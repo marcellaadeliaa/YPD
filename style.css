@@ -1,0 +1,201 @@
+/* Reset ringan */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* Font family:
+   - Montserrat untuk teks pendukung
+   - Playfair Display untuk judul serif
+   - Dancing Script untuk tulisan bergaya tangan (subtitle) */
+:root{
+  --bg-top: #24104a;      /* ungu gelap */
+  --bg-bottom: #8690a6;   /* abu kebiruan lembut */
+  --card-top: rgba(47,18,76,0.95);
+  --card-bottom: rgba(54,35,93,0.95);
+  --pill-bg: rgba(255,255,255,0.18);
+}
+
+body{
+  min-height: 100vh;
+  font-family: 'Montserrat', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  background: linear-gradient(180deg, var(--bg-top) 0%, rgba(48,20,86,0.7) 40%, var(--bg-bottom) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 42px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Wrapper menampung dua kolom */
+.page-wrapper{
+  width: 1100px;            /* cocok untuk tampilan desktop serupa screenshot */
+  max-width: calc(100% - 60px);
+  display: flex;
+  gap: 48px;
+  align-items: flex-start;
+}
+
+/* Kiri */
+.left-col{
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+/* Logo - sesuai posisi pada screenshot */
+.logo{
+  width: 360px;
+  object-fit: contain;
+  background: transparent;
+  /* sedikit margin kiri agar posisinya agak menjorok ke kanan seperti reference */
+  margin-left: 8px;
+}
+
+/* Foto gedung */
+.foto{
+  width: 420px;
+  height: 240px;
+  object-fit: cover;
+  border-radius: 2px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+  margin-top: 4px;
+}
+
+/* Kanan - kartu besar */
+.right-col{
+  width: 480px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Card */
+.card{
+  width: 100%;
+  background: linear-gradient(180deg, rgba(42,22,92,0.95) 0%, rgba(50,30,110,0.95) 100%);
+  border-radius: 28px;
+  padding: 36px;
+  box-shadow: 0 12px 40px rgba(15,12,40,0.35);
+  position: relative;
+  overflow: hidden;
+}
+
+/* varian sudut lebih bulat di bagian bawah kiri agar mirip referensi */
+.card::after{
+  content: "";
+  position: absolute;
+  left: 0; bottom: 0;
+  width: 160px; height: 160px;
+  background: linear-gradient(180deg, rgba(42,22,92,0.9), rgba(50,30,110,0.8));
+  border-top-right-radius: 200px;
+  transform: translate(-60%, 20%);
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+/* Konten di dalam kartu */
+.card-inner{
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  color: #fff;
+  text-align: center;
+  padding: 12px 8px;
+}
+
+/* "Selamat Datang di" */
+.welcome{
+  font-size: 14px;
+  color: rgba(255,255,255,0.9);
+  font-weight: 300;
+  margin-top: 6px;
+}
+
+/* "Yayasan" (serif besar) */
+.title{
+  font-family: 'Playfair Display', serif;
+  font-size: 44px;
+  margin-top: 6px;
+  font-weight: 400;
+  letter-spacing: 0.6px;
+  line-height: 1;
+}
+
+/* "Purba Danarta" (script) */
+.subtitle{
+  font-family: 'Dancing Script', cursive;
+  font-size: 34px;
+  margin-top: -4px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  color: #e9e6ff;
+}
+
+/* Pill deskripsi */
+.desc-pill{
+  width: 82%;
+  background: var(--pill-bg);
+  padding: 14px 18px;
+  border-radius: 14px;
+  margin-top: 6px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+}
+
+.desc-pill p{
+  font-size: 15px;
+  line-height: 1.25;
+  color: #fff;
+  font-weight: 600;
+  margin: 0;
+  text-align: center;
+}
+
+/* Tombol - dua pill putih */
+.btn-row{
+  display: flex;
+  gap: 28px;
+  margin-top: 14px;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-btn{
+  width: 140px;
+  height: 64px;
+  border-radius: 40px;
+  background: #ffffff;
+  border: none;
+  font-family: 'Playfair Display', serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #111;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.25);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.action-btn:hover{
+  transform: translateY(-4px);
+  box-shadow: 0 14px 26px rgba(0,0,0,0.32);
+}
+
+/* sedikit penyesuaian tampilan kecil */
+@media (max-width: 1200px){
+  .page-wrapper{ width: 96%; gap: 28px; }
+  .logo{ width: 320px; }
+  .foto{ width: 380px; height: 220px; }
+  .card{ padding: 30px; }
+}
+
+@media (max-width: 880px){
+  /* tumpuk kolom jadi satu untuk layar sempit */
+  body{ padding: 24px; }
+  .page-wrapper{ flex-direction: column; align-items: center; gap: 22px; width: 100%; }
+  .left-col, .right-col{ width: 100%; display: flex; justify-content: center; }
+  .left-col{ align-items: center; }
+  .logo{ width: 300px; margin-left: 0; }
+  .foto{ width: 90%;
