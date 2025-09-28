@@ -3,21 +3,30 @@ session_start();
 include 'config.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $email    = $_POST['email'];
-    $password = $_POST['password'];
+    // Ambil input & sanitasi
+    $email    = trim($_POST['email']);
+    $password = trim($_POST['password']);
 
-    $sql = "SELECT * FROM users WHERE email='$email'";
-    $result = mysqli_query($conn, $sql);
-    $user = mysqli_fetch_assoc($result);
+    // Siapkan prepared statement
+    $stmt = $conn->prepare("SELECT id, email, password FROM users WHERE email = ?");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $user   = $result->fetch_assoc();
 
     if ($user && password_verify($password, $user['password'])) {
+        // Set session
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['email']   = $user['email'];
-        header("Location: dashboard.php");
+
+        // Redirect (bisa disesuaikan)
+        header("Location: formpelamar.php");
         exit;
     } else {
         $error = "Email atau password salah!";
     }
+
+    $stmt->close();
 }
 ?>
 <!DOCTYPE html>
@@ -58,7 +67,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <?php endif; ?>
 
         <!-- Form -->
-        <form method="POST" class="space-y-4">
+        <form method="POST" class="space-y-4" autocomplete="off">
           <div>
             <label for="email" class="block text-sm font-medium text-white/90 mb-2">Email</label>
             <input id="email" name="email" type="email" placeholder="Masukkan email" required
@@ -79,10 +88,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
           </div>
         </form>
 
+        <!-- Link lupa password -->
+        <p class="text-center text-sm text-white/80 mt-3">
+          <a href="forgot_password.php" class="text-blue-300 hover:underline">Lupa password?</a>
+        </p>
+
         <!-- Link daftar -->
         <p class="text-center text-sm text-white/80 mt-6">
           Belum punya akun?
-          <a href="daftar.php" class="text-blue-300 hover:underline">Daftar disini</a>
+          <a href="register.php" class="text-blue-300 hover:underline">Daftar disini</a>
         </p>
       </div>
     </section>
