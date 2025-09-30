@@ -101,17 +101,17 @@ $nik = isset($_SESSION['nik']) ? $_SESSION['nik'] : '123456789';
   </div>
   <nav>
     <ul>
-      <li><a href="dashboardkaryawan.php">Beranda</a></li>
+      <li><a href="dashboard.php">Beranda</a></li>
       <li><a href="#">Cuti ▾</a>
         <ul>
-          <li><a href="formcutikaryawan.php">Ajukan Cuti</a></li>
-          <li><a href="riwayat_cuti.php">Riwayat Cuti</a></li>
+          <li><a href="formcutikaryawan.php">Pengajuan Cuti</a></li>
+          <li><a href="riwayat_cuti_pribadi.php">Riwayat Cuti</a></li>
         </ul>
       </li>
       <li><a href="#">KHL ▾</a>
         <ul>
-          <li><a href="formkhlkaryawan.php">Ajukan KHL</a></li>
-          <li><a href="riwayat_khl.php">Riwayat KHL</a></li>
+          <li><a href="formkhlkaryawan.php">Pengajuan KHL</a></li>
+          <li><a href="riwayat_khl_pribadi.php">Riwayat KHL</a></li>
         </ul>
       </li>
       <li><a href="#">Profil ▾</a>

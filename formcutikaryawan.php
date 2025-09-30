@@ -81,6 +81,7 @@ session_start();
     border:1px solid #ccc;
     border-radius:8px;
     background-color:#f9f9f9;
+    box-sizing:border-box;
   }
   button {
     display:block;
@@ -93,8 +94,25 @@ session_start();
     font-weight:700;
     font-size:15px;
     cursor:pointer;
+    width:100%;
   }
   button:hover {background-color:#3a3162;}
+  
+  /* Style untuk input manual yang tersembunyi */
+  .manual-input {
+    display: none;
+    margin-top: 10px;
+    animation: fadeIn 0.3s ease-in;
+  }
+  
+  .manual-input.show {
+    display: block;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 </style>
 </head>
 <body>
@@ -103,19 +121,19 @@ session_start();
     <img src="image/namayayasan.png" alt="Logo Yayasan">
     <span>Yayasan Purba Danarta</span>
   </div>
-  <nav>
+   <nav>
     <ul>
-      <li><a href="dashboardkaryawan.php">Beranda</a></li>
+      <li><a href="dashboard.php">Beranda</a></li>
       <li><a href="#">Cuti ▾</a>
         <ul>
-          <li><a href="formcutikaryawan.php">Ajukan Cuti</a></li>
-          <li><a href="riwayat_cuti.php">Riwayat Cuti</a></li>
+          <li><a href="formcutikaryawan.php">Pengajuan Cuti</a></li>
+          <li><a href="riwayat_cuti_pribadi.php">Riwayat Cuti</a></li>
         </ul>
       </li>
       <li><a href="#">KHL ▾</a>
         <ul>
-          <li><a href="formcutikhl.php">Ajukan Cuti</a></li>
-          <li><a href="riwayat_khl.php">Riwayat Cuti</a></li>
+          <li><a href="formkhlkaryawan.php">Pengajuan KHL</a></li>
+          <li><a href="riwayat_khl_pribadi.php">Riwayat KHL</a></li>
         </ul>
       </li>
       <li><a href="#">Profil ▾</a>
@@ -131,26 +149,68 @@ session_start();
 <main>
   <div class="form-container">
     <h2>Pengajuan Cuti</h2>
-    <form method="post" action="prosescuti_karyawan.php">
+    <form method="post" action="prosescuti_karyawan.php" id="formCuti">
       <label>No. Induk Karyawan</label>
       <input type="text" name="nik" value="123456789" readonly>
 
       <label>Jenis Cuti</label>
-      <select name="jenis_cuti" required>
+      <select name="jenis_cuti" id="jenisCuti" required onchange="toggleManualInput()">
         <option value="">Pilih Jenis Cuti</option>
         <option value="Tahunan">Cuti Tahunan</option>
         <option value="Melahirkan">Cuti Melahirkan</option>
+        <option value="Khusus">Cuti Khusus</option>
         <option value="Sakit">Cuti Sakit</option>
         <option value="Lustrum">Cuti Lustrum</option>
         <option value="Ibadah">Cuti Ibadah</option>
+        <option value="Lainnya">Lainnya</option>
       </select>
 
+      <!-- Input manual untuk jenis cuti lainnya -->
+      <div id="manualInputContainer" class="manual-input">
+        <label for="jenis_cuti_manual">Tulis Jenis Cuti</label>
+        <input type="text" name="jenis_cuti_manual" id="jenis_cuti_manual" placeholder="Masukkan jenis cuti lainnya...">
+      </div>
+
       <label>Tanggal Cuti</label>
-       <input type="date" name="tanggal_cuti" min="<?php echo date('Y-m-d'); ?>" required>
+      <input type="date" name="tanggal_cuti" min="<?php echo date('Y-m-d'); ?>" required>
 
       <button type="submit">Masukkan</button>
     </form>
   </div>
 </main>
+
+<script>
+  function toggleManualInput() {
+    const jenisCutiSelect = document.getElementById('jenisCuti');
+    const manualInputContainer = document.getElementById('manualInputContainer');
+    const manualInput = document.getElementById('jenis_cuti_manual');
+    
+    if (jenisCutiSelect.value === 'Lainnya') {
+      manualInputContainer.classList.add('show');
+      manualInput.required = true;
+    } else {
+      manualInputContainer.classList.remove('show');
+      manualInput.required = false;
+      manualInput.value = ''; // Clear input ketika tidak dipakai
+    }
+  }
+
+  // Validasi form sebelum submit
+  document.getElementById('formCuti').addEventListener('submit', function(e) {
+    const jenisCutiSelect = document.getElementById('jenisCuti');
+    const manualInput = document.getElementById('jenis_cuti_manual');
+    
+    if (jenisCutiSelect.value === 'Lainnya' && !manualInput.value.trim()) {
+      e.preventDefault();
+      alert('Silakan tulis jenis cuti lainnya');
+      manualInput.focus();
+    }
+  });
+
+  // Inisialisasi saat page load
+  document.addEventListener('DOMContentLoaded', function() {
+    toggleManualInput();
+  });
+</script>
 </body>
 </html>

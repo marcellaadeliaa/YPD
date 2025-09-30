@@ -1,40 +1,86 @@
 <?php
+session_start();
 include 'config.php';
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $email = $_POST['email'];
-    $token = bin2hex(random_bytes(16));
-    $expires = date("Y-m-d H:i:s", strtotime("+1 hour"));
+$error = '';
 
-    $sql = "UPDATE users SET reset_token='$token', reset_expires='$expires' WHERE email='$email'";
-    if (mysqli_query($conn, $sql) && mysqli_affected_rows($conn) > 0) {
-        $link = "http://localhost/reset_password.php?token=$token";
-        $msg = "Link reset password: <a href='$link'>$link</a>";
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $email = trim($_POST['email']);
+    
+    // Cek apakah email ada di database
+    $stmt = $conn->prepare("SELECT id, email FROM users WHERE email = ?");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $user = $result->fetch_assoc();
+    
+    if ($user) {
+        // Simpan email di session untuk reset password
+        $_SESSION['reset_email'] = $email;
+        header("Location: reset_password.php");
+        exit;
     } else {
-        $error = "Email tidak ditemukan!";
+        $error = "Email tidak ditemukan dalam sistem.";
     }
+    
+    $stmt->close();
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <title>Lupa Password</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lupa Password — Yayasan</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="flex items-center justify-center min-h-screen bg-gray-100">
-  <div class="bg-white p-8 rounded-lg shadow-md w-[400px]">
-    <h2 class="text-2xl font-bold mb-4">Lupa Password</h2>
-    <?php if (!empty($msg)): ?>
-      <p class="text-green-600"><?php echo $msg; ?></p>
-    <?php elseif (!empty($error)): ?>
-      <p class="text-red-600"><?php echo $error; ?></p>
-    <?php endif; ?>
-    <form method="POST" class="space-y-4">
-      <input type="email" name="email" required placeholder="Masukkan email"
-        class="w-full px-4 py-2 border rounded-lg">
-      <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg">Kirim Link Reset</button>
-    </form>
+<body class="antialiased">
+  <!-- Background -->
+  <div class="fixed inset-0 -z-10">
+    <div class="absolute inset-0 bg-[url('image/gedungyayasan.png')] bg-center bg-cover"></div>
+    <div class="absolute inset-0 bg-black/40"></div>
   </div>
+
+  <!-- Container -->
+  <main class="min-h-screen flex items-center justify-center p-6 relative z-10">
+    <section class="w-full max-w-[500px]">
+      <div class="mx-auto bg-[#1E105E]/95 rounded-2xl shadow-2xl p-10 md:p-12">
+        <!-- Header -->
+        <header class="text-center mb-6">
+          <h1 class="text-3xl md:text-4xl text-white font-bold">Lupa Password</h1>
+          <p class="text-sm text-white/80 mt-2">Masukkan email untuk reset password</p>
+        </header>
+
+        <!-- Pesan error -->
+        <?php if (!empty($error)): ?>
+          <div class="bg-red-500/20 border border-red-500 rounded-lg p-4 mb-4">
+            <p class="text-red-300 text-sm"><?= $error ?></p>
+          </div>
+        <?php endif; ?>
+
+        <!-- Form -->
+        <form method="POST" class="space-y-4" autocomplete="off">
+          <div>
+            <label for="email" class="block text-sm font-medium text-white/90 mb-2">Email</label>
+            <input id="email" name="email" type="email" placeholder="Masukkan email yang terdaftar" required
+              class="w-full py-3 px-4 rounded-full bg-white/90 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-300">
+          </div>
+
+          <div class="mt-4">
+            <button type="submit"
+              class="w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-semibold text-lg shadow-sm">
+              Reset Password <span aria-hidden="true">➜</span>
+            </button>
+          </div>
+        </form>
+
+        <!-- Link kembali -->
+        <p class="text-center text-sm text-white/80 mt-6">
+          <a href="login.php" class="text-blue-300 hover:underline">Kembali ke Login</a>
+        </p>
+      </div>
+    </section>
+  </main>
 </body>
 </html>

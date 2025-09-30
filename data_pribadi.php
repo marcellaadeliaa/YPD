@@ -3,7 +3,7 @@ session_start();
 
 // sementara untuk contoh tanpa login
 if (!isset($_SESSION['kode_karyawan'])) {
-    $_SESSION['kode_karyawan'] = '123456789';
+    $_SESSION['kode_karyawan'] = '9001';
 }
 
 // simpan data ke session saat submit
@@ -145,13 +145,13 @@ button:hover{background:#3a3162;}
       <li><a href="#">Cuti ▾</a>
         <ul>
           <li><a href="formcutikaryawan.php">Ajukan Cuti</a></li>
-          <li><a href="riwayat_cuti.php">Riwayat Cuti</a></li>
+          <li><a href="riwayat_cuti_pribadi.php">Riwayat Cuti</a></li>
         </ul>
       </li>
       <li><a href="#">KHL ▾</a>
         <ul>
           <li><a href="formcutikhl.php">Ajukan Cuti</a></li>
-          <li><a href="riwayat_khl.php">Riwayat Cuti</a></li>
+          <li><a href="riwayat_khl_pribadi.php">Riwayat KHL</a></li>
         </ul>
       </li>
       <li><a href="#">Profil ▾</a>
@@ -178,16 +178,16 @@ button:hover{background:#3a3162;}
         <label>Divisi/Bagian</label>
         <select name="divisi" required>
           <option value="">Pilih Divisi</option>
-          <option value="HRD">HRD</option>
-          <option value="IT">IT</option>
-          <option value="Finance">Finance</option>
+          <option value="Training">Training</option>
+          <option value="Wisma">Wisma</option>
+          <option value="Konsultasi">Konsultasi</option>
         </select>
 
         <label>Role</label>
         <select name="role" required>
           <option value="">Pilih Role</option>
           <option value="Staff">Staff</option>
-          <option value="Manager">Manager</option>
+          <option value="Penanggung Jawab">Penanggung Jawab</option>
         </select>
 
         <label>No. Telepon</label>
