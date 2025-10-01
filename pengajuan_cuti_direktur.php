@@ -1,15 +1,151 @@
 <?php
-// FILE: pengajuan_cuti.php
+// FILE: pengajuan_cuti_direktur.php
+// ===========================================
+// BAGIAN 1: KONEKSI, SESSION, DAN PREPARASI DATA
+// ===========================================
 
-// Untuk tujuan tampilan saja, kita tidak memerlukan logika PHP/Database yang kompleks di sini.
-// Namun, jika ada data yang ingin diambil (misal: Sisa Cuti), Anda bisa menempatkan logika PHP di sini.
+session_start();
 
-// Data sisa cuti (Contoh statis, nanti bisa diganti dari database)
-$sisa_cuti_tahunan = 10;
-$sisa_cuti_lustrum = 4;
-$nama_karyawan = "Adrian"; // Placeholder nama
-// Menghapus inisialisasi kode_karyawan atau menjadikannya string kosong agar input kosong
-$kode_karyawan = ""; 
+// --- Konfigurasi Database ---
+$server = "localhost";
+$username = "root";
+$password = "";
+$database = "ypd_ibd";
+
+$conn = new mysqli($server, $username, $password, $database);
+
+if ($conn->connect_error) {
+    die("Koneksi ke database gagal: " . $conn->connect_error);
+}
+
+// ===========================================
+// AMBIL DATA KARYAWAN YANG SEDANG LOGIN (Digunakan hanya untuk tampilan sisa cuti Direktur)
+// ===========================================
+// ASUMSI: Gunakan kode karyawan dari SESSION untuk menampilkan sisa cuti
+// yang bersangkutan, meski nanti form diisi dengan kode karyawan lain.
+$user_kode_session = isset($_SESSION['kode_karyawan']) ? $_SESSION['kode_karyawan'] : 'YPD9999';
+
+$nama_karyawan = "";
+$sisa_cuti_tahunan = 0;
+$sisa_cuti_lustrum = 0;
+$divisi_karyawan = "";
+
+// Query untuk mengambil data karyawan berdasarkan user yang login (untuk welcome message & sisa cuti)
+$stmt_user = $conn->prepare("SELECT nama_lengkap, divisi, sisa_cuti_tahunan, sisa_cuti_lustrum FROM data_karyawan WHERE kode_karyawan = ?");
+$stmt_user->bind_param("s", $user_kode_session);
+$stmt_user->execute();
+$result_user = $stmt_user->get_result();
+
+if ($result_user->num_rows > 0) {
+    $data_user = $result_user->fetch_assoc();
+    $nama_karyawan = htmlspecialchars($data_user['nama_lengkap']);
+    $divisi_karyawan = htmlspecialchars($data_user['divisi']);
+    $sisa_cuti_tahunan = $data_user['sisa_cuti_tahunan'];
+    $sisa_cuti_lustrum = $data_user['sisa_cuti_lustrum'];
+} else {
+    $nama_karyawan = "Pengguna Tidak Dikenal";
+}
+$stmt_user->close();
+
+
+// ===========================================
+// BAGIAN 2: LOGIKA PEMROSESAN PENGAJUAN CUTI (POST) - MENGGUNAKAN INPUT MANUAL
+// ===========================================
+
+if ($_SERVER["REQUEST_METHOD"] == "POST" && 
+    isset($_POST['no_karyawan']) && 			
+    isset($_POST['jenis_cuti']) && 
+    isset($_POST['tanggal_mulai']) && 
+    isset($_POST['jumlah_hari']) && 
+    isset($_POST['alasan'])) {
+        
+    // Ambil data POST
+    $kode_karyawan_input = trim($_POST['no_karyawan']); // Menggunakan input dari form
+    $jenis_cuti = $_POST['jenis_cuti'];
+    $tanggal_mulai = $_POST['tanggal_mulai']; 
+    $jumlah_hari = (int)$_POST['jumlah_hari']; 
+    $alasan = $_POST['alasan']; 
+    
+    $is_valid = true;
+    $error_message = "";
+    
+    // 1. Validasi Kode Karyawan yang di-input harus ada di database
+    $stmt_check = $conn->prepare("SELECT nama_lengkap, divisi, sisa_cuti_tahunan, sisa_cuti_lustrum FROM data_karyawan WHERE kode_karyawan = ?");
+    $stmt_check->bind_param("s", $kode_karyawan_input);
+    $stmt_check->execute();
+    $result_check = $stmt_check->get_result();
+
+    if ($result_check->num_rows == 0) {
+        $is_valid = false;
+        $error_message = "Gagal: Kode Karyawan ($kode_karyawan_input) tidak ditemukan dalam database. Pastikan kode benar.";
+    } else {
+        $data_check = $result_check->fetch_assoc();
+        $nama_karyawan_post = $data_check['nama_lengkap'];
+        $divisi = $data_check['divisi'];
+        $sisa_cuti_tahunan_db = $data_check['sisa_cuti_tahunan'];
+        $sisa_cuti_lustrum_db = $data_check['sisa_cuti_lustrum'];
+        
+        // 2. Hitung tanggal akhir cuti
+        $start_date = new DateTime($tanggal_mulai);
+        $end_date = clone $start_date;
+        if ($jumlah_hari > 0) {
+             $end_date->modify('+'.($jumlah_hari - 1).' day');
+        }
+        $tanggal_akhir = $end_date->format('Y-m-d');
+        
+        // 3. Validasi Sisa Cuti (Hanya untuk Cuti Tahunan dan Lustrum)
+        if ($jenis_cuti == 'Tahunan') {
+            if ($jumlah_hari > $sisa_cuti_tahunan_db) {
+                $is_valid = false;
+                $error_message = "Gagal: Jumlah hari cuti tahunan melebihi sisa cuti ($sisa_cuti_tahunan_db hari) untuk karyawan $nama_karyawan_post.";
+            }
+        } elseif ($jenis_cuti == 'Lustrum') {
+            if ($jumlah_hari > $sisa_cuti_lustrum_db) {
+                $is_valid = false;
+                $error_message = "Gagal: Jumlah hari cuti lustrum melebihi sisa cuti ($sisa_cuti_lustrum_db hari) untuk karyawan $nama_karyawan_post.";
+            }
+        }
+    }
+    $stmt_check->close();
+
+    // 4. Jika valid, masukkan ke database
+    if ($is_valid) {
+        // Status awal untuk Direktur/PJ: Menunggu Persetujuan Direktur
+        $status = "Menunggu Persetujuan Direktur"; 
+        $created_at = date('Y-m-d H:i:s');
+        
+        // Query INSERT
+        $stmt_insert = $conn->prepare("INSERT INTO pengajuan_cuti (kode_karyawan, nama_karyawan, divisi, jenis_cuti, tanggal_mulai, tanggal_akhir, alasan, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        
+        $stmt_insert->bind_param("sssssssss", $kode_karyawan_input, $nama_karyawan_post, $divisi, $jenis_cuti, $tanggal_mulai, $tanggal_akhir, $alasan, $status, $created_at);
+        
+        if ($stmt_insert->execute()) { 
+            $success_message = "Pengajuan Cuti untuk $nama_karyawan_post berhasil diajukan dan menunggu persetujuan Direktur.";
+            
+            // Logika Update Sisa Cuti
+            if ($jenis_cuti == 'Tahunan' || $jenis_cuti == 'Lustrum') {
+                $cuti_kolom = ($jenis_cuti == 'Tahunan') ? 'sisa_cuti_tahunan' : 'sisa_cuti_lustrum';
+                
+                // Update sisa cuti di tabel data_karyawan berdasarkan kode karyawan yang di-input
+                $stmt_update = $conn->prepare("UPDATE data_karyawan SET $cuti_kolom = $cuti_kolom - ? WHERE kode_karyawan = ?");
+                $stmt_update->bind_param("is", $jumlah_hari, $kode_karyawan_input);
+                $stmt_update->execute();
+                $stmt_update->close();
+            }
+            
+            echo "<script>alert('$success_message'); window.location.href='riwayat_cuti_direktur.php';</script>";
+            exit();
+        } else {
+            $error_message = "Gagal menyimpan pengajuan cuti: " . $conn->error;
+        }
+        $stmt_insert->close();
+    }
+    
+    if (!empty($error_message)) {
+          echo "<script>alert('$error_message');</script>";
+    }
+}
+$conn->close();
 ?>
 
 <!DOCTYPE html>
@@ -19,17 +155,17 @@ $kode_karyawan = "";
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pengajuan Cuti - Yayasan Purba Danarta</title>
     <style>
-        /* === CSS NATIVE UNTUK TAMPILAN UI/UX === */
+        /* [CSS TIDAK BERUBAH] */
         :root {
             --primary-color: #1E105E;
-            --secondary-color: #8897AE;
+            --secondary-color: #a29bb8;
             --card-bg: #FFFFFF;
-            --text-dark: #333;
+            --text-dark: #2e1f4f;
             --text-light: #fff;
             --input-bg: #F0F0F0;
             --button-color: #4A3F81;
             --shadow-light: rgba(0,0,0,0.15);
-            --header-bg: #FFFFFF; /* Warna Header Putih */
+            --header-bg: #FFFFFF; 
         }
 
         body {
@@ -40,35 +176,31 @@ $kode_karyawan = "";
             color: var(--text-light);
         }
 
-        /* ===== HEADER & NAVIGASI ===== */
+        /* ===== HEADER & NAVIGASI (Dibuat konsisten) ===== */
         header {
             background: var(--header-bg);
-            padding: 15px 40px;
+            padding: 20px 40px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 10px var(--shadow-light);
+            box-shadow: 0 4px 15px var(--shadow-light);
+            border-bottom: 2px solid var(--button-color);
+            flex-wrap: wrap;
         }
         .logo {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 16px;
+            font-weight: 500;
             font-size: 20px;
-            color: var(--primary-color); /* Ubah ke warna primer agar lebih kontras */
-            font-weight: 600;
+            color: var(--text-dark);
         }
         .logo img {
-            width: 40px; 
-            height: 40px;
+            width: 50px; 
+            height: 50px;
             object-fit: contain;
+            border-radius: 50%;
         }
-        
-        .logo span {
-            font-family: serif; 
-            font-size: 24px;
-        }
-
-        /* Navigasi */
         nav ul {
             list-style: none;
             margin: 0;
@@ -77,46 +209,33 @@ $kode_karyawan = "";
             align-items: center; 
             gap: 30px;
         }
-        nav li {
-            position: relative;
-        }
+        nav li { position: relative; }
         nav a {
             text-decoration: none;
             color: var(--text-dark);
             font-weight: 600;
-            padding: 10px 0;
+            padding: 8px 4px;
             display: block; 
         }
-        
-        /* Style Dropdown Menu */
         nav li ul {
             display: none;
             position: absolute;
             top: 100%;
-            /* Ganti 'right' menjadi 'left' agar dropdown tidak keluar layar di sisi kiri */
             left: 0; 
             background: var(--card-bg);
             padding: 10px 0;
             border-radius: 8px;
-            box-shadow: 0 2px 8px var(--shadow-light);
-            min-width: 180px; /* Lebarkan sedikit untuk teks yang lebih panjang */
-            z-index: 1000;
+            box-shadow: 0 2px 10px var(--shadow-light);
+            min-width: 200px;
+            z-index: 999;
         }
         nav li:hover > ul { display: block; }
-        nav li ul li { 
-            padding: 0; /* Hapus padding di li */
-        }
+        nav li ul li { padding: 5px 20px; }
         nav li ul li a {
             color: var(--text-dark);
             font-weight: 400;
-            padding: 8px 15px; /* Tambahkan padding di link */
-            display: block; 
-            white-space: nowrap; /* Mencegah teks turun baris */
+            white-space: nowrap;
         }
-        nav li ul li a:hover {
-            background-color: #f0f0f0; /* Efek hover pada item dropdown */
-        }
-
 
         /* ===== MAIN CONTENT & FORM ===== */
         main {
@@ -148,6 +267,7 @@ $kode_karyawan = "";
             margin-top: 0;
             margin-bottom: 30px;
             text-align: center;
+            color: var(--primary-color);
         }
         .form-card p {
             font-size: 16px;
@@ -156,7 +276,7 @@ $kode_karyawan = "";
             opacity: 0.8;
         }
         
-        /* ===== FORM INPUT LAYOUT (NO. KODE KARYAWAN KEMBALI NORMAL) ===== */
+        /* ===== FORM INPUT LAYOUT ===== */
         .form-group {
             margin-bottom: 25px;
         }
@@ -179,7 +299,12 @@ $kode_karyawan = "";
             appearance: none;
             -webkit-appearance: none;
             -moz-appearance: none;
-            color: var(--text-dark); /* Menggunakan warna teks gelap (hitam) */
+            color: var(--text-dark);
+        }
+        .input-text:disabled {
+            background: #e9e9e9;
+            cursor: not-allowed;
+            font-style: italic;
         }
         
         .input-select {
@@ -189,10 +314,6 @@ $kode_karyawan = "";
             background-size: 18px;
         }
         
-        .input-date {
-            padding-right: 15px; 
-        }
-
         /* Grouping Tombol dan Sisa Cuti */
         .action-group {
             display: flex;
@@ -266,32 +387,33 @@ $kode_karyawan = "";
     
     <nav>
         <ul>
-            <li><a href="dashboard_direktur.php">Beranda</a></li>
-            <li>
-                <a href="#">Cuti ▾</a>
+            <li><a href="dashboarddirektur.php">Beranda</a></li>
+            <li><a href="#">Cuti ▾</a>
                 <ul>
                     <li><a href="persetujuan_cuti_direktur.php">Persetujuan Cuti</a></li>
                     <li><a href="riwayat_cuti_direktur.php">Riwayat Cuti</a></li>
                 </ul>
             </li>
-            <li>
-                <a href="#">KHL ▾</a>
+            <li><a href="#">KHL ▾</a>
                 <ul>
                     <li><a href="persetujuan_khl_direktur.php">Persetujuan KHL</a></li>
                     <li><a href="riwayat_khl_direktur.php">Riwayat KHL</a></li>
                 </ul>
             </li>
-            <li>
-                <a href="#">Karyawan ▾</a>
+            <li><a href="#">Karyawan ▾</a>
                 <ul>
                     <li><a href="data_karyawan_direktur.php">Data Karyawan</a></li>
-                    <li><a href="data_direktur_pj.php">Data Direktur</a></li>
+                    
                 </ul>
             </li>
-            <li>
-                <a href="#">Profil ▾</a>
+            <li><a href="#">Pelamar ▾</a>
                 <ul>
-                    <li><a href="profil_direktur.php">Profil Direktur</a></li>
+                    <li><a href="riwayat_pelamar.php">Riwayat Pelamar</a></li>
+                </ul>
+            </li>
+            <li><a href="#">Profil ▾</a>
+                <ul>
+                    <li><a href="profil_direktur.php">Profil Saya</a></li>
                     <li><a href="logout2.php">Logout</a></li>
                 </ul>
             </li>
@@ -302,15 +424,15 @@ $kode_karyawan = "";
     <div class="welcome">Welcome, <?= htmlspecialchars($nama_karyawan) ?>!</div>
 
     <div class="form-card">
-        <h2>Pengajuan Cuti</h2>
-        <p>Ajukkan Permohonan Cuti Anda</p>
+        <h2>Pengajuan Cuti Pribadi/Karyawan</h2>
+        <p>Silakan isi kode karyawan yang akan mengajukan cuti.</p>
         
         <form action="" method="POST">
             
             <div class="form-group">
                 <label for="no_karyawan">No. Kode Karyawan</label>
-                <input type="text" id="no_karyawan" name="no_karyawan" class="input-text" value="" 
-                       onclick="this.select()">
+                <input type="text" id="no_karyawan" name="no_karyawan" class="input-text" 
+                       placeholder="Contoh: YPD0001" required> 
             </div>
             
             <div class="form-group">
@@ -326,17 +448,28 @@ $kode_karyawan = "";
             </div>
 
             <div class="form-group">
-                <label for="tanggal_cuti">Tanggal Cuti</label>
-                <input type="date" id="tanggal_cuti" name="tanggal_cuti" class="input-date" required>
+                <label for="tanggal_mulai">Tanggal Mulai Cuti</label>
+                <input type="date" id="tanggal_mulai" name="tanggal_mulai" class="input-date" required>
             </div>
             
+            <div class="form-group">
+                <label for="jumlah_hari">Jumlah Hari Cuti (Termasuk hari libur/akhir pekan jika dicantumkan)</label>
+                <input type="number" id="jumlah_hari" name="jumlah_hari" class="input-text" min="1" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="alasan">Alasan/Keterangan Cuti</label>
+                <textarea id="alasan" name="alasan" class="input-text" rows="4" required></textarea>
+            </div>
+            
+            
             <div class="action-group">
-                <button type="submit" class="btn-submit">Masukkan</button>
+                <button type="submit" class="btn-submit">Ajukan Cuti</button>
                 
                 <div class="sisa-cuti">
-                    <strong>Sisa Cuti</strong>
-                    Cuti Tahunan: <?= $sisa_cuti_tahunan ?> hari<br>
-                    Cuti Lustrum: <?= $sisa_cuti_lustrum ?> hari
+                    <strong>Sisa Cuti <?= $nama_karyawan ?> (Anda)</strong>
+                    Cuti Tahunan: **<?= $sisa_cuti_tahunan ?>** hari<br>
+                    Cuti Lustrum: **<?= $sisa_cuti_lustrum ?>** hari
                 </div>
             </div>
         </form>

@@ -1,14 +1,120 @@
 <?php
 // FILE: pengajuan_khl_direktur.php
+session_start();
 
-// Data Direktur
-// Kode Karyawan dibuat kosong agar input awalnya kosong, sesuai permintaan.
-$kode_karyawan = ""; 
-$nama_direktur = "Pico"; 
-$jabatan = "Direktur";
+// ===========================================
+// 1. KONFIGURASI DAN KONEKSI DATABASE
+// ===========================================
+$server = "localhost";
+$username = "root";
+$password = "";
+$database = "ypd_ibd"; // Database Anda
 
-// Data placeholder untuk form dropdown (simulasi dari DB)
+$conn = new mysqli($server, $username, $password, $database);
+
+if ($conn->connect_error) {
+    die("Koneksi ke database gagal: " . $conn->connect_error);
+}
+
+// Inisialisasi variabel untuk pesan flash
+$error_message = $_SESSION['error_message'] ?? "";
+$success_message = $_SESSION['success_message'] ?? "";
+unset($_SESSION['error_message'], $_SESSION['success_message']);
+
+// ===========================================
+// 2. DATA AWAL DIREKTUR LOGIN
+// ===========================================
+// Cek jika session 'kode_karyawan' ada, jika tidak gunakan placeholder
+$user_kode_session = $_SESSION['kode_karyawan'] ?? 'YPD0001'; 
+$nama_direktur = "Pengguna";
+$divisi_direktur = "Direktur";
+
+// Ambil data Direktur dari database
+$stmt_direktur = $conn->prepare("SELECT nama_lengkap, divisi FROM data_karyawan WHERE kode_karyawan = ?");
+$stmt_direktur->bind_param("s", $user_kode_session);
+$stmt_direktur->execute();
+$result_direktur = $stmt_direktur->get_result();
+
+if ($result_direktur->num_rows > 0) {
+    $data_direktur = $result_direktur->fetch_assoc();
+    $nama_direktur = htmlspecialchars($data_direktur['nama_lengkap']);
+    $divisi_direktur = htmlspecialchars($data_direktur['divisi']);
+}
+$stmt_direktur->close();
+
+// Data proyek (dropdown)
 $proyek_list = ["Proyek A (Jakarta)", "Proyek B (Bandung)", "Proyek C (Surabaya)", "Proyek Internal"];
+
+// Untuk menjaga nilai input kode_karyawan
+$kode_karyawan_input_value = $_POST['kode_karyawan'] ?? ""; 
+
+// ===========================================
+// 3. LOGIKA SIMPAN PENGAJUAN KHL
+// ===========================================
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $kode_karyawan_input = trim($_POST['kode_karyawan'] ?? ""); 
+    $proyek = $_POST['proyek'] ?? "";
+    $tanggal_khl = $_POST['tanggal_khl'] ?? "";
+
+    $is_valid = true;
+
+    // --- Validasi Mandatory Field ---
+    if (empty($kode_karyawan_input) || empty($proyek) || empty($tanggal_khl)) {
+        $is_valid = false;
+        $_SESSION['error_message'] = "Gagal: Semua field wajib diisi.";
+    }
+
+    // --- Cek karyawan ---
+    if ($is_valid) {
+        $stmt_check = $conn->prepare("SELECT nama_lengkap, divisi FROM data_karyawan WHERE kode_karyawan = ?");
+        $stmt_check->bind_param("s", $kode_karyawan_input);
+        $stmt_check->execute();
+        $result_check = $stmt_check->get_result();
+
+        if ($result_check->num_rows == 0) {
+            $is_valid = false;
+            $_SESSION['error_message'] = "Kode karyawan $kode_karyawan_input tidak ditemukan.";
+        } else {
+            $data_check = $result_check->fetch_assoc();
+            $nama_karyawan_post = $data_check['nama_lengkap'];
+            $divisi_karyawan_post = $data_check['divisi'];
+        }
+        $stmt_check->close();
+    }
+
+    // --- Simpan ke database ---
+    if ($is_valid) {
+        $status = "Menunggu Persetujuan Direktur";
+        // Query disesuaikan dengan kolom yang Anda berikan
+        $sql = "INSERT INTO pengajuan_khl (kode_karyawan, nama_karyawan, divisi, tanggal_khl, nama_proyek, status) 
+                VALUES (?, ?, ?, ?, ?, ?)";
+        $stmt_insert = $conn->prepare($sql);
+        $stmt_insert->bind_param("ssssss", 
+            $kode_karyawan_input, 
+            $nama_karyawan_post, 
+            $divisi_karyawan_post, 
+            $tanggal_khl, 
+            $proyek,
+            $status
+        );
+
+        if ($stmt_insert->execute()) { 
+            $_SESSION['success_message'] = "Pengajuan KHL untuk $nama_karyawan_post berhasil diajukan.";
+            header("Location: riwayat_khl_direktur.php");
+            exit();
+        } else {
+            $_SESSION['error_message'] = "Gagal menyimpan pengajuan: " . $stmt_insert->error;
+        }
+        $stmt_insert->close();
+    }
+
+    if (!$is_valid) {
+        header("Location: pengajuan_khl_direktur.php");
+        exit();
+    }
+}
+
+$conn->close();
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -17,18 +123,21 @@ $proyek_list = ["Proyek A (Jakarta)", "Proyek B (Bandung)", "Proyek C (Surabaya)
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pengajuan KHL - Yayasan Purba Danarta</title>
     <style>
-        /* === Variabel Warna & Font Konsisten === */
+        /* ======================================= */
+        /* CSS DIAMBIL DARI dashboard_direktur.php */
+        /* ======================================= */
         :root {
-            --primary-color: #1E105E; /* Ungu gelap */
-            --secondary-color: #8897AE; /* Abu-abu kebiruan */
-            --accent-color: #4a3f81; /* Ungu sedang untuk tombol */
+            --primary-color: #1E105E; 
+            --secondary-color: #8897AE;
+            --accent-color: #4a3f81; 
             --card-bg: #FFFFFF;
             --text-color-light: #fff;
             --text-color-dark: #2e1f4f;
             --shadow-light: rgba(0,0,0,0.15);
+            --success-color: #28a745;
+            --error-color: #dc3545;
         }
 
-        /* === GLOBAL STYLES === */
         body {
             margin: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -38,7 +147,6 @@ $proyek_list = ["Proyek A (Jakarta)", "Proyek B (Bandung)", "Proyek C (Surabaya)
             padding-bottom: 50px;
         }
 
-        /* ===== HEADER & NAV ===== */
         header {
             background: var(--card-bg);
             padding: 20px 40px;
@@ -95,8 +203,13 @@ $proyek_list = ["Proyek A (Jakarta)", "Proyek B (Bandung)", "Proyek C (Surabaya)
             z-index: 999;
         }
         nav li:hover > ul { display: block; }
+        nav li ul li { padding: 5px 20px; }
+        nav li ul li a { 
+            color: var(--text-color-dark); 
+            font-weight: 400; 
+            white-space: nowrap; 
+        }
         
-        /* === MAIN CONTENT & FORM LAYOUT === */
         .container {
             max-width: 1000px;
             margin: 50px auto;
@@ -128,13 +241,7 @@ $proyek_list = ["Proyek A (Jakarta)", "Proyek B (Bandung)", "Proyek C (Surabaya)
             margin-bottom: 5px;
             font-size: 24px;
         }
-        .form-card p.subtitle {
-            text-align: center;
-            color: var(--secondary-color);
-            margin-bottom: 40px;
-        }
         
-        /* === INPUT & DROPDOWN STYLES === */
         .form-group {
             margin-bottom: 20px;
         }
@@ -150,7 +257,7 @@ $proyek_list = ["Proyek A (Jakarta)", "Proyek B (Bandung)", "Proyek C (Surabaya)
         .form-group select {
             width: 100%;
             padding: 15px;
-            border: 1px solid #ccc; /* Border untuk input */
+            border: 1px solid #ccc;
             border-radius: 8px;
             background: #f0f0f5;
             box-sizing: border-box;
@@ -158,19 +265,6 @@ $proyek_list = ["Proyek A (Jakarta)", "Proyek B (Bandung)", "Proyek C (Surabaya)
             color: var(--text-color-dark);
         }
         
-        /* HAPUS STYLING KHUSUS UNTUK INPUT READONLY/KODE KARYAWAN */
-        .form-group input[readonly] {
-             /* Hapus semua style di sini agar input Kode Karyawan normal */
-             /* Biarkan kosong agar menggunakan style .form-group input di atas */
-        }
-        /* Jika Anda ingin agar input readonly tetap terlihat sedikit berbeda: */
-        .form-group input[readonly] {
-             background: #f8f9fa; /* Lebih terang dari input biasa */
-             color: var(--text-color-dark);
-             cursor: default;
-             font-weight: 400; 
-        }
-
         .select-wrapper {
             position: relative;
         }
@@ -190,24 +284,6 @@ $proyek_list = ["Proyek A (Jakarta)", "Proyek B (Bandung)", "Proyek C (Surabaya)
             -moz-appearance: none;
         }
 
-        /* Grouping untuk Jam */
-        .form-row {
-            display: flex;
-            gap: 20px;
-        }
-        .form-row .form-group {
-            flex: 1;
-        }
-        .form-card h3 {
-            color: var(--primary-color);
-            font-size: 1.1rem;
-            margin-top: 25px;
-            margin-bottom: 10px;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 5px;
-        }
-
-        /* === BUTTON STYLES === */
         .submit-btn {
             background: var(--accent-color);
             color: var(--text-color-light);
@@ -226,7 +302,26 @@ $proyek_list = ["Proyek A (Jakarta)", "Proyek B (Bandung)", "Proyek C (Surabaya)
             background-color: #352d5c;
         }
 
-        /* === RESPONSIVE CSS === */
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            color: white; /* Diatur agar konsisten dengan warna background */
+        }
+
+        .alert-success {
+            background-color: var(--success-color);
+            box-shadow: 0 2px 10px rgba(40, 167, 69, 0.4);
+        }
+
+        .alert-error {
+            background-color: var(--error-color);
+            box-shadow: 0 2px 10px rgba(220, 53, 69, 0.4);
+        }
+
         @media(max-width: 768px){
             header{
                 padding: 20px;
@@ -239,13 +334,15 @@ $proyek_list = ["Proyek A (Jakarta)", "Proyek B (Bandung)", "Proyek C (Surabaya)
                 width: 100%;
                 margin-top: 15px;
             }
+            nav li ul { 
+                position: static; 
+                border: none; 
+                box-shadow: none; 
+                padding-left: 20px; 
+            }
             .form-card{
                 padding: 30px 20px;
                 max-width: 100%; 
-            }
-            .form-row {
-                flex-direction: column; 
-                gap: 0;
             }
         }
     </style>
@@ -259,7 +356,7 @@ $proyek_list = ["Proyek A (Jakarta)", "Proyek B (Bandung)", "Proyek C (Surabaya)
     </div>
     <nav>
         <ul>
-            <li><a href="dashboard_direktur.php">Beranda</a></li>
+            <li><a href="dashboarddirektur.php">Beranda</a></li>
             <li><a href="#">Cuti ▾</a>
                 <ul>
                     <li><a href="persetujuan_cuti_direktur.php">Persetujuan Cuti</a></li>
@@ -270,6 +367,7 @@ $proyek_list = ["Proyek A (Jakarta)", "Proyek B (Bandung)", "Proyek C (Surabaya)
                 <ul>
                     <li><a href="persetujuan_khl_direktur.php">Persetujuan KHL</a></li>
                     <li><a href="riwayat_khl_direktur.php">Riwayat KHL</a></li>
+                    <li><a href="pengajuan_khl_direktur.php" style="color: var(--accent-color); font-weight: 700;">Pengajuan KHL</a></li>
                 </ul>
             </li>
             <li><a href="#">Karyawan ▾</a>
@@ -277,74 +375,66 @@ $proyek_list = ["Proyek A (Jakarta)", "Proyek B (Bandung)", "Proyek C (Surabaya)
                     <li><a href="data_karyawan_direktur.php">Data Karyawan</a></li>
                 </ul>
             </li>
-            <li><a href="#">Profil 👤</a></li>
+            <li><a href="#">Pelamar ▾</a>
+                <ul>
+                    <li><a href="riwayat_pelamar.php">Riwayat Pelamar</a></li>
+                </ul>
+            </li>
+            <li><a href="#">Profil ▾</a>
+                <ul>
+                    <li><a href="profil_direktur.php">Profil Saya</a></li>
+                    <li><a href="logout2.php">Logout</a></li>
+                </ul>
+            </li>
         </ul>
     </nav>
 </header>
 
 <div class="container">
     <div class="welcome-section">
-        <h1>Welcome, <?= htmlspecialchars($nama_direktur) ?>!</h1>
-        <p><?= htmlspecialchars($jabatan) ?></p>
+        <h1>Welcome, <?= $nama_direktur ?>!</h1>
+        <p>Anda login sebagai <?= $divisi_direktur ?></p>
     </div>
+
+    <?php if (!empty($success_message)): ?>
+        <div class="alert alert-success"><?= $success_message ?></div>
+    <?php endif; ?>
+    <?php if (!empty($error_message)): ?>
+        <div class="alert alert-error"><?= $error_message ?></div>
+    <?php endif; ?>
 
     <div class="form-card">
         <h2>Pengajuan KHL</h2>
-        <p class="subtitle">Ajukan Permohonan KHL Anda</p>
-
-        <form action="proses_pengajuan_khl.php" method="POST">
-            
+        <form action="pengajuan_khl_direktur.php" method="POST">
             <div class="form-group">
-                <label for="kode_karyawan">No. Kode Karyawan</label>
-                <input type="text" id="kode_karyawan" name="kode_karyawan" value="<?= htmlspecialchars($kode_karyawan) ?>" 
-                       onclick="this.select()" required>
+                <label for="kode_karyawan">Kode Karyawan</label>
+                <input type="text" id="kode_karyawan" name="kode_karyawan" 
+                        value="<?= htmlspecialchars($kode_karyawan_input_value) ?>" 
+                        placeholder="Contoh: YPD0001" required>
             </div>
-
+            
             <div class="form-group select-wrapper">
                 <label for="proyek">Proyek</label>
                 <select id="proyek" name="proyek" required>
                     <option value="" disabled selected>Pilih Proyek</option>
-                    <?php foreach ($proyek_list as $proyek): ?>
-                        <option value="<?= htmlspecialchars($proyek) ?>"><?= htmlspecialchars($proyek) ?></option>
+                    <?php 
+                    $selected_proyek = $_POST['proyek'] ?? '';
+                    foreach ($proyek_list as $proyek_item): ?>
+                        <option value="<?= htmlspecialchars($proyek_item) ?>" 
+                            <?= $selected_proyek == $proyek_item ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($proyek_item) ?>
+                        </option>
                     <?php endforeach; ?>
                 </select>
             </div>
-
+            
             <div class="form-group">
                 <label for="tanggal_khl">Tanggal KHL</label>
-                <input type="date" id="tanggal_khl" name="tanggal_khl" required>
+                <input type="date" id="tanggal_khl" name="tanggal_khl" 
+                        value="<?= $_POST['tanggal_khl'] ?? '' ?>" required>
             </div>
-
-            <h3>Jadwal Kerja KHL</h3>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="jam_mulai_kerja">Jam Mulai Kerja</label>
-                    <input type="time" id="jam_mulai_kerja" name="jam_mulai_kerja" value="08:00" required>
-                </div>
-                <div class="form-group">
-                    <label for="jam_akhir_kerja">Jam Akhir Kerja</label>
-                    <input type="time" id="jam_akhir_kerja" name="jam_akhir_kerja" value="17:00" required>
-                </div>
-            </div>
-
-            <h3>Jadwal Libur Pengganti</h3>
-            <div class="form-group">
-                <label for="tanggal_libur">Tanggal Libur</label>
-                <input type="date" id="tanggal_libur" name="tanggal_libur" required>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="jam_mulai_libur">Jam Mulai Libur</label>
-                    <input type="time" id="jam_mulai_libur" name="jam_mulai_libur" value="08:00" required>
-                </div>
-                <div class="form-group">
-                    <label for="jam_akhir_libur">Jam Akhir Libur</label>
-                    <input type="time" id="jam_akhir_libur" name="jam_akhir_libur" value="17:00" required>
-                </div>
-            </div>
-
-            <button type="submit" class="submit-btn">Masukkan</button>
+            
+            <button type="submit" class="submit-btn">Ajukan KHL</button>
         </form>
     </div>
 </div>
