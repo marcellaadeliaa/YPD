@@ -327,7 +327,13 @@ $conn->close();
                     <li><a href="data_direktur_pj.php">Data Direktur</a></li>
                 </ul>
             </li>
-            <li><a href="#">Profil ▾</a></li>
+            <li><a href="#">Profil ▾</a>
+                <ul>
+                    <li><a href="profil_direktur.php">Profil Direktur</a></li>
+                    <li><a href="logout2.php">Logout</a></li>
+                </ul>
+            </li>
+            
         </ul>
     </nav>
 </header>

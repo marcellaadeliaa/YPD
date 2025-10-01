@@ -178,7 +178,7 @@ h1 {text-align:center;font-size:26px;margin-bottom:30px;}
       <li><a href="#">Profil ▾</a>
         <ul>
           <li><a href="data_pribadi.php">Data Pribadi</a></li>
-          <li><a href="logout.php">Logout</a></li>
+          <li><a href="logout2.php">Logout</a></li>
         </ul>
       </li>
     </ul>

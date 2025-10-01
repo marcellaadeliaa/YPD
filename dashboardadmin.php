@@ -235,6 +235,10 @@ p.admin-title {
             </ul>
         </li>
         <li><a href="#">Profil ▾</a></li>
+          <ul>
+                <li><a href="logout2.php">Logout</a></li>
+            </ul>
+        </li>
         </ul>
     </nav>
 </header>
