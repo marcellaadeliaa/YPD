@@ -1,259 +1,250 @@
 <?php
-session_start();
-require 'config.php';
+// FILE: persetujuan_khl_direktur.php
+// ===========================================
+// BAGIAN 1: KONEKSI DAN PENGAMBILAN DATA KHL
+// ===========================================
 
-// Pastikan pengguna memiliki role direktur sebelum mengakses halaman
-// Ini adalah langkah keamanan penting, bisa Anda sesuaikan dengan sistem login Anda
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'direktur') {
-    // header("Location: login.php");
-    // exit();
+// --- Konfigurasi Database ---
+$server   = "localhost";
+$username = "root";
+$password = "";
+$database = "ypd_ibd";
+
+// Membuat koneksi
+$conn = mysqli_connect($server, $username, $password, $database);
+
+// Memeriksa koneksi
+if (!$conn) {
+    // Pastikan XAMPP MySQL sudah berjalan
+    die("Koneksi ke database gagal: " . mysqli_connect_error());
 }
 
-// === LOGIKA PERSETUJUAN / PENOLAKAN ===
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $id_pengajuan = $_POST['id_pengajuan'];
-    $status_baru = $_POST['status']; // Nilai: 'Disetujui' atau 'Ditolak'
-    
-    // Perbarui status di database
-    $stmt = $conn->prepare("UPDATE pengajuan_khl SET status = ? WHERE id = ?");
-    $stmt->bind_param("si", $status_baru, $id_pengajuan);
-    
-    if ($stmt->execute()) {
-        // Berhasil, bisa tambahkan pesan sukses di sini
-        echo "<script>alert('Pengajuan KHL berhasil diperbarui.');</script>";
-    } else {
-        // Gagal, bisa tambahkan pesan error
-        echo "<script>alert('Terjadi kesalahan saat memperbarui status.');</script>";
-    }
-    
-    $stmt->close();
-    
-    // Redirect untuk refresh halaman dan menghindari pengiriman ulang form
-    header("Location: persetujuan_khl_direktur.php");
-    exit();
+// --- Query Pengambilan Data KHL ---
+$sql = "
+    SELECT 
+        id,
+        nama_karyawan,
+        divisi,
+        tanggal_khl,     -- Tanggal KHL
+        alasan,        
+        status
+    FROM 
+        pengajuan_khl 
+    ORDER BY 
+        id DESC
+";
+
+$result = mysqli_query($conn, $sql);
+
+if (!$result) {
+    die("Query Gagal: " . mysqli_error($conn));
 }
 
-// === PENGAMBILAN DATA UNTUK TABEL ===
-// Ambil semua pengajuan KHL yang menunggu persetujuan direktur
-$query = "SELECT * FROM pengajuan_khl WHERE status = 'Menunggu Direktur' ORDER BY created_at ASC";
-$result = $conn->query($query);
+$role_title = "Direktur (Hanya Melihat Data)";
 ?>
-
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Persetujuan KHL</title>
+    <title>Daftar KHL Karyawan | Yayasan Purba Danarta</title>
     <style>
-        /* CSS yang diambil langsung dari dashboard_direktur.php */
-        body {
-          margin:0;
-          font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          background: linear-gradient(180deg,#1E105E 0%,#8897AE 100%);
-          min-height:100vh;
-          color:#fff;
+        :root { 
+            --primary-color: #1E105E; 
+            --accent-color: #4a3f81; 
+            --card-bg: #FFFFFF; 
+            --text-color-dark: #2e1f4f; 
+            --shadow-light: rgba(0,0,0,0.15); 
+            --success-color: #28a745; 
+            --danger-color: #dc3545; 
         }
-        header {
-          background:rgba(255,255,255,1);
-          padding:20px 40px;
-          display:flex;
-          justify-content:space-between;
-          align-items:center;
-          border-bottom:2px solid #34377c;
-          flex-wrap:wrap;
+        body { 
+            margin: 0; 
+            font-family: 'Segoe UI', sans-serif; 
+            background: linear-gradient(180deg, var(--primary-color) 0%, #a29bb8 100%); 
+            min-height: 100vh; 
+            padding-bottom: 40px; 
         }
-        .logo {
-          display:flex;
-          align-items:center;
-          gap:16px;
-          font-weight:500;
-          font-size:20px;
-          color:#2e1f4f;
+        
+        /* Header dan Navigasi */
+        header { 
+            background: var(--card-bg); 
+            padding: 20px 40px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            box-shadow: 0 4px 15px var(--shadow-light); 
         }
-        .logo img {
-          width: 50px;
-          height: 50px;
-          object-fit: contain;
-          border-radius: 50%;
+        .logo { 
+            display: flex; 
+            align-items: center; 
+            gap: 16px; 
+            font-weight: 500; 
+            font-size: 20px; 
+            color: var(--text-color-dark); 
         }
-        nav ul {
-          list-style:none;
-          margin:0;
-          padding:0;
-          display:flex;
-          gap:30px;
+        .logo img { 
+            width: 50px; 
+            height: 50px; 
+            object-fit: contain; 
+            border-radius: 50%; 
         }
-        nav li {
-          position:relative;
+        nav ul { 
+            list-style: none; 
+            margin: 0; 
+            padding: 0; 
+            display: flex; 
+            gap: 30px; 
         }
-        nav a {
-          text-decoration:none;
-          color:#333;
-          font-weight:600;
-          padding:8px 4px;
-          display:block;
+        nav li { position: relative; }
+        nav a { 
+            text-decoration: none; 
+            color: var(--text-color-dark); 
+            font-weight: 600; 
+            padding: 8px 4px; 
+            display: block; 
         }
-        nav li ul {
-          display:none;
-          position:absolute;
-          top:100%;
-          left:0;
-          background:#fff;
-          padding:10px 0;
-          border-radius:8px;
-          box-shadow:0 2px 8px rgba(0,0,0,.15);
-          min-width:200px;
-          z-index:999;
+        nav a:hover { color: var(--accent-color); }
+        nav li ul { 
+            display: none; 
+            position: absolute; 
+            top: 100%; 
+            left: 0; 
+            background: var(--card-bg); 
+            padding: 10px 0; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px var(--shadow-light); 
+            min-width: 200px; 
+            z-index: 999; 
         }
-        nav li:hover > ul { display:block; }
-        nav li ul li { padding:5px 20px; }
-        nav li ul li a {
-          color:#333;
-          font-weight:400;
-          white-space:nowrap;
+        nav li:hover > ul { display: block; }
+        nav li ul li { padding: 5px 20px; }
+        nav li ul li a { 
+            color: var(--text-color-dark); 
+            font-weight: 400; 
+            white-space: nowrap; 
         }
-        main {
-          max-width:1200px;
-          margin:40px auto;
-          padding:0 20px;
+        
+        /* Konten Utama */
+        main { 
+            max-width: 1200px; 
+            margin: 40px auto; 
+            padding: 0 20px; 
         }
-        h1 {
-          text-align:left;
-          font-size:28px;
-          margin-bottom:10px;
-          color:#fff;
+        .card { 
+            background: var(--card-bg); 
+            color: var(--text-color-dark); 
+            border-radius: 20px; 
+            padding: 30px 40px; 
+            box-shadow: 0 5px 20px var(--shadow-light); 
         }
-        .card {
-          background:#fff;
-          color:#2e1f4f;
-          border-radius:20px;
-          padding:30px 40px;
-          box-shadow:0 2px 10px rgba(0,0,0,0.15);
-          display: flex;
-          flex-direction: column;
+        h2 { 
+            margin-top: 0; 
+            color: var(--primary-color); 
         }
-        .btn {
-          display:inline-block;
-          color:#fff;
-          padding:12px 20px;
-          border-radius:8px;
-          text-decoration:none;
-          font-weight:600;
-          font-size:14px;
-          text-align: center;
-          border: none;
-          cursor: pointer;
+        
+        /* Tabel */
+        .data-table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 15px; 
         }
-        .btn:hover {
-            opacity: 0.9;
+        .data-table th, .data-table td { 
+            padding: 15px; 
+            text-align: left; 
+            border-bottom: 1px solid #ddd; 
         }
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-            color: #2e1f4f;
+        .data-table th { background-color: #f8f9fa; }
+        
+        /* Status Badge */
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            white-space: nowrap;
         }
-        .data-table th, .data-table td {
-            padding: 15px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        .data-table th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-        }
-        .data-table tbody tr:hover {
-            background-color: #f1f1f1;
-        }
-        @media(max-width:768px){
-          header{flex-direction:column;align-items:flex-start;}
-          nav ul{flex-direction:column;gap:10px;width:100%;margin-top:15px;}
-          nav li ul {
-            position:static;
-            border:none;
-            box-shadow:none;
-            padding-left: 20px;
-          }
-        }
+        .status-approved { background-color: #4CAF50; color: white; }
+        .status-pending { background-color: #FFC107; color: #333; }
+        .status-rejected { background-color: var(--danger-color); color: white; }
     </style>
 </head>
 <body>
-
 <header>
-  <div class="logo">
-    <img src="image/namayayasan.png" alt="Logo Yayasan">
-    <span>Yayasan Purba Danarta</span>
-  </div>
-  <nav>
-    <ul>
-      <li><a href="dashboard_direktur.php">Beranda</a></li>
-      <li><a href="#">Cuti ▾</a>
+    <div class="logo">
+        <img src="image/namayayasan.png" alt="Logo Yayasan">
+        <span>Yayasan Purba Danarta</span>
+    </div>
+    <nav>
         <ul>
-          <li><a href="persetujuan_cuti_direktur.php">Persetujuan Cuti</a></li>
-          <li><a href="riwayat_cuti_direktur.php">Riwayat Cuti</a></li>
+            <li><a href="dashboard_direktur.php">Beranda</a></li>
+            <li><a href="#">Cuti ▾</a>
+                <ul>
+                    <li><a href="persetujuan_cuti_direktur.php">Persetujuan Cuti Karyawan</a></li>
+                    <li><a href="riwayat_cuti_karyawan.php">Riwayat Cuti Karyawan</a></li>
+                    <li><a href="pengajuan_cuti_pribadi.php">Ajukan Cuti Pribadi</a></li>
+                </ul>
+            </li>
+            <li><a href="#">KHL ▾</a>
+                <ul>
+                    <li><a href="persetujuan_khl_direktur.php">Persetujuan KHL Karyawan</a></li>
+                    <li><a href="riwayat_khl_karyawan.php">Riwayat KHL Karyawan</a></li>
+                    <li><a href="pengajuan_khl_pribadi.php">Ajukan KHL Pribadi</a></li>
+                </ul>
+            </li>
+            <li><a href="karyawan_list.php">Karyawan</a></li>
+            <li><a href="#">Profil ▾</a>
+                <ul>
+                    <li><a href="profil_direktur.php">Profil Saya</a></li>
+                    <li><a href="logout.php">Logout</a></li>
+                </ul>
+            </li>
         </ul>
-      </li>
-      <li><a href="#">KHL ▾</a>
-        <ul>
-          <li><a href="persetujuan_khl_direktur.php">Persetujuan KHL</a></li>
-          <li><a href="riwayat_khl_direktur.php">Riwayat KHL</a></li>
-        </ul>
-      </li>
-      <li><a href="#">Karyawan ▾</a>
-        <ul>
-          <li><a href="data_karyawan_direktur.php">Data </a></li>
-        </ul>
-      </li>
-      <li><a href="#">Profil ▾</a></li>
-    </ul>
-  </nav>
+    </nav>
 </header>
-
 <main>
-    <h1>Persetujuan KHL </h1>
-    <p style="color:#fff; margin-bottom: 20px; opacity: 0.9;">Daftar pengajuan KHL yang perlu Anda tinjau.</p>
     <div class="card">
+        <h2>Daftar Pengajuan KHL (<?= $role_title ?>)</h2>
+        <p>Tampilan ini memberikan gambaran umum data KHL di seluruh perusahaan.</p>
         <table class="data-table">
             <thead>
                 <tr>
-                    <th>Nama </th>
+                    <th>ID</th>
+                    <th>Nama Karyawan</th>
                     <th>Divisi</th>
                     <th>Tanggal KHL</th>
-                    <th>Alasan</th>
-                    <th>Aksi</th>
+                    <th>Alasan (Keterangan)</th> 
+                    <th>Status</th>
                 </tr>
             </thead>
             <tbody>
-                <?php if ($result->num_rows > 0): ?>
-                    <?php while($row = $result->fetch_assoc()): ?>
+                <?php if (mysqli_num_rows($result) > 0): ?>
+                    <?php while($khl = mysqli_fetch_assoc($result)): 
+                        $status_text = htmlspecialchars($khl['status']);
+                        $status_class = 'status-pending';
+                        if (strpos($status_text, 'Disetujui') !== false) {
+                            $status_class = 'status-approved';
+                        } elseif (strpos($status_text, 'Ditolak') !== false) {
+                            $status_class = 'status-rejected';
+                        }
+                    ?>
                         <tr>
-                            <td><?= htmlspecialchars($row['nama_karyawan']) ?></td>
-                            <td><?= htmlspecialchars($row['divisi']) ?></td>
-                            <td><?= date('d M Y', strtotime($row['tanggal_khl'])) ?></td>
-                            <td><?= htmlspecialchars($row['alasan']) ?></td>
-                            <td>
-                                <form action="persetujuan_khl_direktur.php" method="post" style="display:inline;">
-                                    <input type="hidden" name="id_pengajuan" value="<?= $row['id'] ?>">
-                                    <input type="hidden" name="status" value="Disetujui">
-                                    <button type="submit" class="btn" style="background-color: green;">Setujui</button>
-                                </form>
-                                <form action="persetujuan_khl_direktur.php" method="post" style="display:inline;">
-                                    <input type="hidden" name="id_pengajuan" value="<?= $row['id'] ?>">
-                                    <input type="hidden" name="status" value="Ditolak">
-                                    <button type="submit" class="btn" style="background-color: red;">Tolak</button>
-                                </form>
-                            </td>
+                            <td><?= htmlspecialchars($khl['id']) ?></td>
+                            <td><?= htmlspecialchars($khl['nama_karyawan']) ?></td>
+                            <td><?= htmlspecialchars($khl['divisi']) ?></td>
+                            <td><?= date('d-m-Y', strtotime($khl['tanggal_khl'])) ?></td>
+                            <td><?= htmlspecialchars($khl['alasan']) ?></td>
+                            <td><span class="status-badge <?= $status_class ?>"><?= $status_text ?></span></td>
                         </tr>
                     <?php endwhile; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="5">Tidak ada pengajuan KHL yang perlu disetujui.</td>
+                        <td colspan="6" style="text-align:center;">Tidak ada pengajuan KHL yang ditemukan.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>
         </table>
     </div>
 </main>
+<?php mysqli_close($conn); ?>
 </body>
 </html>

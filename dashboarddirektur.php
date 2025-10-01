@@ -1,27 +1,31 @@
 <?php
 // FILE: dashboard_direktur.php
+
+session_start(); // Tambahkan session start
+
 require 'config.php';
 
 // Data Direktur (Placeholder) - Sebaiknya diambil dari session
 $nama_direktur = "Pico"; 
 $jabatan = "Direktur";
 
-// 1. Mengambil jumlah cuti DIREKSI yang menunggu persetujuan
+// 1. Mengambil jumlah cuti DIREKSI yang menunggu persetujuan ('Menunggu Direktur')
 $query_cuti_direksi = "SELECT COUNT(id) AS total FROM pengajuan_cuti WHERE status = 'Menunggu Direktur'";
 $result_cuti_direksi = $conn->query($query_cuti_direksi);
 $cuti_menunggu_direksi = $result_cuti_direksi->fetch_assoc()['total'] ?? 0;
 
-// 2. Mengambil jumlah KHL DIREKSI yang menunggu persetujuan
+// 2. Mengambil jumlah KHL DIREKSI yang menunggu persetujuan ('Menunggu Direktur')
 $query_khl_direksi = "SELECT COUNT(id) AS total FROM pengajuan_khl WHERE status = 'Menunggu Direktur'";
 $result_khl_direksi = $conn->query($query_khl_direksi);
 $khl_menunggu_direksi = $result_khl_direksi->fetch_assoc()['total'] ?? 0;
 
-// 3. Mengambil jumlah cuti KARYAWAN yang menunggu persetujuan
+// 3. Mengambil jumlah cuti KARYAWAN yang menunggu persetujuan ('Menunggu HRD' / PJ)
+// Asumsi Direktur juga harus menyetujui pengajuan yang statusnya masih 'Menunggu HRD'
 $query_cuti_karyawan = "SELECT COUNT(id) AS total FROM pengajuan_cuti WHERE status = 'Menunggu HRD'";
 $result_cuti_karyawan = $conn->query($query_cuti_karyawan);
 $cuti_menunggu_karyawan = $result_cuti_karyawan->fetch_assoc()['total'] ?? 0;
 
-// 4. Mengambil jumlah KHL KARYAWAN yang menunggu persetujuan
+// 4. Mengambil jumlah KHL KARYAWAN yang menunggu persetujuan ('Menunggu HRD' / PJ)
 $query_khl_karyawan = "SELECT COUNT(id) AS total FROM pengajuan_khl WHERE status = 'Menunggu HRD'";
 $result_khl_karyawan = $conn->query($query_khl_karyawan);
 $khl_menunggu_karyawan = $result_khl_karyawan->fetch_assoc()['total'] ?? 0;
@@ -92,12 +96,12 @@ $conn->close();
         </div>
         <div class="card">
             <h3>KHL Penanggung Jawab dan karyawan <br> Menunggu Persetujuan</h3>
-             <p class="pending-count"><?= $total_khl_menunggu ?></p>
+            <p class="pending-count"><?= $total_khl_menunggu ?></p>
             <a href="persetujuan_khl_direktur.php" class="btn">Lihat Rincian</a>
         </div>
         <div class="card">
             <h3>Seluruh Data karyawan</h3>
-             <p class="pending-count"><?= $total_semua_karyawan ?></p>
+            <p class="pending-count"><?= $total_semua_karyawan ?></p>
             <a href="data_karyawan_direktur.php" class="btn">Lihat Rincian</a>
         </div>
     </div>
