@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Sep 30, 2025 at 03:58 PM
+-- Generation Time: Oct 01, 2025 at 03:05 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -20,6 +20,39 @@ SET time_zone = "+00:00";
 --
 -- Database: `ypd_ibd`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `data_karyawan`
+--
+
+CREATE TABLE `data_karyawan` (
+  `id_karyawan` int(11) NOT NULL,
+  `kode_karyawan` varchar(20) NOT NULL,
+  `nama_lengkap` varchar(100) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `jabatan` varchar(50) NOT NULL,
+  `divisi` varchar(50) NOT NULL,
+  `role` enum('karyawan','direktur','admin_sdm') NOT NULL DEFAULT 'karyawan',
+  `no_telp` varchar(20) DEFAULT NULL,
+  `sisa_cuti_tahunan` int(3) DEFAULT 12,
+  `sisa_cuti_lustrum` int(3) DEFAULT 5,
+  `status_aktif` enum('aktif','non_aktif') NOT NULL DEFAULT 'aktif',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `data_karyawan`
+--
+
+INSERT INTO `data_karyawan` (`id_karyawan`, `kode_karyawan`, `nama_lengkap`, `email`, `password`, `jabatan`, `divisi`, `role`, `no_telp`, `sisa_cuti_tahunan`, `sisa_cuti_lustrum`, `status_aktif`, `created_at`) VALUES
+(1, 'YPD001', 'Pico', 'pico.dir@ypd.com', 'hashed_password_direktur', 'Direktur Utama', 'Direksi', 'direktur', '081234567890', 12, 5, 'aktif', '2025-09-30 23:37:17'),
+(2, 'YPD002', 'Cell', 'cell.sdm@ypd.com', 'hashed_password_admin', 'Admin SDM', 'HRD', 'admin_sdm', '081234567891', 12, 5, 'aktif', '2025-09-30 23:37:17'),
+(3, 'YPD101', 'Adrian', 'adrian.karyawan@ypd.com', 'hashed_password_karyawan', 'Staf Marketing', 'Marketing', 'karyawan', '081234567892', 12, 5, 'aktif', '2025-09-30 23:37:17'),
+(4, 'YPD003', 'Ria', 'ria.direksi@ypd.com', 'hashed_password_ria', 'Direktur Operasional', 'Direksi', 'direktur', '081234567893', 12, 5, 'aktif', '2025-09-30 23:45:32'),
+(5, 'YPD004', 'Dani', 'dani.pj@ypd.com', 'hashed_password_dani', 'Kepala Proyek B', 'IT', 'karyawan', '081234567894', 12, 5, 'aktif', '2025-09-30 23:45:32');
 
 -- --------------------------------------------------------
 
@@ -272,6 +305,14 @@ INSERT INTO `users` (`id`, `nama_lengkap`, `email`, `password`, `created_at`) VA
 --
 
 --
+-- Indexes for table `data_karyawan`
+--
+ALTER TABLE `data_karyawan`
+  ADD PRIMARY KEY (`id_karyawan`),
+  ADD UNIQUE KEY `kode_karyawan` (`kode_karyawan`),
+  ADD UNIQUE KEY `email` (`email`);
+
+--
 -- Indexes for table `data_pelamar`
 --
 ALTER TABLE `data_pelamar`
@@ -349,6 +390,12 @@ ALTER TABLE `users`
 --
 -- AUTO_INCREMENT for dumped tables
 --
+
+--
+-- AUTO_INCREMENT for table `data_karyawan`
+--
+ALTER TABLE `data_karyawan`
+  MODIFY `id_karyawan` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `data_pelamar`

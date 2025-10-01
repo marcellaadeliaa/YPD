@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.1
+-- version 5.1.1
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 01, 2025 at 03:05 AM
--- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
+-- Waktu pembuatan: 01 Okt 2025 pada 03.57
+-- Versi server: 10.4.22-MariaDB
+-- Versi PHP: 7.3.33
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -24,7 +24,7 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
--- Table structure for table `data_karyawan`
+-- Struktur dari tabel `data_karyawan`
 --
 
 CREATE TABLE `data_karyawan` (
@@ -35,29 +35,29 @@ CREATE TABLE `data_karyawan` (
   `password` varchar(255) NOT NULL,
   `jabatan` varchar(50) NOT NULL,
   `divisi` varchar(50) NOT NULL,
-  `role` enum('karyawan','direktur','admin_sdm') NOT NULL DEFAULT 'karyawan',
+  `role` enum('karyawan','direktur','admin','penanggung jawab') NOT NULL DEFAULT 'karyawan',
   `no_telp` varchar(20) DEFAULT NULL,
   `sisa_cuti_tahunan` int(3) DEFAULT 12,
   `sisa_cuti_lustrum` int(3) DEFAULT 5,
   `status_aktif` enum('aktif','non_aktif') NOT NULL DEFAULT 'aktif',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
--- Dumping data for table `data_karyawan`
+-- Dumping data untuk tabel `data_karyawan`
 --
 
 INSERT INTO `data_karyawan` (`id_karyawan`, `kode_karyawan`, `nama_lengkap`, `email`, `password`, `jabatan`, `divisi`, `role`, `no_telp`, `sisa_cuti_tahunan`, `sisa_cuti_lustrum`, `status_aktif`, `created_at`) VALUES
 (1, 'YPD001', 'Pico', 'pico.dir@ypd.com', 'hashed_password_direktur', 'Direktur Utama', 'Direksi', 'direktur', '081234567890', 12, 5, 'aktif', '2025-09-30 23:37:17'),
-(2, 'YPD002', 'Cell', 'cell.sdm@ypd.com', 'hashed_password_admin', 'Admin SDM', 'HRD', 'admin_sdm', '081234567891', 12, 5, 'aktif', '2025-09-30 23:37:17'),
-(3, 'YPD101', 'Adrian', 'adrian.karyawan@ypd.com', 'hashed_password_karyawan', 'Staf Marketing', 'Marketing', 'karyawan', '081234567892', 12, 5, 'aktif', '2025-09-30 23:37:17'),
-(4, 'YPD003', 'Ria', 'ria.direksi@ypd.com', 'hashed_password_ria', 'Direktur Operasional', 'Direksi', 'direktur', '081234567893', 12, 5, 'aktif', '2025-09-30 23:45:32'),
-(5, 'YPD004', 'Dani', 'dani.pj@ypd.com', 'hashed_password_dani', 'Kepala Proyek B', 'IT', 'karyawan', '081234567894', 12, 5, 'aktif', '2025-09-30 23:45:32');
+(2, 'YPD002', 'Cell', 'cell.sdm@ypd.com', 'hashed_password_admin', 'Admin SDM', 'SDM', '', '081234567891', 12, 5, 'aktif', '2025-09-30 23:37:17'),
+(3, 'YPD101', 'Adrian', 'adrian.karyawan@ypd.com', 'hashed_password_karyawan', 'Staf Training', 'Training', 'karyawan', '081234567892', 12, 5, 'aktif', '2025-09-30 23:37:17'),
+(4, 'YPD003', 'Ria', 'ria.direksi@ypd.com', 'hashed_password_ria', 'Penanggung Jawab Wisma', 'Wisma', 'penanggung jawab', '081234567893', 12, 5, 'aktif', '2025-09-30 23:45:32'),
+(5, 'YPD004', 'Dani', 'dani.pj@ypd.com', 'hashed_password_dani', 'Staf Keuangan', 'Keuangan', 'karyawan', '081234567894', 12, 5, 'aktif', '2025-09-30 23:45:32');
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `data_pelamar`
+-- Struktur dari tabel `data_pelamar`
 --
 
 CREATE TABLE `data_pelamar` (
@@ -85,10 +85,10 @@ CREATE TABLE `data_pelamar` (
   `status_seleksi` varchar(100) DEFAULT 'Proses seleksi sedang berlangsung',
   `pengumuman` text DEFAULT 'Belum ada pengumuman saat ini.',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
--- Dumping data for table `data_pelamar`
+-- Dumping data untuk tabel `data_pelamar`
 --
 
 INSERT INTO `data_pelamar` (`id`, `user_id`, `nama_lengkap`, `posisi_dilamar`, `jenis_kelamin`, `tempat_lahir`, `tanggal_lahir`, `nik`, `alamat_rumah`, `no_telp`, `email`, `agama`, `kontak_darurat`, `pendidikan_terakhir`, `surat_lamaran`, `cv`, `photo_formal`, `ijazah_transkrip`, `berkas_pendukung`, `ktp`, `status`, `status_seleksi`, `pengumuman`, `created_at`) VALUES
@@ -100,7 +100,7 @@ INSERT INTO `data_pelamar` (`id`, `user_id`, `nama_lengkap`, `posisi_dilamar`, `
 -- --------------------------------------------------------
 
 --
--- Table structure for table `lamaran`
+-- Struktur dari tabel `lamaran`
 --
 
 CREATE TABLE `lamaran` (
@@ -108,12 +108,12 @@ CREATE TABLE `lamaran` (
   `user_id` int(11) NOT NULL,
   `status` varchar(50) DEFAULT 'Menunggu Proses',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `password_resets`
+-- Struktur dari tabel `password_resets`
 --
 
 CREATE TABLE `password_resets` (
@@ -123,10 +123,10 @@ CREATE TABLE `password_resets` (
   `expires_at` datetime NOT NULL,
   `used` tinyint(1) DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
--- Dumping data for table `password_resets`
+-- Dumping data untuk tabel `password_resets`
 --
 
 INSERT INTO `password_resets` (`id`, `email`, `token`, `expires_at`, `used`, `created_at`) VALUES
@@ -135,7 +135,7 @@ INSERT INTO `password_resets` (`id`, `email`, `token`, `expires_at`, `used`, `cr
 -- --------------------------------------------------------
 
 --
--- Table structure for table `pengajuan_cuti`
+-- Struktur dari tabel `pengajuan_cuti`
 --
 
 CREATE TABLE `pengajuan_cuti` (
@@ -149,12 +149,12 @@ CREATE TABLE `pengajuan_cuti` (
   `alasan` text DEFAULT NULL,
   `status` varchar(50) NOT NULL DEFAULT 'Menunggu PJ',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `pengajuan_cuti_pj`
+-- Struktur dari tabel `pengajuan_cuti_pj`
 --
 
 CREATE TABLE `pengajuan_cuti_pj` (
@@ -168,12 +168,12 @@ CREATE TABLE `pengajuan_cuti_pj` (
   `alasan` text NOT NULL,
   `status` varchar(50) NOT NULL DEFAULT 'Disetujui',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `pengajuan_khl`
+-- Struktur dari tabel `pengajuan_khl`
 --
 
 CREATE TABLE `pengajuan_khl` (
@@ -185,12 +185,12 @@ CREATE TABLE `pengajuan_khl` (
   `alasan` text DEFAULT NULL,
   `status` varchar(50) NOT NULL DEFAULT 'Menunggu PJ',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `pengumuman`
+-- Struktur dari tabel `pengumuman`
 --
 
 CREATE TABLE `pengumuman` (
@@ -199,10 +199,10 @@ CREATE TABLE `pengumuman` (
   `isi` text NOT NULL,
   `tanggal` timestamp NOT NULL DEFAULT current_timestamp(),
   `status` enum('active','inactive') DEFAULT 'active'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
--- Dumping data for table `pengumuman`
+-- Dumping data untuk tabel `pengumuman`
 --
 
 INSERT INTO `pengumuman` (`id`, `judul`, `isi`, `tanggal`, `status`) VALUES
@@ -212,7 +212,7 @@ INSERT INTO `pengumuman` (`id`, `judul`, `isi`, `tanggal`, `status`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `pengumuman_pelamar`
+-- Struktur dari tabel `pengumuman_pelamar`
 --
 
 CREATE TABLE `pengumuman_pelamar` (
@@ -222,10 +222,10 @@ CREATE TABLE `pengumuman_pelamar` (
   `pesan` text DEFAULT NULL,
   `tanggal` date DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
--- Dumping data for table `pengumuman_pelamar`
+-- Dumping data untuk tabel `pengumuman_pelamar`
 --
 
 INSERT INTO `pengumuman_pelamar` (`id`, `pelamar_id`, `tahap`, `pesan`, `tanggal`, `created_at`) VALUES
@@ -251,7 +251,7 @@ INSERT INTO `pengumuman_pelamar` (`id`, `pelamar_id`, `tahap`, `pesan`, `tanggal
 -- --------------------------------------------------------
 
 --
--- Table structure for table `pengumuman_umum`
+-- Struktur dari tabel `pengumuman_umum`
 --
 
 CREATE TABLE `pengumuman_umum` (
@@ -261,24 +261,24 @@ CREATE TABLE `pengumuman_umum` (
   `tanggal` date NOT NULL,
   `status` enum('active','inactive') DEFAULT 'active',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `sisa_cuti`
+-- Struktur dari tabel `sisa_cuti`
 --
 
 CREATE TABLE `sisa_cuti` (
   `id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `sisa_cuti` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
 --
--- Table structure for table `users`
+-- Struktur dari tabel `users`
 --
 
 CREATE TABLE `users` (
@@ -287,25 +287,24 @@ CREATE TABLE `users` (
   `email` varchar(100) NOT NULL,
   `password` varchar(255) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
--- Dumping data for table `users`
+-- Dumping data untuk tabel `users`
 --
 
 INSERT INTO `users` (`id`, `nama_lengkap`, `email`, `password`, `created_at`) VALUES
 (1, '', 'marcellaadelia06@gmail.com', '$2y$10$IDfw5.PGi8gmnxb3N4apteA47WEQxU0raaIjHP1FVn9goGnoGJHD2', '2025-09-28 09:40:50'),
 (2, '', 'marcellaadelia1003@gmail.com', '$2y$10$3STTMIcjJptqnI4paiNI.uFWD03II3QUblNpxpxUqn4SLtiSBS4Lm', '2025-09-30 06:25:09'),
 (4, '', 'marcellaadelia07@gmail.com', '$2y$10$JPf5yS847fIq3d92uxvot.0dKnlccHktiZrsAZYQ.KkrHTdf1l3kq', '2025-09-30 07:21:32'),
-(5, '', 'marcellaadelia08@gmail.com', '$2y$10$Hqxci5VEETSDKYsXCOa0LOyULs.M/gJXD8qXbDwFEi8giiiXJsmyu', '2025-09-30 07:50:15'),
-(6, '', 'lauren@gmail.com', '$2y$10$04sTY/X5sG98okLJPRyl9uq38fmAFpjGQ22AVtUg9ryKfAjWdeTbG', '2025-09-30 12:30:51');
+(5, '', 'marcellaadelia08@gmail.com', '$2y$10$Hqxci5VEETSDKYsXCOa0LOyULs.M/gJXD8qXbDwFEi8giiiXJsmyu', '2025-09-30 07:50:15');
 
 --
 -- Indexes for dumped tables
 --
 
 --
--- Indexes for table `data_karyawan`
+-- Indeks untuk tabel `data_karyawan`
 --
 ALTER TABLE `data_karyawan`
   ADD PRIMARY KEY (`id_karyawan`),
@@ -313,21 +312,21 @@ ALTER TABLE `data_karyawan`
   ADD UNIQUE KEY `email` (`email`);
 
 --
--- Indexes for table `data_pelamar`
+-- Indeks untuk tabel `data_pelamar`
 --
 ALTER TABLE `data_pelamar`
   ADD PRIMARY KEY (`id`),
   ADD KEY `fk_user` (`user_id`);
 
 --
--- Indexes for table `lamaran`
+-- Indeks untuk tabel `lamaran`
 --
 ALTER TABLE `lamaran`
   ADD PRIMARY KEY (`id`),
   ADD KEY `user_id` (`user_id`);
 
 --
--- Indexes for table `password_resets`
+-- Indeks untuk tabel `password_resets`
 --
 ALTER TABLE `password_resets`
   ADD PRIMARY KEY (`id`),
@@ -335,173 +334,149 @@ ALTER TABLE `password_resets`
   ADD KEY `token` (`token`);
 
 --
--- Indexes for table `pengajuan_cuti`
+-- Indeks untuk tabel `pengajuan_cuti`
 --
 ALTER TABLE `pengajuan_cuti`
   ADD PRIMARY KEY (`id`),
   ADD KEY `user_id` (`user_id`);
 
 --
--- Indexes for table `pengajuan_cuti_pj`
+-- Indeks untuk tabel `pengajuan_cuti_pj`
 --
 ALTER TABLE `pengajuan_cuti_pj`
   ADD PRIMARY KEY (`id`),
   ADD KEY `user_id` (`user_id`);
 
 --
--- Indexes for table `pengajuan_khl`
+-- Indeks untuk tabel `pengajuan_khl`
 --
 ALTER TABLE `pengajuan_khl`
   ADD PRIMARY KEY (`id`),
   ADD KEY `user_id` (`user_id`);
 
 --
--- Indexes for table `pengumuman`
+-- Indeks untuk tabel `pengumuman`
 --
 ALTER TABLE `pengumuman`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `pengumuman_pelamar`
+-- Indeks untuk tabel `pengumuman_pelamar`
 --
 ALTER TABLE `pengumuman_pelamar`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `pengumuman_umum`
+-- Indeks untuk tabel `pengumuman_umum`
 --
 ALTER TABLE `pengumuman_umum`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `sisa_cuti`
+-- Indeks untuk tabel `sisa_cuti`
 --
 ALTER TABLE `sisa_cuti`
   ADD PRIMARY KEY (`id`),
   ADD KEY `user_id` (`user_id`);
 
 --
--- Indexes for table `users`
+-- Indeks untuk tabel `users`
 --
 ALTER TABLE `users`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `email` (`email`);
 
 --
--- AUTO_INCREMENT for dumped tables
+-- AUTO_INCREMENT untuk tabel yang dibuang
 --
 
 --
--- AUTO_INCREMENT for table `data_karyawan`
+-- AUTO_INCREMENT untuk tabel `data_karyawan`
 --
 ALTER TABLE `data_karyawan`
   MODIFY `id_karyawan` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
--- AUTO_INCREMENT for table `data_pelamar`
+-- AUTO_INCREMENT untuk tabel `data_pelamar`
 --
 ALTER TABLE `data_pelamar`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
--- AUTO_INCREMENT for table `lamaran`
+-- AUTO_INCREMENT untuk tabel `lamaran`
 --
 ALTER TABLE `lamaran`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `password_resets`
+-- AUTO_INCREMENT untuk tabel `password_resets`
 --
 ALTER TABLE `password_resets`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
--- AUTO_INCREMENT for table `pengajuan_cuti`
+-- AUTO_INCREMENT untuk tabel `pengajuan_cuti`
 --
 ALTER TABLE `pengajuan_cuti`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `pengajuan_cuti_pj`
+-- AUTO_INCREMENT untuk tabel `pengajuan_cuti_pj`
 --
 ALTER TABLE `pengajuan_cuti_pj`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `pengajuan_khl`
+-- AUTO_INCREMENT untuk tabel `pengajuan_khl`
 --
 ALTER TABLE `pengajuan_khl`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `pengumuman`
+-- AUTO_INCREMENT untuk tabel `pengumuman`
 --
 ALTER TABLE `pengumuman`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
--- AUTO_INCREMENT for table `pengumuman_pelamar`
+-- AUTO_INCREMENT untuk tabel `pengumuman_pelamar`
 --
 ALTER TABLE `pengumuman_pelamar`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
--- AUTO_INCREMENT for table `pengumuman_umum`
+-- AUTO_INCREMENT untuk tabel `pengumuman_umum`
 --
 ALTER TABLE `pengumuman_umum`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `sisa_cuti`
+-- AUTO_INCREMENT untuk tabel `sisa_cuti`
 --
 ALTER TABLE `sisa_cuti`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `users`
+-- AUTO_INCREMENT untuk tabel `users`
 --
 ALTER TABLE `users`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
--- Constraints for dumped tables
+-- Ketidakleluasaan untuk tabel pelimpahan (Dumped Tables)
 --
 
 --
--- Constraints for table `data_pelamar`
+-- Ketidakleluasaan untuk tabel `data_pelamar`
 --
 ALTER TABLE `data_pelamar`
   ADD CONSTRAINT `fk_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 --
--- Constraints for table `lamaran`
+-- Ketidakleluasaan untuk tabel `lamaran`
 --
 ALTER TABLE `lamaran`
   ADD CONSTRAINT `lamaran_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `pengajuan_cuti`
---
-ALTER TABLE `pengajuan_cuti`
-  ADD CONSTRAINT `pengajuan_cuti_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
-
---
--- Constraints for table `pengajuan_cuti_pj`
---
-ALTER TABLE `pengajuan_cuti_pj`
-  ADD CONSTRAINT `pengajuan_cuti_pj_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
-
---
--- Constraints for table `pengajuan_khl`
---
-ALTER TABLE `pengajuan_khl`
-  ADD CONSTRAINT `pengajuan_khl_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
-
---
--- Constraints for table `sisa_cuti`
---
-ALTER TABLE `sisa_cuti`
-  ADD CONSTRAINT `sisa_cuti_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
