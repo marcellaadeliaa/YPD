@@ -1,7 +1,7 @@
 <?php
 $host = "localhost";
-$user = "root"; 
-$pass = "";     
+$user = "root";
+$pass = "";
 $db   = "ypd_ibd";
 
 $conn = new mysqli($host, $user, $pass, $db);

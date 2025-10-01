@@ -56,7 +56,7 @@ $sisa_cuti_pj = 7;
                 </ul>
             </li>
             <li><a href="karyawan_divisi.php">Karyawan Divisi</a></li>
-            <li><a href="#">Profil ▾</a></li>
+            <li><a href="logout2.php">Logout</a></li>
         </ul>
     </nav>
 </header>
