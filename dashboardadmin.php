@@ -7,11 +7,7 @@ $query_total_pelamar = "SELECT COUNT(id) AS total FROM data_pelamar WHERE status
 $result_total = $conn->query($query_total_pelamar);
 $total_pelamar = $result_total->fetch_assoc()['total'] ?? 0;
 
-// 2. Placeholder untuk data Cuti dan KHL
-$cuti_menunggu = 5; // Contoh data statis
-$khl_menunggu = 3;  // Contoh data statis
-
-// 3. Mengambil data untuk tabel
+// 2. Mengambil data untuk tabel
 $query_tabel = "SELECT nama_lengkap, posisi_dilamar, created_at FROM data_pelamar ORDER BY created_at DESC LIMIT 5";
 $result_tabel = $conn->query($query_tabel);
 
@@ -164,13 +160,12 @@ p.admin-title {
     background-color: #352d5c;
 }
 
-/* Style khusus untuk angka pada kartu Cuti & KHL */
-.pending-count {
-    font-size: 2.5rem;
-    font-weight: 700;
+/* Style untuk ikon kalender */
+.calendar-icon {
+    font-size: 3rem;
+    text-align: center;
+    margin: 20px 0;
     color: #1E105E;
-    margin-top: auto;
-    margin-bottom: 15px;
 }
 
 /* ===== TABEL DATA (Style baru) ===== */
@@ -217,7 +212,6 @@ p.admin-title {
         <li><a href="dashboardadmin.php">Beranda</a></li>
         <li><a href="#">Cuti ▾</a>
             <ul>
-            <li><a href="administrasi_cuti.php">Administrasi Cuti</a></li>
             <li><a href="riwayat_cuti_pegawai.php">Riwayat Cuti</a></li>
             <li><a href="kalender_cuti.php">Kalender Cuti</a></li>
             <li><a href="daftar_sisa_cuti.php">Sisa Cuti Karyawan</a></li>
@@ -225,7 +219,6 @@ p.admin-title {
         </li>
         <li><a href="#">KHL ▾</a>
             <ul>
-                <li><a href="administrasi_khl.php">Administrasi KHL</a></li>
                 <li><a href="riwayat_khl.php">Riwayat KHL</a></li>
                 <li><a href="kalender_khl.php">Kalender KHL</a></li>
             </ul>
@@ -236,10 +229,11 @@ p.admin-title {
                 <li><a href="riwayat_pelamar.php">Riwayat Pelamar</a></li>
             </ul>
         </li>
-        <li><a href="#">Karyawan ▾</a></li>
+        <li><a href="#">Karyawan ▾</a>
             <ul>
                 <li><a href="data_karyawan.php">Data Karyawan</a></li>
             </ul>
+        </li>
         <li><a href="#">Profil ▾</a></li>
         </ul>
     </nav>
@@ -261,15 +255,17 @@ p.admin-title {
         </div>
 
         <div class="card">
-            <h3>Cuti Menunggu Persetujuan</h3>
-            <p class="pending-count"><?php echo $cuti_menunggu; ?></p>
-            <a href="administrasicuti.php" class="btn">Lihat Rincian</a>
+            <h3>Kalender Cuti</h3>
+            <div class="calendar-icon">📅</div>
+            <p>Akses kalender cuti karyawan untuk melihat jadwal cuti yang telah direncanakan.</p>
+            <a href="kalender_cuti.php" class="btn">Lihat Kalender Cuti</a>
         </div>
 
         <div class="card">
-            <h3>KHL Menunggu Persetujuan</h3>
-            <p class="pending-count"><?php echo $khl_menunggu; ?></p>
-            <a href="administrasikhl.php" class="btn">Lihat Rincian</a>
+            <h3>Kalender KHL</h3>
+            <div class="calendar-icon">📅</div>
+            <p>Akses kalender Kerja Hari Libur (KHL) untuk melihat jadwal kerja di hari libur.</p>
+            <a href="kalender_khl.php" class="btn">Lihat Kalender KHL</a>
         </div>
     </div>
 
