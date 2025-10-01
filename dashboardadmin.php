@@ -212,7 +212,7 @@ p.admin-title {
         <li><a href="dashboardadmin.php">Beranda</a></li>
         <li><a href="#">Cuti ▾</a>
             <ul>
-            <li><a href="riwayat_cuti_pegawai.php">Riwayat Cuti</a></li>
+            <li><a href="riwayat_cuti.php">Riwayat Cuti</a></li>
             <li><a href="kalender_cuti.php">Kalender Cuti</a></li>
             <li><a href="daftar_sisa_cuti.php">Sisa Cuti Karyawan</a></li>
             </ul>

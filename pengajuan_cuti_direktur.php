@@ -54,7 +54,7 @@ $kode_karyawan = "";
             align-items: center;
             gap: 10px;
             font-size: 20px;
-            color: var(--text-dark);
+            color: var(--primary-color); /* Ubah ke warna primer agar lebih kontras */
             font-weight: 600;
         }
         .logo img {
@@ -85,17 +85,7 @@ $kode_karyawan = "";
             color: var(--text-dark);
             font-weight: 600;
             padding: 10px 0;
-            display: flex; 
-            align-items: center; 
-            gap: 5px; 
-        }
-        
-        /* Style untuk Ikon Profil */
-        .profile-icon {
-            font-size: 20px; /* Ukuran ikon dikurangi */
-            line-height: 1;
-            color: var(--button-color);
-            margin-left: 2px;
+            display: block; 
         }
         
         /* Style Dropdown Menu */
@@ -103,21 +93,28 @@ $kode_karyawan = "";
             display: none;
             position: absolute;
             top: 100%;
-            right: 0;
+            /* Ganti 'right' menjadi 'left' agar dropdown tidak keluar layar di sisi kiri */
+            left: 0; 
             background: var(--card-bg);
             padding: 10px 0;
             border-radius: 8px;
             box-shadow: 0 2px 8px var(--shadow-light);
-            min-width: 150px;
+            min-width: 180px; /* Lebarkan sedikit untuk teks yang lebih panjang */
             z-index: 1000;
         }
         nav li:hover > ul { display: block; }
-        nav li ul li { padding: 5px 15px; }
+        nav li ul li { 
+            padding: 0; /* Hapus padding di li */
+        }
         nav li ul li a {
             color: var(--text-dark);
             font-weight: 400;
-            padding: 5px 0;
+            padding: 8px 15px; /* Tambahkan padding di link */
             display: block; 
+            white-space: nowrap; /* Mencegah teks turun baris */
+        }
+        nav li ul li a:hover {
+            background-color: #f0f0f0; /* Efek hover pada item dropdown */
         }
 
 
@@ -184,8 +181,6 @@ $kode_karyawan = "";
             -moz-appearance: none;
             color: var(--text-dark); /* Menggunakan warna teks gelap (hitam) */
         }
-        
-        /* Hapus style spesifik untuk #no_karyawan */
         
         .input-select {
             background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-down"><polyline points="6 9 12 15 18 9"></polyline></svg>');
@@ -271,24 +266,38 @@ $kode_karyawan = "";
     
     <nav>
         <ul>
-            <li><a href="dashboardkaryawan.php">Beranda</a></li>
-            <li><a href="#">Cuti ▾</a>
+            <li><a href="dashboard_direktur.php">Beranda</a></li>
+            <li>
+                <a href="#">Cuti ▾</a>
                 <ul>
-                    <li><a href="pengajuan_cuti.php">Pengajuan Cuti</a></li>
-                    <li><a href="riwayat_cuti.php">Riwayat Cuti</a></li>
+                    <li><a href="persetujuan_cuti_direktur.php">Persetujuan Cuti</a></li>
+                    <li><a href="riwayat_cuti_direktur.php">Riwayat Cuti</a></li>
                 </ul>
             </li>
-            <li><a href="#">KHL ▾</a>
+            <li>
+                <a href="#">KHL ▾</a>
                 <ul>
-                    <li><a href="pengajuan_khl.php">Pengajuan KHL</a></li>
-                    <li><a href="riwayat_khl.php">Riwayat KHL</a></li>
+                    <li><a href="persetujuan_khl_direktur.php">Persetujuan KHL</a></li>
+                    <li><a href="riwayat_khl_direktur.php">Riwayat KHL</a></li>
                 </ul>
             </li>
-            <li><a href="profil.php">Profil <span class="profile-icon">👤</span></a></li>
+            <li>
+                <a href="#">Karyawan ▾</a>
+                <ul>
+                    <li><a href="data_karyawan_direktur.php">Data Karyawan</a></li>
+                    <li><a href="data_direktur_pj.php">Data Direktur</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="#">Profil ▾</a>
+                <ul>
+                    <li><a href="profil_direktur.php">Profil Direktur</a></li>
+                    <li><a href="logout2.php">Logout</a></li>
+                </ul>
+            </li>
         </ul>
     </nav>
 </header>
-
 <main>
     <div class="welcome">Welcome, <?= htmlspecialchars($nama_karyawan) ?>!</div>
 
