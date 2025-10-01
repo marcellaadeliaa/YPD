@@ -1,16 +1,20 @@
 <?php
 // FILE: dashboardpenanggungjawab.php
-$nama_pj = "Budi Santoso"; 
-$jabatan = "Penanggung Jawab Divisi IT";
-$divisi_pj = "IT";
+$nama_pj = "Ria"; 
+$jabatan = "Penanggung Jawab Divisi Training"; // Sudah diubah sesuai permintaan sebelumnya
+$divisi_pj = "Training"; // Sudah diubah sesuai permintaan sebelumnya
 
-$cuti_menunggu = 3; 
+// Data dummy untuk kartu
+$cuti_menunggu = 1; 
 $khl_menunggu = 1;
-$total_karyawan_divisi = 8;
+$total_karyawan_divisi = 4;
+
+// Data dummy untuk tabel
 $latest_requests = [
     ['jenis' => 'Cuti', 'nama_karyawan' => 'Andi', 'created_at' => '2025-10-01'],
     ['jenis' => 'KHL', 'nama_karyawan' => 'Citra', 'created_at' => '2025-09-30'],
     ['jenis' => 'Cuti', 'nama_karyawan' => 'Dewi', 'created_at' => '2025-09-29'],
+    ['jenis' => 'KHL', 'nama_karyawan' => 'Joko', 'created_at' => '2025-09-28'],
 ];
 ?>
 <!DOCTYPE html>
@@ -35,15 +39,29 @@ $latest_requests = [
         nav li ul li a { color: var(--text-color-dark); font-weight: 400; white-space: nowrap; }
         main { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
         .heading-section h1 { font-size: 2.5rem; margin: 0; }
-        .heading-section p { font-size: 1.1rem; margin-top: 5px; opacity: 0.9; }
+        .heading-section p { font-size: 1.1rem; margin-top: 5px; opacity: 0.9; margin-bottom: 30px;}
         .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin-bottom: 30px; }
-        .card { background: var(--card-bg); color: var(--text-color-dark); border-radius: 20px; padding: 30px 40px; box-shadow: 0 5px 20px var(--shadow-light); }
-        .card h3 { margin-top: 0; font-size: 20px; }
+        .card { background: var(--card-bg); color: var(--text-color-dark); border-radius: 20px; padding: 30px 40px; box-shadow: 0 5px 20px var(--shadow-light); display: flex; flex-direction: column; }
+        .card h3 { margin-top: 0; font-size: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
         .pending-count { font-size: 3.5rem; font-weight: 700; color: var(--primary-color); }
-        .btn { display: inline-block; background: var(--accent-color); color: var(--text-color-light); padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; }
+        .btn { display: inline-block; background: var(--accent-color); color: var(--text-color-light); padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-top: auto; text-align: center; }
         .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         .data-table th, .data-table td { padding: 15px; text-align: left; border-bottom: 1px solid #ddd; }
         .data-table th { background-color: #f8f9fa; }
+
+        /* === KODE CSS BARU UNTUK KALENDER (disalin dari dashboardadmin) === */
+        .calendar-icon {
+            font-size: 3rem;
+            text-align: center;
+            margin: 20px 0;
+            color: var(--primary-color);
+        }
+        .card p {
+            margin: 4px 0;
+            line-height: 1.6;
+        }
+        /* === AKHIR KODE CSS BARU === */
+
     </style>
 </head>
 <body>
@@ -71,11 +89,11 @@ $latest_requests = [
             </li>
             <li><a href="karyawan_divisi.php">Karyawan Divisi</a></li>
             <li><a href="#">Profil ▾</a>
-    <ul>
-        <li><a href="profil_penanggungjawab.php">Profil Saya</a></li>
-        <li><a href="logout2.php">Logout</a></li>
-    </ul>
-</li>
+                <ul>
+                    <li><a href="profil_penanggungjawab.php">Profil Saya</a></li>
+                    <li><a href="logout2.php">Logout</a></li>
+                </ul>
+            </li>
         </ul>
     </nav>
 </header>
@@ -84,6 +102,7 @@ $latest_requests = [
         <h1>Welcome, <?= htmlspecialchars($nama_pj) ?>!</h1>
         <p><?= htmlspecialchars($jabatan) ?></p>
     </div>
+    
     <div class="dashboard-grid">
         <div class="card">
             <h3>Cuti Menunggu Persetujuan</h3>
@@ -100,7 +119,21 @@ $latest_requests = [
             <p class="pending-count"><?= $total_karyawan_divisi ?></p>
             <a href="karyawan_divisi.php" class="btn">Lihat Data</a>
         </div>
-    </div>
+
+        <div class="card">
+            <h3>Kalender Cuti Divisi</h3>
+            <div class="calendar-icon">📅</div>
+            <p>Akses kalender untuk melihat jadwal cuti karyawan di divisi Anda.</p>
+            <a href="kalender_cuti_penanggungjawab.php" class="btn">Lihat Kalender Cuti</a>
+        </div>
+
+        <div class="card">
+            <h3>Kalender KHL Divisi</h3>
+            <div class="calendar-icon">📅</div>
+            <p>Akses kalender untuk melihat jadwal KHL karyawan di divisi Anda.</p>
+            <a href="kalender_khl_penanggungjawab.php" class="btn">Lihat Kalender KHL</a>
+        </div>
+        </div>
     <div class="card">
         <h3>5 Pengajuan Terbaru di Divisi Anda</h3>
         <table class="data-table">

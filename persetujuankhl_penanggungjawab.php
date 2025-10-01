@@ -2,7 +2,7 @@
 // FILE: persetujuankhl_penanggungjawab.php
 $divisi_pj = "IT";
 $pengajuan_khl = [
-    ['id' => 1, 'nama_karyawan' => 'Citra', 'tgl_khl' => '2025-10-12', 'jenis_khl' => 'Lembur', 'keterangan' => 'Menyelesaikan migrasi server'],
+    ['id' => 1, 'nama_karyawan' => 'Citra', 'tgl_khl' => '2025-9-12', 'jenis_khl' => 'Lembur', 'keterangan' => 'Menyelesaikan tugas'],
 ];
 ?>
 <!DOCTYPE html>

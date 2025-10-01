@@ -2,10 +2,10 @@
 // FILE: karyawan_divisi.php
 $divisi_pj = "IT";
 $karyawan_divisi = [
-    ['id' => 1, 'nama' => 'Andi', 'jabatan' => 'Staff IT', 'sisa_cuti' => 10],
-    ['id' => 2, 'nama' => 'Citra', 'jabatan' => 'Staff IT', 'sisa_cuti' => 12],
-    ['id' => 3, 'nama' => 'Dewi', 'jabatan' => 'UI/UX Designer', 'sisa_cuti' => 5],
-    ['id' => 4, 'nama' => 'Eko', 'jabatan' => 'Programmer', 'sisa_cuti' => 8],
+    ['id' => 1, 'nama' => 'Andi', 'jabatan' => 'Trainer', 'sisa_cuti' => 10],
+    ['id' => 2, 'nama' => 'Citra', 'jabatan' => 'Manager', 'sisa_cuti' => 12],
+    ['id' => 3, 'nama' => 'Dewi', 'jabatan' => 'Coordinator', 'sisa_cuti' => 5],
+    ['id' => 4, 'nama' => 'Eko', 'jabatan' => 'Trainer', 'sisa_cuti' => 8],
 ];
 ?>
 <!DOCTYPE html>
