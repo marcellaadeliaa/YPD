@@ -9,9 +9,9 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'direktur') {
     // exit();
 }
 
-// 1. Query untuk mengambil data Karyawan SAJA (role SELAIN 'direktur')
-// PERUBAHAN UTAMA: Hanya menyaring berdasarkan role yang BUKAN 'direktur'
-$query_data_karyawan = "
+// 1. Query untuk mengambil data Direktur SAJA
+// PERUBAHAN UTAMA: Hanya menyaring berdasarkan role 'direktur'
+$query_data_pejabat = "
     SELECT 
         kode_karyawan, 
         nama_lengkap, 
@@ -19,13 +19,13 @@ $query_data_karyawan = "
         role, 
         no_telp, 
         email, 
-        sisa_cuti_tahunan, 
+        sisa_cuti_tahunan,  
         status_aktif 
     FROM data_karyawan 
-    WHERE role != 'direktur'  -- HANYA role SELAIN 'direktur'
-    ORDER BY nama_lengkap ASC";
+    WHERE role = 'direktur'  -- HANYA role 'direktur'
+    ORDER BY nama_lengkap ASC"; 
 
-$result_karyawan = $conn->query($query_data_karyawan);
+$result_pejabat = $conn->query($query_data_pejabat);
 
 $conn->close();
 ?>
@@ -35,7 +35,7 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Karyawan</title>
+    <title>Data Direktur</title>
     <style>
         /* === CSS yang Diambil dan Disesuaikan === */
         body {
@@ -194,15 +194,15 @@ $conn->close();
     </header>
 
     <main>
-        <h1>Data Karyawan</h1>
-        <p style="color:#fff; margin-bottom: 20px; opacity: 0.9;">Lihat semua data dan informasi detail karyawan (Non-Direktur).</p>
+        <h1>Data Direktur</h1>
+        <p style="color:#fff; margin-bottom: 20px; opacity: 0.9;">Lihat semua data pejabat Direktur di Yayasan Purba Danarta.</p>
         <div class="card">
             <table class="data-table">
                 <thead>
                     <tr>
                         <th>No. Kode Karyawan</th>
                         <th>Nama Karyawan</th>
-                        <th>Jabatan</th> 
+                        <th>Jabatan</th>
                         <th>Role Sistem</th>
                         <th>No Telepon</th>
                         <th>Email</th>
@@ -211,12 +211,12 @@ $conn->close();
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if ($result_karyawan->num_rows > 0): ?>
-                        <?php while($row = $result_karyawan->fetch_assoc()): ?>
+                    <?php if ($result_pejabat->num_rows > 0): ?>
+                        <?php while($row = $result_pejabat->fetch_assoc()): ?>
                             <tr>
                                 <td><?= htmlspecialchars($row['kode_karyawan']) ?></td>
                                 <td><?= htmlspecialchars($row['nama_lengkap']) ?></td>
-                                <td><?= htmlspecialchars($row['jabatan']) ?></td> 
+                                <td><?= htmlspecialchars($row['jabatan']) ?></td>
                                 <td><?= htmlspecialchars(strtoupper($row['role'])) ?></td> 
                                 <td><?= htmlspecialchars($row['no_telp']) ?></td>
                                 <td><?= htmlspecialchars($row['email']) ?></td>
@@ -226,7 +226,7 @@ $conn->close();
                         <?php endwhile; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="8" style="text-align: center;">Tidak ada data karyawan Non-Direktur saat ini.</td>
+                            <td colspan="8" style="text-align: center;">Tidak ada data Direktur saat ini.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>

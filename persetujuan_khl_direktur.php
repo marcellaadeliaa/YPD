@@ -202,7 +202,7 @@ $result = $conn->query($query);
       </li>
       <li><a href="#">Karyawan ▾</a>
         <ul>
-          <li><a href="data_karyawan_direktur.php">Data Karyawan</a></li>
+          <li><a href="data_karyawan_direktur.php">Data </a></li>
         </ul>
       </li>
       <li><a href="#">Profil ▾</a></li>
@@ -211,13 +211,13 @@ $result = $conn->query($query);
 </header>
 
 <main>
-    <h1>Persetujuan KHL Karyawan</h1>
+    <h1>Persetujuan KHL </h1>
     <p style="color:#fff; margin-bottom: 20px; opacity: 0.9;">Daftar pengajuan KHL yang perlu Anda tinjau.</p>
     <div class="card">
         <table class="data-table">
             <thead>
                 <tr>
-                    <th>Nama Karyawan</th>
+                    <th>Nama </th>
                     <th>Divisi</th>
                     <th>Tanggal KHL</th>
                     <th>Alasan</th>

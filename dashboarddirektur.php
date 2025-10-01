@@ -9,7 +9,7 @@ require 'config.php';
 
 // Asumsi: Anda sudah menginisialisasi $conn di config.php dan koneksi berhasil.
 
-// Data Direktur (Placeholder)
+// Data Direktur (Placeholder) - Sebaiknya diambil dari session atau DB
 $nama_direktur = "Pico"; 
 $jabatan = "Direktur";
 
@@ -23,7 +23,17 @@ $query_khl = "SELECT COUNT(id) AS total FROM pengajuan_khl WHERE status = 'Menun
 $result_khl = $conn->query($query_khl);
 $khl_menunggu = $result_khl->fetch_assoc()['total'] ?? 0;
 
-// 3. Mengambil 5 data cuti & KHL terbaru
+// 3. MENGHITUNG TOTAL PJ/Direktur
+$query_total_direktur = "SELECT COUNT(kode_karyawan) AS total FROM data_karyawan WHERE role = 'direktur'";
+$result_total_direktur = $conn->query($query_total_direktur);
+$total_pj_direksi = $result_total_direktur->fetch_assoc()['total'] ?? 0; 
+
+// 4. MENGHITUNG TOTAL KARYAWAN (Selain Direktur)
+$query_total_karyawan = "SELECT COUNT(kode_karyawan) AS total FROM data_karyawan WHERE role != 'direktur'";
+$result_total_karyawan = $conn->query($query_total_karyawan);
+$total_karyawan = $result_total_karyawan->fetch_assoc()['total'] ?? 0; 
+
+// 5. Mengambil 5 data cuti & KHL terbaru
 // Ambil 5 data cuti terbaru
 $query_cuti_latest = "SELECT 'Cuti' AS jenis, nama_karyawan, divisi, created_at FROM pengajuan_cuti ORDER BY created_at DESC LIMIT 5";
 $result_cuti_latest = $conn->query($query_cuti_latest);
@@ -50,10 +60,6 @@ usort($latest_requests, function($a, $b) {
 });
 $latest_requests = array_slice($latest_requests, 0, 5);
 
-// Placeholder untuk total data
-$total_pj_direksi = 5; 
-$total_karyawan = 50;
-
 $conn->close();
 ?>
 
@@ -64,7 +70,7 @@ $conn->close();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Direktur</title>
     <style>
-        /* CSS yang sudah ada tetap dipertahankan, hanya menambahkan sedikit penyesuaian untuk layout header di main */
+        /* CSS yang sudah ada tetap dipertahankan */
         :root {
             --primary-color: #1E105E;
             --secondary-color: #8897AE;
@@ -318,6 +324,7 @@ $conn->close();
             <li><a href="#">Karyawan ▾</a>
                 <ul>
                     <li><a href="data_karyawan_direktur.php">Data Karyawan</a></li>
+                    <li><a href="data_direktur_pj.php">Data Direktur</a></li>
                 </ul>
             </li>
             <li><a href="#">Profil ▾</a></li>
@@ -352,25 +359,25 @@ $conn->close();
 
         <div class="card">
             <h3>Data PJ/DIREKSI</h3>
-            <p class="pending-count"><?= $total_pj_direksi ?></p>
-            <a href="data_karyawan_direktur.php" class="btn">Lihat Rincian</a>
+            <p class="pending-count"><?= $total_pj_direksi ?></p> 
+            <a href="data_direkturPJ.php" class="btn">Lihat Rincian</a>
         </div>
 
         <div class="card">
             <h3>Cuti KARYAWAN <br> Menunggu Persetujuan</h3>
             <p class="pending-count"><?= $cuti_menunggu ?></p>
-            <a href="persetujuan_cuti_direktur.php" class="btn">Lihat Rincian</a>
+            <a href="persetujuan_cuti_karyawan.php" class="btn">Lihat Rincian</a>
         </div>
 
         <div class="card">
             <h3>KHL KARYAWAN <br> Menunggu Persetujuan</h3>
             <p class="pending-count"><?= $khl_menunggu ?></p>
-            <a href="persetujuan_khl_direktur.php" class="btn">Lihat Rincian</a>
+            <a href="persetujuan_khl_karyawan.php" class="btn">Lihat Rincian</a>
         </div>
 
         <div class="card">
             <h3>Data Karyawan</h3>
-            <p class="pending-count"><?= $total_karyawan ?></p>
+            <p class="pending-count"><?= $total_karyawan ?></p> 
             <a href="data_karyawan_direktur.php" class="btn">Lihat Rincian</a>
         </div>
         

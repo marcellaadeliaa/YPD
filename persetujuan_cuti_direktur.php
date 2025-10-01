@@ -1,18 +1,82 @@
 <?php
-session_start();
-require 'config.php';
+// === BAGIAN LOGIKA BACKEND (PHP) ===
 
-// Pastikan pengguna memiliki role direktur sebelum mengakses halaman
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'direktur') {
-    // header("Location: login.php");
-    // exit();
+// 1. Memulai session dan menyertakan config (Asumsi Anda memiliki file config.php)
+session_start();
+// require 'config.php'; 
+
+// 2. Ambil data Direktur yang sedang login (Menggunakan data dummy/session placeholder)
+$nama_direktur = $_SESSION['nama_lengkap'] ?? 'Budi Direktur'; 
+$jabatan_direktur = $_SESSION['jabatan'] ?? 'Direktur Utama'; 
+
+// 3. LOGIKA UNTUK MENGAMBIL DATA PENGAJUAN CUTI YANG MENUNGGU PERSETUJUAN DIREKTUR
+//    *Hapus placeholder di bawah dan ganti dengan kode koneksi dan query SQL Anda yang sebenarnya*
+
+// **Contoh Struktur Query yang Dibutuhkan:**
+/*
+    $query_pengajuan = "
+        SELECT 
+            pc.id, dk.nama_lengkap, dk.divisi, pc.jenis_cuti, pc.tanggal_mulai, 
+            DATEDIFF(pc.tanggal_akhir, pc.tanggal_mulai) + 1 AS jumlah_hari, 
+            pc.status_sdm // Kolom untuk status dari SDM
+        FROM 
+            pengajuan_cuti pc
+        JOIN 
+            data_karyawan dk ON pc.kode_pegawai = dk.kode_karyawan 
+        WHERE 
+            pc.status = 'Menunggu Direktur' 
+        ORDER BY 
+            pc.created_at ASC
+    ";
+    $result = $conn->query($query_pengajuan);
+    $data_pengajuan = $result->fetch_all(MYSQLI_ASSOC);
+*/
+
+// Data Dummy (Hanya untuk menampilkan tampilan UI dengan data)
+$data_pengajuan = [
+    [
+        'id' => 101,
+        'nama_lengkap' => 'Budi Santoso',
+        'divisi' => 'Marketing',
+        'jenis_cuti' => 'Cuti Tahunan',
+        'tanggal_mulai' => '2025-10-10',
+        'tanggal_akhir' => '2025-10-14',
+        'jumlah_hari' => 5,
+        'status_sdm' => 'Disetujui SDM',
+    ],
+    [
+        'id' => 102,
+        'nama_lengkap' => 'Citra Dewi',
+        'divisi' => 'Keuangan',
+        'jenis_cuti' => 'Cuti Sakit',
+        'tanggal_mulai' => '2025-10-05',
+        'tanggal_akhir' => '2025-10-07',
+        'jumlah_hari' => 3,
+        'status_sdm' => 'Menunggu SDM', // Seharusnya tidak muncul, ini hanya contoh.
+    ],
+];
+// *End of Data Dummy*
+
+// 4. LOGIKA UNTUK MENANGANI AKSI PERSETUJUAN/PENOLAKAN
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    $cuti_id = $_POST['cuti_id'];
+    $action = $_POST['action']; // 'approve' atau 'reject'
+    
+    // Tempatkan kode untuk update status di database di sini
+    // Contoh:
+    /*
+    $new_status = ($action === 'approve') ? 'Disetujui Direktur' : 'Ditolak Direktur';
+    $stmt = $conn->prepare("UPDATE pengajuan_cuti SET status = ? WHERE id = ?");
+    $stmt->bind_param("si", $new_status, $cuti_id);
+    $stmt->execute();
+    
+    // Redirect untuk mencegah resubmission
+    header("Location: persetujuan_cuti_direktur.php");
+    exit();
+    */
 }
 
-// Mengambil semua riwayat cuti dari database
-$query_riwayat_cuti = "SELECT * FROM pengajuan_cuti ORDER BY created_at DESC";
-$result_riwayat_cuti = $conn->query($query_riwayat_cuti);
-
-$conn->close();
+// $conn->close(); // Tutup koneksi jika dibuka di atas
 ?>
 
 <!DOCTYPE html>
@@ -20,8 +84,9 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Riwayat Cuti Direktur</title>
+    <title>Persetujuan Cuti Direktur</title>
     <style>
+        /* CSS yang sama seperti sebelumnya untuk konsistensi */
         body {
           margin:0;
           font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -36,7 +101,7 @@ $conn->close();
           justify-content:space-between;
           align-items:center;
           border-bottom:2px solid #34377c;
-          flex-wrap:nowrap; /* fix supaya tombol tidak turun */
+          flex-wrap:nowrap;
         }
         .logo {
           display:flex;
@@ -106,21 +171,6 @@ $conn->close();
           display: flex;
           flex-direction: column;
         }
-        .btn {
-          display:inline-block;
-          color:#fff;
-          padding:8px 14px;
-          border-radius:6px;
-          text-decoration:none;
-          font-weight:600;
-          font-size:13px;
-          text-align: center;
-          border: none;
-          cursor: pointer;
-          margin-right:5px;
-        }
-        .btn-approve { background:#28a745; }
-        .btn-reject { background:#dc3545; }
         .data-table {
             width: 100%;
             border-collapse: collapse;
@@ -137,19 +187,29 @@ $conn->close();
             font-weight: 600;
         }
         .data-table tbody tr:hover { background-color: #f1f1f1; }
-        @media(max-width:768px){
-          header{flex-direction:column;align-items:flex-start;}
-          nav ul{flex-direction:column;gap:10px;width:100%;margin-top:15px;}
-          nav li ul {
-            position:static;
-            border:none;
-            box-shadow:none;
-            padding-left: 20px;
-          }
-          .user-section {margin-top:10px;}
+        
+        .btn {
+          display:inline-block;
+          color:#fff;
+          padding:8px 14px;
+          border-radius:6px;
+          text-decoration:none;
+          font-weight:600;
+          font-size:13px;
+          text-align: center;
+          border: none;
+          cursor: pointer;
+          margin-right:5px;
         }
-
-        /* Tambahan tombol Pengajuan Cuti */
+        .btn-approve {
+            background-color: #28a745; /* Green */
+        }
+        .btn-reject {
+            background-color: #dc3545; /* Red */
+        }
+        .btn-detail {
+            background-color: #007bff; /* Blue */
+        }
         .user-section {
           display: flex;
           align-items: center;
@@ -169,9 +229,6 @@ $conn->close();
           display: inline-flex;
           align-items: center;
         }
-        .btn-pengajuan:hover {
-          background: #4b2a7a;
-        }
     </style>
 </head>
 <body>
@@ -185,7 +242,7 @@ $conn->close();
           <li><a href="dashboard_direktur.php">Beranda</a></li>
           <li><a href="#">Cuti ▾</a>
             <ul>
-              <li><a href="persetujuan_cuti_direktur.php">Persetujuan Cuti</a></li>
+              <li><a href="persetujuan_cuti_direktur.php" style="font-weight: 700;">Persetujuan Cuti</a></li>
               <li><a href="riwayat_cuti_direktur.php">Riwayat Cuti</a></li>
             </ul>
           </li>
@@ -204,82 +261,59 @@ $conn->close();
         </ul>
       </nav>
 
-      <!-- Tambahan di kanan -->
       <div class="user-section">
-        <span class="welcome-text">Welcome Pico, Direktur</span>
+        <span class="welcome-text">Welcome <?= htmlspecialchars($nama_direktur) ?>, <?= htmlspecialchars($jabatan_direktur) ?></span>
         <a href="pengajuan_cuti.php" class="btn-pengajuan">Pengajuan Cuti</a>
       </div>
     </header>
 
     <main>
-        <h1>Riwayat Cuti Seluruh Karyawan</h1>
-        <p style="color:#fff; margin-bottom: 20px; opacity: 0.9;">Lihat semua riwayat cuti karyawan di seluruh divisi.</p>
+        <h1>Daftar Persetujuan Cuti </h1>
+        <p style="color:#fff; margin-bottom: 20px; opacity: 0.9;">Tinjau dan berikan persetujuan untuk pengajuan cuti yang telah diajukan.</p>
         <div class="card">
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Nama Karyawan</th>
+                        <th>ID</th>
+                        <th>Nama </th>
                         <th>Divisi</th>
                         <th>Jenis Cuti</th>
                         <th>Tanggal Mulai</th>
-                        <th>Tanggal Akhir</th>
-                        <th>Alasan</th>
-                        <th>Status</th>
+                        <th>Jumlah Hari</th>
+                        <th>Status SDM</th>
+                        <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if ($result_riwayat_cuti->num_rows > 0): ?>
-                        <?php while($row = $result_riwayat_cuti->fetch_assoc()): ?>
+                    <?php if (!empty($data_pengajuan)): ?>
+                        <?php foreach($data_pengajuan as $row): ?>
                             <tr>
-                                <td><?= htmlspecialchars($row['nama_karyawan']) ?></td>
+                                <td><?= htmlspecialchars($row['id']) ?></td>
+                                <td><?= htmlspecialchars($row['nama_lengkap']) ?></td>
                                 <td><?= htmlspecialchars($row['divisi']) ?></td>
                                 <td><?= htmlspecialchars($row['jenis_cuti']) ?></td>
+                                
                                 <td><?= date('d-m-Y', strtotime($row['tanggal_mulai'])) ?></td>
-                                <td><?= date('d-m-Y', strtotime($row['tanggal_akhir'])) ?></td>
-                                <td><?= htmlspecialchars($row['alasan']) ?></td>
+                                <td><?= htmlspecialchars($row['jumlah_hari']) ?> Hari</td>
+                                <td><?= htmlspecialchars($row['status_sdm']) ?></td>
                                 <td>
-                                    <button class="btn btn-approve">✔️</button>
-                                    <button class="btn btn-reject">❌</button>
+                                    <form method="POST" action="persetujuan_cuti_direktur.php" style="display:inline;">
+                                        <input type="hidden" name="cuti_id" value="<?= htmlspecialchars($row['id']) ?>">
+                                        <button type="submit" name="action" value="approve" class="btn btn-approve" onclick="return confirm('Yakin ingin MENYETUJUI cuti ini?');">Setujui</button>
+                                        <button type="submit" name="action" value="reject" class="btn btn-reject" onclick="return confirm('Yakin ingin MENOLAK cuti ini?');">Tolak</button>
+                                    </form>
+                                    <a href="detail_cuti.php?id=<?= htmlspecialchars($row['id']) ?>" class="btn btn-detail">Detail</a>
                                 </td>
                             </tr>
-                        <?php endwhile; ?>
+                        <?php endforeach; ?>
                     <?php else: ?>
-                        <!-- Data dummy jika kosong -->
-                        <?php for ($i=1; $i<=5; $i++): ?>
-                            <tr>
-                                <td>Karyawan <?= $i ?></td>
-                                <td>Divisi <?= $i ?></td>
-                                <td>Cuti Tahunan</td>
-                                <td><?= date('d-m-Y') ?></td>
-                                <td><?= date('d-m-Y', strtotime('+3 days')) ?></td>
-                                <td>Alasan dummy ke-<?= $i ?></td>
-                                <td>
-                                    <button class="btn btn-approve">✔️</button>
-                                    <button class="btn btn-reject">❌</button>
-                                </td>
-                            </tr>
-                        <?php endfor; ?>
+                        <tr>
+                            <td colspan="8" style="text-align: center;">Tidak ada pengajuan cuti yang menunggu persetujuan Direktur saat ini.</td>
+                        </tr>
                     <?php endif; ?>
                 </tbody>
             </table>
         </div>
     </main>
-
-    <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const table = document.querySelector(".data-table");
-
-      table.addEventListener("click", function(e) {
-        if (e.target.classList.contains("btn-approve")) {
-          const cell = e.target.parentElement;
-          cell.innerHTML = "<span style='color:green; font-weight:bold;'>Disetujui</span>";
-        }
-        if (e.target.classList.contains("btn-reject")) {
-          const cell = e.target.parentElement;
-          cell.innerHTML = "<span style='color:red; font-weight:bold;'>Ditolak</span>";
-        }
-      });
-    });
-    </script>
 </body>
 </html>

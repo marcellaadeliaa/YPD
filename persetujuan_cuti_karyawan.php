@@ -3,29 +3,14 @@ session_start();
 require 'config.php';
 
 // Pastikan pengguna memiliki role direktur sebelum mengakses halaman
-// Cek login tetap dipertahankan seperti kode awal Anda.
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'direktur') {
     // header("Location: login.php");
     // exit();
 }
 
-// 1. Query untuk mengambil data Karyawan SAJA (role SELAIN 'direktur')
-// PERUBAHAN UTAMA: Hanya menyaring berdasarkan role yang BUKAN 'direktur'
-$query_data_karyawan = "
-    SELECT 
-        kode_karyawan, 
-        nama_lengkap, 
-        jabatan, 
-        role, 
-        no_telp, 
-        email, 
-        sisa_cuti_tahunan, 
-        status_aktif 
-    FROM data_karyawan 
-    WHERE role != 'direktur'  -- HANYA role SELAIN 'direktur'
-    ORDER BY nama_lengkap ASC";
-
-$result_karyawan = $conn->query($query_data_karyawan);
+// Mengambil semua riwayat cuti dari database
+$query_riwayat_cuti = "SELECT * FROM pengajuan_cuti ORDER BY created_at DESC";
+$result_riwayat_cuti = $conn->query($query_riwayat_cuti);
 
 $conn->close();
 ?>
@@ -35,9 +20,8 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Karyawan</title>
+    <title>Riwayat Cuti Direktur</title>
     <style>
-        /* === CSS yang Diambil dan Disesuaikan === */
         body {
           margin:0;
           font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -46,13 +30,13 @@ $conn->close();
           color:#fff;
         }
         header {
-          background:rgba(255,255,255,1);
+          background:#fff;
           padding:20px 40px;
           display:flex;
           justify-content:space-between;
           align-items:center;
           border-bottom:2px solid #34377c;
-          flex-wrap:wrap;
+          flex-wrap:nowrap; /* fix supaya tombol tidak turun */
         }
         .logo {
           display:flex;
@@ -75,9 +59,7 @@ $conn->close();
           display:flex;
           gap:30px;
         }
-        nav li {
-          position:relative;
-        }
+        nav li { position:relative; }
         nav a {
           text-decoration:none;
           color:#333;
@@ -85,8 +67,6 @@ $conn->close();
           padding:8px 4px;
           display:block;
         }
-
-        /* ===== DROPDOWN ===== */
         nav li ul {
           display:none;
           position:absolute;
@@ -106,8 +86,6 @@ $conn->close();
           font-weight:400;
           white-space:nowrap;
         }
-
-        /* ===== MAIN CONTENT ===== */
         main {
           max-width:1200px;
           margin:40px auto;
@@ -128,6 +106,21 @@ $conn->close();
           display: flex;
           flex-direction: column;
         }
+        .btn {
+          display:inline-block;
+          color:#fff;
+          padding:8px 14px;
+          border-radius:6px;
+          text-decoration:none;
+          font-weight:600;
+          font-size:13px;
+          text-align: center;
+          border: none;
+          cursor: pointer;
+          margin-right:5px;
+        }
+        .btn-approve { background:#28a745; }
+        .btn-reject { background:#dc3545; }
         .data-table {
             width: 100%;
             border-collapse: collapse;
@@ -143,12 +136,7 @@ $conn->close();
             background-color: #f8f9fa;
             font-weight: 600;
         }
-        .data-table tbody tr:hover {
-            background-color: #f1f1f1;
-        }
-        .nav-active {
-             border-bottom: 2px solid #34377c;
-        }
+        .data-table tbody tr:hover { background-color: #f1f1f1; }
         @media(max-width:768px){
           header{flex-direction:column;align-items:flex-start;}
           nav ul{flex-direction:column;gap:10px;width:100%;margin-top:15px;}
@@ -158,6 +146,31 @@ $conn->close();
             box-shadow:none;
             padding-left: 20px;
           }
+          .user-section {margin-top:10px;}
+        }
+
+        /* Tambahan tombol Pengajuan Cuti */
+        .user-section {
+          display: flex;
+          align-items: center;
+          gap: 15px;
+        }
+        .welcome-text {
+          color: #2e1f4f;
+          font-weight: 600;
+        }
+        .btn-pengajuan {
+          background: #2e1f4f;
+          color: #fff !important;
+          padding: 10px 20px;
+          border-radius: 8px;
+          text-decoration: none;
+          font-weight: 600;
+          display: inline-flex;
+          align-items: center;
+        }
+        .btn-pengajuan:hover {
+          background: #4b2a7a;
         }
     </style>
 </head>
@@ -182,56 +195,91 @@ $conn->close();
               <li><a href="riwayat_khl_direktur.php">Riwayat KHL</a></li>
             </ul>
           </li>
-          <li class="nav-active"><a href="#">Karyawan ▾</a>
+          <li><a href="#">Karyawan ▾</a>
             <ul>
               <li><a href="data_karyawan_direktur.php">Data Karyawan</a></li>
-              <li><a href="data_direktur_pj.php">Data Direktur</a></li> 
             </ul>
           </li>
           <li><a href="#">Profil ▾</a></li>
         </ul>
       </nav>
+
+      <!-- Tambahan di kanan -->
+      <div class="user-section">
+        <span class="welcome-text">Welcome Pico, Direktur</span>
+        <a href="pengajuan_cuti.php" class="btn-pengajuan">Pengajuan Cuti</a>
+      </div>
     </header>
 
     <main>
-        <h1>Data Karyawan</h1>
-        <p style="color:#fff; margin-bottom: 20px; opacity: 0.9;">Lihat semua data dan informasi detail karyawan (Non-Direktur).</p>
+        <h1>Riwayat Cuti Seluruh Karyawan</h1>
+        <p style="color:#fff; margin-bottom: 20px; opacity: 0.9;">Lihat semua riwayat cuti karyawan di seluruh divisi.</p>
         <div class="card">
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>No. Kode Karyawan</th>
                         <th>Nama Karyawan</th>
-                        <th>Jabatan</th> 
-                        <th>Role Sistem</th>
-                        <th>No Telepon</th>
-                        <th>Email</th>
-                        <th>Sisa Cuti Tahunan</th>
+                        <th>Divisi</th>
+                        <th>Jenis Cuti</th>
+                        <th>Tanggal Mulai</th>
+                        <th>Tanggal Akhir</th>
+                        <th>Alasan</th>
                         <th>Status</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if ($result_karyawan->num_rows > 0): ?>
-                        <?php while($row = $result_karyawan->fetch_assoc()): ?>
+                    <?php if ($result_riwayat_cuti->num_rows > 0): ?>
+                        <?php while($row = $result_riwayat_cuti->fetch_assoc()): ?>
                             <tr>
-                                <td><?= htmlspecialchars($row['kode_karyawan']) ?></td>
-                                <td><?= htmlspecialchars($row['nama_lengkap']) ?></td>
-                                <td><?= htmlspecialchars($row['jabatan']) ?></td> 
-                                <td><?= htmlspecialchars(strtoupper($row['role'])) ?></td> 
-                                <td><?= htmlspecialchars($row['no_telp']) ?></td>
-                                <td><?= htmlspecialchars($row['email']) ?></td>
-                                <td><?= htmlspecialchars($row['sisa_cuti_tahunan']) ?> hari</td>
-                                <td><?= htmlspecialchars($row['status_aktif']) ?></td>
+                                <td><?= htmlspecialchars($row['nama_karyawan']) ?></td>
+                                <td><?= htmlspecialchars($row['divisi']) ?></td>
+                                <td><?= htmlspecialchars($row['jenis_cuti']) ?></td>
+                                <td><?= date('d-m-Y', strtotime($row['tanggal_mulai'])) ?></td>
+                                <td><?= date('d-m-Y', strtotime($row['tanggal_akhir'])) ?></td>
+                                <td><?= htmlspecialchars($row['alasan']) ?></td>
+                                <td>
+                                    <button class="btn btn-approve">✔️</button>
+                                    <button class="btn btn-reject">❌</button>
+                                </td>
                             </tr>
                         <?php endwhile; ?>
                     <?php else: ?>
-                        <tr>
-                            <td colspan="8" style="text-align: center;">Tidak ada data karyawan Non-Direktur saat ini.</td>
-                        </tr>
+                        <!-- Data dummy jika kosong -->
+                        <?php for ($i=1; $i<=5; $i++): ?>
+                            <tr>
+                                <td>Karyawan <?= $i ?></td>
+                                <td>Divisi <?= $i ?></td>
+                                <td>Cuti Tahunan</td>
+                                <td><?= date('d-m-Y') ?></td>
+                                <td><?= date('d-m-Y', strtotime('+3 days')) ?></td>
+                                <td>Alasan dummy ke-<?= $i ?></td>
+                                <td>
+                                    <button class="btn btn-approve">✔️</button>
+                                    <button class="btn btn-reject">❌</button>
+                                </td>
+                            </tr>
+                        <?php endfor; ?>
                     <?php endif; ?>
                 </tbody>
             </table>
         </div>
     </main>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const table = document.querySelector(".data-table");
+
+      table.addEventListener("click", function(e) {
+        if (e.target.classList.contains("btn-approve")) {
+          const cell = e.target.parentElement;
+          cell.innerHTML = "<span style='color:green; font-weight:bold;'>Disetujui</span>";
+        }
+        if (e.target.classList.contains("btn-reject")) {
+          const cell = e.target.parentElement;
+          cell.innerHTML = "<span style='color:red; font-weight:bold;'>Ditolak</span>";
+        }
+      });
+    });
+    </script>
 </body>
 </html>
