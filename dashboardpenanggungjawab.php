@@ -7,7 +7,7 @@ $divisi_pj = "Training"; // Sudah diubah sesuai permintaan sebelumnya
 // Data dummy untuk kartu
 $cuti_menunggu = 1; 
 $khl_menunggu = 1;
-$total_karyawan_divisi = 4;
+$total_karyawan_divisi = 5;
 
 // Data dummy untuk tabel
 $latest_requests = [
@@ -78,6 +78,8 @@ $latest_requests = [
                     <li><a href="persetujuancuti_penanggungjawab.php">Persetujuan Cuti Karyawan</a></li>
                     <li><a href="riwayatcuti_penanggungjawab.php">Riwayat Cuti Karyawan</a></li>
                     <li><a href="pengajuancuti_penanggungjawab.php">Ajukan Cuti Pribadi</a></li>
+                    <li><a href="kalender_cuti_penanggungjawab.php">Kalender Cuti Divisi</a></li>
+                    <li><a href="riwayat_cuti_pribadi_penanggungjawab.php">Riwayat Cuti Pribadi</a></li>
                 </ul>
             </li>
             <li><a href="#">KHL ▾</a>
@@ -85,6 +87,8 @@ $latest_requests = [
                     <li><a href="persetujuankhl_penanggungjawab.php">Persetujuan KHL Karyawan</a></li>
                     <li><a href="riwayatkhl_penanggungjawab.php">Riwayat KHL Karyawan</a></li>
                     <li><a href="pengajuankhl_penanggungjawab.php">Ajukan KHL Pribadi</a></li>
+                    <li><a href="kalender_khl_penanggungjawab.php">Kalender KHL Divisi</a></li>
+                    <li><a href="riwayat_cuti_pribadi_penanggungjawab.php">Riwayat Cuti Pribadi</a></li>
                 </ul>
             </li>
             <li><a href="karyawan_divisi.php">Karyawan Divisi</a></li>
@@ -135,7 +139,7 @@ $latest_requests = [
         </div>
         </div>
     <div class="card">
-        <h3>5 Pengajuan Terbaru di Divisi Anda</h3>
+        <h3>4 Pengajuan Terbaru di Divisi Anda</h3>
         <table class="data-table">
             <thead><tr><th>Jenis</th><th>Nama Karyawan</th><th>Tanggal Pengajuan</th></tr></thead>
             <tbody>

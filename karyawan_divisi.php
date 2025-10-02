@@ -6,6 +6,7 @@ $karyawan_divisi = [
     ['id' => 2, 'nama' => 'Citra', 'jabatan' => 'Manager', 'sisa_cuti' => 12],
     ['id' => 3, 'nama' => 'Dewi', 'jabatan' => 'Coordinator', 'sisa_cuti' => 5],
     ['id' => 4, 'nama' => 'Eko', 'jabatan' => 'Trainer', 'sisa_cuti' => 8],
+    ['id' => 5, 'nama' => 'Fani', 'jabatan' => 'Trainer', 'sisa_cuti' => 8],
 ];
 ?>
 <!DOCTYPE html>
@@ -49,6 +50,8 @@ $karyawan_divisi = [
                     <li><a href="persetujuancuti_penanggungjawab.php">Persetujuan Cuti Karyawan</a></li>
                     <li><a href="riwayatcuti_penanggungjawab.php">Riwayat Cuti Karyawan</a></li>
                     <li><a href="pengajuancuti_penanggungjawab.php">Ajukan Cuti Pribadi</a></li>
+                    <li><a href="kalender_cuti_penanggungjawab.php">Kalender Cuti Divisi</a></li>
+                    <li><a href="riwayat_cuti_pribadi_penanggungjawab.php">Riwayat Cuti Pribadi</a></li>
                 </ul>
             </li>
             <li><a href="#">KHL ▾</a>
@@ -56,6 +59,8 @@ $karyawan_divisi = [
                     <li><a href="persetujuankhl_penanggungjawab.php">Persetujuan KHL Karyawan</a></li>
                     <li><a href="riwayatkhl_penanggungjawab.php">Riwayat KHL Karyawan</a></li>
                     <li><a href="pengajuankhl_penanggungjawab.php">Ajukan KHL Pribadi</a></li>
+                    <li><a href="kalender_khl_penanggungjawab.php">Kalender KHL Divisi</a></li>
+                    <li><a href="riwayat_cuti_pribadi_penanggungjawab.php">Riwayat Cuti Pribadi</a></li>
                 </ul>
             </li>
             <li><a href="karyawan_divisi.php">Karyawan Divisi</a></li>

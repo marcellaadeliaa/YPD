@@ -1,14 +1,54 @@
 <?php
 // FILE: riwayatkhl_penanggungjawab.php
-$divisi_pj = "IT";
-$riwayat_khl = [
-    ['nama_karyawan' => 'Citra', 'tgl_khl' => '2025-10-12', 'status' => 'Menunggu Persetujuan'],
-    ['nama_karyawan' => 'Joko', 'tgl_khl' => '2025-09-28', 'status' => 'Disetujui'],
+
+// --- DATA DUMMY (diperkaya dengan detail tambahan) ---
+$divisi_pj = "Training";
+$riwayat_khl_asli = [
+    [
+        'id' => 1,
+        'kode_khl' => 'KHL-001',
+        'nama_karyawan' => 'Citra',
+        'jenis_khl' => 'Proyek Khusus',
+        'projek' => 'lembur',
+        'tanggal_kerja' => '2025-09-30',
+        'jam_mulai_kerja' => '09:00:00',
+        'jam_selesai_kerja' => '17:00:00',
+        'tanggal_libur' => '2025-10-02',
+        'status' => 'Menunggu'
+    ],
+    [
+        'id' => 2,
+        'kode_khl' => 'KHL-002',
+        'nama_karyawan' => 'Joko',
+        'jenis_khl' => 'Training Internal',
+        'projek' => 'Pelatihan Sistem Baru',
+        'tanggal_kerja' => '2025-09-28',
+        'jam_mulai_kerja' => '08:00:00',
+        'jam_selesai_kerja' => '15:00:00',
+        'tanggal_libur' => '2025-09-29',
+        'status' => 'Diterima'
+    ],
 ];
-function getStatusBadge($status) {
-    if ($status == 'Disetujui') return '<span class="badge badge-success">Disetujui</span>';
-    if ($status == 'Ditolak') return '<span class="badge badge-danger">Ditolak</span>';
-    return '<span class="badge badge-warning">Menunggu Persetujuan</span>';
+
+// --- LOGIKA FILTER (diambil dari riwayat_khl.php) ---
+$start_date = $_GET['start_date'] ?? '';
+$end_date = $_GET['end_date'] ?? '';
+$search_query = $_GET['search'] ?? '';
+
+$riwayat_khl_filter = $riwayat_khl_asli;
+
+// Filter berdasarkan tanggal kerja
+if ($start_date && $end_date) {
+    $riwayat_khl_filter = array_filter($riwayat_khl_filter, function($khl) use ($start_date, $end_date) {
+        return $khl['tanggal_kerja'] >= $start_date && $khl['tanggal_kerja'] <= $end_date;
+    });
+}
+
+// Filter berdasarkan pencarian nama
+if ($search_query) {
+    $riwayat_khl_filter = array_filter($riwayat_khl_filter, function($khl) use ($search_query) {
+        return stripos($khl['nama_karyawan'], $search_query) !== false;
+    });
 }
 ?>
 <!DOCTYPE html>
@@ -16,33 +56,54 @@ function getStatusBadge($status) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Riwayat KHL Karyawan</title>
+    <title>Riwayat KHL Divisi</title>
     <style>
-        :root { --primary-color: #1E105E; --accent-color: #4a3f81; --card-bg: #FFFFFF; --text-color-dark: #2e1f4f; --shadow-light: rgba(0,0,0,0.15); }
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: linear-gradient(180deg, var(--primary-color) 0%, #a29bb8 100%); min-height: 100vh; padding-bottom: 40px; }
+        /* CSS LENGKAP DIAMBIL DARI riwayat_khl.php UNTUK UI YANG SAMA */
+        :root {
+            --primary-color: #1E105E;
+            --secondary-color: #8897AE;
+            --accent-color: #4A3F81;
+            --card-bg: #FFFFFF;
+            --text-light: #fff;
+            --text-dark: #333;
+            --shadow-light: rgba(0,0,0,0.1);
+        }
+        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: linear-gradient(180deg, var(--primary-color) 0%, var(--secondary-color) 100%); min-height: 100vh; }
         header { background: var(--card-bg); padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px var(--shadow-light); }
-        .logo { display: flex; align-items: center; gap: 16px; font-weight: 500; font-size: 20px; color: var(--text-color-dark); }
-        .logo img { width: 50px; height: 50px; object-fit: contain; border-radius: 50%; }
+        .logo { display: flex; align-items: center; gap: 16px; font-weight: 500; font-size: 20px; color: var(--text-dark); }
+        .logo img { width: 50px; height: 50px; object-fit: contain; }
         nav ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 30px; }
         nav li { position: relative; }
-        nav a { text-decoration: none; color: var(--text-color-dark); font-weight: 600; padding: 8px 4px; display: block; }
-        nav a:hover { color: var(--accent-color); }
+        nav a { text-decoration: none; color: var(--text-dark); font-weight: 600; padding: 8px 4px; display: block; }
         nav li ul { display: none; position: absolute; top: 100%; left: 0; background: var(--card-bg); padding: 10px 0; border-radius: 8px; box-shadow: 0 2px 10px var(--shadow-light); min-width: 200px; z-index: 999; }
         nav li:hover > ul { display: block; }
-        nav li ul li { padding: 5px 20px; }
-        nav li ul li a { color: var(--text-color-dark); font-weight: 400; white-space: nowrap; }
-        main { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
-        .card { background: var(--card-bg); color: var(--text-color-dark); border-radius: 20px; padding: 30px 40px; box-shadow: 0 5px 20px var(--shadow-light); }
-        .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        nav li ul li a { color: var(--text-dark); font-weight: 400; padding: 5px 20px; white-space: nowrap; }
+        main { max-width: 1400px; margin: 40px auto; padding: 0 20px; }
+        .card { background: var(--card-bg); color: var(--text-dark); border-radius: 20px; padding: 30px 40px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
+        h2 { color: var(--primary-color); font-size: 24px; margin-top: 0; }
+        .filter-container { margin-bottom: 25px; padding: 20px; background-color: #f8f9fa; border-radius: 10px; }
+        .filter-group { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 20px; }
+        .filter-item { flex: 1; min-width: 200px; }
+        .filter-item label { font-weight: 600; font-size: 14px; display: block; margin-bottom: 8px; }
+        .filter-item input { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; }
+        .filter-buttons { display: flex; gap: 10px; }
+        .filter-buttons button, .filter-buttons a { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .btn-filter { background: var(--accent-color); color: var(--text-light); }
+        .btn-reset { background: #6c757d; color: var(--text-light); text-decoration: none; display: inline-block; line-height: 1.5; }
+        .table-responsive { overflow-x: auto; }
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 20px; white-space: nowrap; }
         .data-table th, .data-table td { padding: 15px; text-align: left; border-bottom: 1px solid #ddd; }
-        .data-table th { background-color: #f8f9fa; }
-        .badge { color: #fff; padding: 5px 10px; border-radius: 12px; font-size: 12px; }
-        .badge-success { background-color: #28a745; }
-        .badge-danger { background-color: #dc3545; }
-        .badge-warning { background-color: #ffc107; color: #212529; }
+        .data-table th { background-color: #f8f9fa; font-weight: 600; }
+        .data-table tbody tr:hover { background-color: #f1f1f1; }
+        .status-diterima, .status-ditolak, .status-menunggu { padding: 5px 10px; border-radius: 15px; font-weight: 600; font-size: 12px; }
+        .status-diterima { background-color: #d4edda; color: #155724; }
+        .status-ditolak { background-color: #f8d7da; color: #721c24; }
+        .status-menunggu { background-color: #fff3cd; color: #856404; }
+        .no-data { text-align: center; padding: 20px; color: #6c757d; }
     </style>
 </head>
 <body>
+
 <header>
     <div class="logo">
         <img src="image/namayayasan.png" alt="Logo Yayasan">
@@ -56,6 +117,8 @@ function getStatusBadge($status) {
                     <li><a href="persetujuancuti_penanggungjawab.php">Persetujuan Cuti Karyawan</a></li>
                     <li><a href="riwayatcuti_penanggungjawab.php">Riwayat Cuti Karyawan</a></li>
                     <li><a href="pengajuancuti_penanggungjawab.php">Ajukan Cuti Pribadi</a></li>
+                    <li><a href="kalender_cuti_penanggungjawab.php">Kalender Cuti Divisi</a></li>
+                    <li><a href="riwayat_cuti_pribadi_penanggungjawab.php">Riwayat Cuti Pribadi</a></li>
                 </ul>
             </li>
             <li><a href="#">KHL ▾</a>
@@ -63,36 +126,105 @@ function getStatusBadge($status) {
                     <li><a href="persetujuankhl_penanggungjawab.php">Persetujuan KHL Karyawan</a></li>
                     <li><a href="riwayatkhl_penanggungjawab.php">Riwayat KHL Karyawan</a></li>
                     <li><a href="pengajuankhl_penanggungjawab.php">Ajukan KHL Pribadi</a></li>
+                    <li><a href="kalender_khl_penanggungjawab.php">Kalender KHL Divisi</a></li>
+                    <li><a href="riwayat_cuti_pribadi_penanggungjawab.php">Riwayat Cuti Pribadi</a></li>
                 </ul>
             </li>
             <li><a href="karyawan_divisi.php">Karyawan Divisi</a></li>
             <li><a href="#">Profil ▾</a>
-    <ul>
-        <li><a href="profil_penanggungjawab.php">Profil Saya</a></li>
-        <li><a href="logout2.php">Logout</a></li>
-    </ul>
-</li>
+                <ul>
+                    <li><a href="profil_penanggungjawab.php">Profil Saya</a></li>
+                    <li><a href="logout2.php">Logout</a></li>
+                </ul>
+            </li>
         </ul>
     </nav>
 </header>
+
 <main>
     <div class="card">
-        <h2>Riwayat Pengajuan KHL (Divisi <?= $divisi_pj ?>)</h2>
-        <table class="data-table">
-            <thead><tr><th>Nama Karyawan</th><th>Tanggal KHL</th><th>Status</th></tr></thead>
-            <tbody>
-                <?php if (!empty($riwayat_khl)): foreach($riwayat_khl as $khl): ?>
+        <h2>Riwayat Pengajuan KHL (Divisi <?= htmlspecialchars($divisi_pj) ?>)</h2>
+        
+        <div class="filter-container">
+            <form action="" method="GET">
+                <div class="filter-group">
+                    <div class="filter-item">
+                        <label for="search">Cari Nama Karyawan</label>
+                        <input type="text" id="search" name="search" placeholder="Masukkan nama..." value="<?= htmlspecialchars($search_query) ?>">
+                    </div>
+                    <div class="filter-item">
+                        <label for="start_date">Dari Tanggal Kerja</label>
+                        <input type="date" id="start_date" name="start_date" value="<?= htmlspecialchars($start_date) ?>">
+                    </div>
+                    <div class="filter-item">
+                        <label for="end_date">Sampai Tanggal Kerja</label>
+                        <input type="date" id="end_date" name="end_date" value="<?= htmlspecialchars($end_date) ?>">
+                    </div>
+                    <div class="filter-buttons">
+                        <button type="submit" class="btn-filter">Filter</button>
+                        <a href="riwayatkhl_penanggungjawab.php" class="btn-reset">Reset</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
                     <tr>
-                        <td><?= htmlspecialchars($khl['nama_karyawan']) ?></td>
-                        <td><?= date('d-m-Y', strtotime($khl['tgl_khl'])) ?></td>
-                        <td><?= getStatusBadge($khl['status']) ?></td>
+                        <th>ID</th>
+                        <th>Nama Karyawan</th>
+                        <th>Nama Proyek</th>
+                        <th>Tanggal Kerja</th>
+                        <th>Jam Kerja</th>
+                        <th>Tanggal Libur Pengganti</th>
+                        <th>Status</th>
                     </tr>
-                <?php endforeach; else: ?>
-                    <tr><td colspan="3" style="text-align:center;">Belum ada riwayat KHL.</td></tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    <?php if (!empty($riwayat_khl_filter)): ?>
+                        <?php foreach($riwayat_khl_filter as $khl): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($khl['id']) ?></td>
+                            <td><?= htmlspecialchars($khl['nama_karyawan']) ?></td>
+                            <td><?= htmlspecialchars($khl['projek']) ?></td>
+                            <td><?= date('d M Y', strtotime($khl['tanggal_kerja'])) ?></td>
+                            <td><?= date('H:i', strtotime($khl['jam_mulai_kerja'])) . ' - ' . date('H:i', strtotime($khl['jam_selesai_kerja'])) ?></td>
+                            <td><?= date('d M Y', strtotime($khl['tanggal_libur'])) ?></td>
+                            <td>
+                                <span class="status-<?= strtolower($khl['status']) ?>"><?= htmlspecialchars($khl['status']) ?></span>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="7" class="no-data">Tidak ada data riwayat KHL yang cocok dengan filter.</td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
     </div>
 </main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const startDate = document.getElementById('start_date');
+        const endDate = document.getElementById('end_date');
+        
+        function validateDates() {
+            if (startDate.value && endDate.value) {
+                if (new Date(startDate.value) > new Date(endDate.value)) {
+                    alert('Tanggal akhir tidak boleh kurang dari tanggal awal');
+                    endDate.value = startDate.value;
+                }
+            }
+        }
+        
+        startDate.addEventListener('change', validateDates);
+        endDate.addEventListener('change', validateDates);
+    });
+</script>
+
 </body>
 </html>

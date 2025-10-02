@@ -125,6 +125,8 @@ $kode_pj = "YPD-003";
                     <li><a href="persetujuancuti_penanggungjawab.php">Persetujuan Cuti Karyawan</a></li>
                     <li><a href="riwayatcuti_penanggungjawab.php">Riwayat Cuti Karyawan</a></li>
                     <li><a href="pengajuancuti_penanggungjawab.php">Ajukan Cuti Pribadi</a></li>
+                    <li><a href="kalender_cuti_penanggungjawab.php">Kalender Cuti Divisi</a></li>
+                    <li><a href="riwayat_cuti_pribadi_penanggungjawab.php">Riwayat Cuti Pribadi</a></li>
                 </ul>
             </li>
             <li><a href="#">KHL ▾</a>
@@ -132,6 +134,8 @@ $kode_pj = "YPD-003";
                     <li><a href="persetujuankhl_penanggungjawab.php">Persetujuan KHL Karyawan</a></li>
                     <li><a href="riwayatkhl_penanggungjawab.php">Riwayat KHL Karyawan</a></li>
                     <li><a href="pengajuankhl_penanggungjawab.php">Ajukan KHL Pribadi</a></li>
+                    <li><a href="kalender_khl_penanggungjawab.php">Kalender KHL Divisi</a></li>
+                    <li><a href="riwayat_cuti_pribadi_penanggungjawab.php">Riwayat Cuti Pribadi</a></li>
                 </ul>
             </li>
             <li><a href="karyawan_divisi.php">Karyawan Divisi</a></li>
