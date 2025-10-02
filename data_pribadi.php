@@ -3,7 +3,7 @@ session_start();
 
 // sementara untuk contoh tanpa login
 if (!isset($_SESSION['kode_karyawan'])) {
-    $_SESSION['kode_karyawan'] = '9001';
+    $_SESSION['kode_karyawan'] = 'YPD001';
 }
 
 // simpan data ke session saat submit
@@ -177,10 +177,13 @@ button:hover{background:#3a3162;}
 
         <label>Divisi/Bagian</label>
         <select name="divisi" required>
-          <option value="">Pilih Divisi</option>
+          <option value="">Pilih Divisi/Posisi</option>
           <option value="Training">Training</option>
           <option value="Wisma">Wisma</option>
           <option value="Konsultasi">Konsultasi</option>
+          <option value="Keuangan">Keuangan</option>
+          <option value="SDM">SDM</option>
+          <option value="Sekretariat">Sekretariat</option>
         </select>
 
         <label>Role</label>

@@ -49,10 +49,9 @@ header {
   color:#2e1f4f;
 }
 .logo img {
-  width: 50px;
+  width: 130px;
   height: 50px;
   object-fit: contain;
-  border-radius: 50%;
 }
 
 nav ul {
@@ -234,7 +233,6 @@ p.admin-title {
                 <li><a href="data_karyawan.php">Data Karyawan</a></li>
             </ul>
         </li>
-        <li><a href="#">Profil ▾</a></li>
           <ul>
                 <li><a href="logout2.php">Logout</a></li>
             </ul>

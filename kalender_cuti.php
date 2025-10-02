@@ -113,8 +113,8 @@ $month_names = [
 <style>
     body { margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg,#1E105E 0%,#8897AE 100%); min-height:100vh; color:#333; }
     header { background:rgba(255,255,255,1); padding:20px 40px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #34377c; }
-    .logo { display:flex; align-items:center; gap:16px; font-weight:500; font-size:20px; color:#2e1f4f; }
-    .logo img { width: 50px; height: 50px; object-fit: contain; border-radius: 50%; }
+    .logo { display:flex; align-items:center; gap:18px; font-weight:500; font-size:20px; color:#2e1f4f; }
+    .logo img { width: 120px; height: 50px; object-fit: contain; }
     nav ul { list-style:none; margin:0; padding:0; display:flex; gap:30px; }
     nav li { position:relative; }
     nav a { text-decoration:none; color:#333; font-weight:600; padding:8px 4px; display:block; }
@@ -193,23 +193,21 @@ $month_names = [
 
 <header>
     <div class="logo">
-        <img src="https://yt3.googleusercontent.com/ytc/AIdro_k21dE_e_T4s2-9e5aB2H3-_hDUa8sGAky5TTsD=s900-c-k-c0x00ffffff-no-rj" alt="Logo Yayasan">
-        <span>Yayasan Purba Danarta</span>
-    </div>
+    <img src="image/namayayasan.png" alt="Logo Yayasan">
+    <span>Yayasan Purba Danarta</span>
+  </div>
     <nav>
         <ul>
         <li><a href="dashboardadmin.php">Beranda</a></li>
         <li><a href="#">Cuti ▾</a>
             <ul>
-            <li><a href="administrasi_cuti.php">Administrasi Cuti</a></li>
-            <li><a href="riwayat_cuti_pegawai.php">Riwayat Cuti</a></li>
+            <li><a href="riwayat_cuti.php">Riwayat Cuti</a></li>
             <li><a href="kalender_cuti.php">Kalender Cuti</a></li>
             <li><a href="daftar_sisa_cuti.php">Sisa Cuti Karyawan</a></li>
             </ul>
         </li>
         <li><a href="#">KHL ▾</a>
             <ul>
-                <li><a href="administrasi_khl.php">Administrasi KHL</a></li>
                 <li><a href="riwayat_khl.php">Riwayat KHL</a></li>
                 <li><a href="kalender_khl.php">Kalender KHL</a></li>
             </ul>
@@ -220,11 +218,15 @@ $month_names = [
                 <li><a href="riwayat_pelamar.php">Riwayat Pelamar</a></li>
             </ul>
         </li>
-        <li><a href="#">Karyawan ▾</a></li>
+        <li><a href="#">Karyawan ▾</a>
             <ul>
                 <li><a href="data_karyawan.php">Data Karyawan</a></li>
             </ul>
-        <li><a href="#">Profil ▾</a></li>
+        </li>
+          <ul>
+                <li><a href="logout2.php">Logout</a></li>
+            </ul>
+        </li>
         </ul>
     </nav>
 </header>

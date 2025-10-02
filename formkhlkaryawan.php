@@ -1,7 +1,7 @@
 <?php
 session_start();
 // Ambil NIK karyawan dari session login
-$nik = isset($_SESSION['nik']) ? $_SESSION['nik'] : '123456789';
+$nik = isset($_SESSION['nik']) ? $_SESSION['nik'] : 'YPD002';
 
 // Jika pakai database, bisa query data user di sini
 ?>
@@ -133,11 +133,7 @@ $nik = isset($_SESSION['nik']) ? $_SESSION['nik'] : '123456789';
       <input type="text" name="nik" value="<?php echo htmlspecialchars($nik); ?>" readonly>
 
       <label>Proyek</label>
-      <select name="proyek" required>
-        <option value="">Pilih Proyek</option>
-        <option value="Proyek A">Proyek A</option>
-        <option value="Proyek B">Proyek B</option>
-      </select>
+      <input type="text" name="proyek" placeholder="Masukkan nama proyek" required>
 
       <label>Tanggal KHL</label>
       <input type="date" name="tanggal_khl" required>

@@ -2,7 +2,7 @@
 session_start();
 
 // --- Contoh data login / profil ---
-$nama               = "Adel";
+$nama               = "Cell";
 $sisa_cuti_tahunan  = 12;
 $sisa_cuti_lustrum  = 5;
 

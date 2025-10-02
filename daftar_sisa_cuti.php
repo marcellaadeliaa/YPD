@@ -7,7 +7,7 @@ $data_sisa_cuti = [
         'id' => 1,
         'kode_karyawan' => '11223344',
         'nama_karyawan' => 'Xue',
-        'divisi' => 'Admin SDM',
+        'divisi' => 'Keuangan',
         'cuti_tahunan' => 12,
         'cuti_tahunan_terpakai' => 3,
         'cuti_lustrum' => 5,
@@ -20,7 +20,7 @@ $data_sisa_cuti = [
         'id' => 2,
         'kode_karyawan' => '11223355',
         'nama_karyawan' => 'Adel',
-        'divisi' => 'Admin SDM',
+        'divisi' => 'SDM',
         'cuti_tahunan' => 12,
         'cuti_tahunan_terpakai' => 8,
         'cuti_lustrum' => 3,
@@ -33,7 +33,7 @@ $data_sisa_cuti = [
         'id' => 3,
         'kode_karyawan' => '11223366',
         'nama_karyawan' => 'Budi Santoso',
-        'divisi' => 'Operasional',
+        'divisi' => 'Training',
         'cuti_tahunan' => 12,
         'cuti_tahunan_terpakai' => 12,
         'cuti_lustrum' => 2,
@@ -46,7 +46,7 @@ $data_sisa_cuti = [
         'id' => 4,
         'kode_karyawan' => '11223377',
         'nama_karyawan' => 'Siti Rahayu',
-        'divisi' => 'Marketing',
+        'divisi' => 'Konsultasi',
         'cuti_tahunan' => 12,
         'cuti_tahunan_terpakai' => 5,
         'cuti_lustrum' => 7,
@@ -59,7 +59,7 @@ $data_sisa_cuti = [
         'id' => 5,
         'kode_karyawan' => '11223388',
         'nama_karyawan' => 'Ahmad Fauzi',
-        'divisi' => 'IT',
+        'divisi' => 'Wisma',
         'cuti_tahunan' => 12,
         'cuti_tahunan_terpakai' => 2,
         'cuti_lustrum' => 4,
@@ -96,7 +96,7 @@ if (!empty($search_query)) {
     body { margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg,#1E105E 0%,#8897AE 100%); min-height:100vh; color:#333; }
     header { background:rgba(255,255,255,1); padding:20px 40px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #34377c; }
     .logo { display:flex; align-items:center; gap:16px; font-weight:500; font-size:20px; color:#2e1f4f; }
-    .logo img { width: 50px; height: 50px; object-fit: contain; border-radius: 50%; }
+    .logo img { width: 130px; height: 50px; object-fit: contain; }
     nav ul { list-style:none; margin:0; padding:0; display:flex; gap:30px; }
     nav li { position:relative; }
     nav a { text-decoration:none; color:#333; font-weight:600; padding:8px 4px; display:block; }
@@ -185,23 +185,21 @@ if (!empty($search_query)) {
 
 <header>
     <div class="logo">
-        <img src="https://yt3.googleusercontent.com/ytc/AIdro_k21dE_e_T4s2-9e5aB2H3-_hDUa8sGAky5TTsD=s900-c-k-c0x00ffffff-no-rj" alt="Logo Yayasan">
-        <span>Yayasan Purba Danarta</span>
-    </div>
+    <img src="image/namayayasan.png" alt="Logo Yayasan">
+    <span>Yayasan Purba Danarta</span>
+  </div>
     <nav>
         <ul>
         <li><a href="dashboardadmin.php">Beranda</a></li>
         <li><a href="#">Cuti ▾</a>
             <ul>
-            <li><a href="administrasi_cuti.php">Administrasi Cuti</a></li>
-            <li><a href="riwayat_cuti_pegawai.php">Riwayat Cuti</a></li>
+            <li><a href="riwayat_cuti.php">Riwayat Cuti</a></li>
             <li><a href="kalender_cuti.php">Kalender Cuti</a></li>
             <li><a href="daftar_sisa_cuti.php">Sisa Cuti Karyawan</a></li>
             </ul>
         </li>
         <li><a href="#">KHL ▾</a>
             <ul>
-                <li><a href="administrasi_khl.php">Administrasi KHL</a></li>
                 <li><a href="riwayat_khl.php">Riwayat KHL</a></li>
                 <li><a href="kalender_khl.php">Kalender KHL</a></li>
             </ul>
@@ -212,15 +210,22 @@ if (!empty($search_query)) {
                 <li><a href="riwayat_pelamar.php">Riwayat Pelamar</a></li>
             </ul>
         </li>
-        <li><a href="#">Karyawan ▾</a></li>
-        <li><a href="#">Profil ▾</a></li>
+        <li><a href="#">Karyawan ▾</a>
+            <ul>
+                <li><a href="data_karyawan.php">Data Karyawan</a></li>
+            </ul>
+        </li>
+          <ul>
+                <li><a href="logout2.php">Logout</a></li>
+            </ul>
+        </li>
         </ul>
     </nav>
 </header>
 
 <main>
-    <h1>Welcome, Xue!</h1>
-    <p class="admin-title">Admin Divisi XXXX</p>
+    <h1>Welcome, Cell!</h1>
+    <p class="admin-title">Administrator</p>
 
     <div class="card">
         <h2 class="page-title">Daftar Sisa Cuti Karyawan</h2>
@@ -237,7 +242,7 @@ if (!empty($search_query)) {
             <form method="GET" action="daftar_sisa_cuti.php">
                 <div class="filter-row">
                     <div class="filter-group search-group">
-                        <label for="search">Cari Karyawan (Nama/Kode/Divisi)</label>
+                        <label for="search">Cari Karyawan (Nama/Kode/Divisi/Posisi)</label>
                         <input type="text" id="search" name="search" placeholder="Cari berdasarkan nama, kode, atau divisi..." value="<?= htmlspecialchars($search_query) ?>">
                     </div>
                 </div>
@@ -264,7 +269,7 @@ if (!empty($search_query)) {
                 <tr>
                     <th>No. Kode</th>
                     <th>Nama Karyawan</th>
-                    <th>Divisi</th>
+                    <th>Divisi/Posisi</th>
                     <th>Cuti Tahunan</th>
                     <th>Cuti Lustrum</th>
                     <th>Cuti Tambahan</th>

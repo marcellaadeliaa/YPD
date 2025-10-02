@@ -7,78 +7,25 @@ $end_date = $_GET['end_date'] ?? '';
 $search_query = $_GET['search'] ?? '';
 
 // --- DUMMY DATA (DATA CONTOH) ---
+// Data Anda tetap di sini, saya singkat agar tidak terlalu panjang
 $riwayat_khl = [
     [
-        'id' => 1,
-        'kode_khl' => '11221384',
-        'nama_karyawan' => 'Adrianna',
-        'jenis_khl' => 'Training',
-        'projek' => 'Pelatihan Karyawan',
-        'tanggal_kerja' => '2025-09-10',
-        'jam_mulai_kerja' => '07:00:00',
-        'jam_selesai_kerja' => '16:00:00',
-        'tanggal_libur' => '2025-09-11',
-        'jam_mulai_libur' => '',
-        'jam_selesai_libur' => '',
-        'status' => 'Ditolak'
+        'id' => 1, 'kode_khl' => '11221384', 'nama_karyawan' => 'Adrianna', 'jenis_khl' => 'Training', 'projek' => 'Pelatihan Karyawan', 'tanggal_kerja' => '2025-09-10', 'jam_mulai_kerja' => '07:00:00', 'jam_selesai_kerja' => '16:00:00', 'tanggal_libur' => '2025-09-11', 'jam_mulai_libur' => '', 'jam_selesai_libur' => '', 'status' => 'Ditolak'
     ],
     [
-        'id' => 2,
-        'kode_khl' => '11221385',
-        'nama_karyawan' => 'Budi Santoso',
-        'jenis_khl' => 'Proyek Khusus',
-        'projek' => 'Implementasi Sistem Baru',
-        'tanggal_kerja' => '2025-09-12',
-        'jam_mulai_kerja' => '08:00:00',
-        'jam_selesai_kerja' => '17:00:00',
-        'tanggal_libur' => '2025-09-13',
-        'jam_mulai_libur' => '09:00:00',
-        'jam_selesai_libur' => '14:00:00',
-        'status' => 'Diterima'
+        'id' => 2, 'kode_khl' => '11221385', 'nama_karyawan' => 'Budi Santoso', 'jenis_khl' => 'Proyek Khusus', 'projek' => 'Implementasi Sistem Baru', 'tanggal_kerja' => '2025-09-12', 'jam_mulai_kerja' => '08:00:00', 'jam_selesai_kerja' => '17:00:00', 'tanggal_libur' => '2025-09-13', 'jam_mulai_libur' => '09:00:00', 'jam_selesai_libur' => '14:00:00', 'status' => 'Diterima'
     ],
     [
-        'id' => 3,
-        'kode_khl' => '11221386',
-        'nama_karyawan' => 'Siti Rahayu',
-        'jenis_khl' => 'Lembur',
-        'projek' => 'Laporan Bulanan',
-        'tanggal_kerja' => '2025-09-15',
-        'jam_mulai_kerja' => '17:00:00',
-        'jam_selesai_kerja' => '21:00:00',
-        'tanggal_libur' => '2025-09-16',
-        'jam_mulai_libur' => '',
-        'jam_selesai_libur' => '',
-        'status' => 'Diterima'
+        'id' => 3, 'kode_khl' => '11221386', 'nama_karyawan' => 'Siti Rahayu', 'jenis_khl' => 'Lembur', 'projek' => 'Laporan Bulanan', 'tanggal_kerja' => '2025-09-15', 'jam_mulai_kerja' => '17:00:00', 'jam_selesai_kerja' => '21:00:00', 'tanggal_libur' => '2025-09-16', 'jam_mulai_libur' => '', 'jam_selesai_libur' => '', 'status' => 'Diterima'
     ],
     [
-        'id' => 4,
-        'kode_khl' => '11221387',
-        'nama_karyawan' => 'Ahmad Fauzi',
-        'jenis_khl' => 'Training',
-        'projek' => 'Workshop Leadership',
-        'tanggal_kerja' => '2025-09-18',
-        'jam_mulai_kerja' => '08:30:00',
-        'jam_selesai_kerja' => '16:30:00',
-        'tanggal_libur' => '2025-09-19',
-        'jam_mulai_libur' => '10:00:00',
-        'jam_selesai_libur' => '15:00:00',
-        'status' => 'Menunggu'
+        'id' => 4, 'kode_khl' => '11221387', 'nama_karyawan' => 'Ahmad Fauzi', 'jenis_khl' => 'Training', 'projek' => 'Workshop Leadership', 'tanggal_kerja' => '2025-09-18', 'jam_mulai_kerja' => '08:30:00', 'jam_selesai_kerja' => '16:30:00', 'tanggal_libur' => '2025-09-19', 'jam_mulai_libur' => '10:00:00', 'jam_selesai_libur' => '15:00:00', 'status' => 'Menunggu'
     ],
     [
-        'id' => 5,
-        'kode_khl' => '11221388',
-        'nama_karyawan' => 'Rina Melati',
-        'jenis_khl' => 'Proyek Khusus',
-        'projek' => 'Event Company Gathering',
-        'tanggal_kerja' => '2025-09-20',
-        'jam_mulai_kerja' => '06:00:00',
-        'jam_selesai_kerja' => '18:00:00',
-        'tanggal_libur' => '2025-09-21',
-        'jam_mulai_libur' => '',
-        'jam_selesai_libur' => '',
-        'status' => 'Diterima'
+        'id' => 5, 'kode_khl' => '11221388', 'nama_karyawan' => 'Rina Melati', 'jenis_khl' => 'Proyek Khusus', 'projek' => 'Event Company Gathering', 'tanggal_kerja' => '2025-09-20', 'jam_mulai_kerja' => '06:00:00', 'jam_selesai_kerja' => '18:00:00', 'tanggal_libur' => '2025-09-21', 'jam_mulai_libur' => '', 'jam_selesai_libur' => '', 'status' => 'Diterima'
     ],
 ];
+
 
 // Filter data berdasarkan input
 $filtered_data = $riwayat_khl;
@@ -124,14 +71,15 @@ $filtered_data = array_values($filtered_data);
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Riwayat KHL Pegawai - Admin SDM</title>
+<title>Riwayat KHL Pegawai - Admin</title>
 <style>
     /* Menggunakan style yang konsisten dari halaman admin sebelumnya */
     body { margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg,#1E105E 0%,#8897AE 100%); min-height:100vh; color:#333; }
-    header { background:rgba(255,255,255,1); padding:20px 40px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #34377c; }
+    header { background:rgba(255,255,255,1); padding:20px 40px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #34377c; flex-wrap: wrap; }
     .logo { display:flex; align-items:center; gap:16px; font-weight:500; font-size:20px; color:#2e1f4f; }
-    .logo img { width: 50px; height: 50px; object-fit: contain; border-radius: 50%; }
-    nav ul { list-style:none; margin:0; padding:0; display:flex; gap:30px; }
+    /* Menyamakan style logo dengan perbaikan sebelumnya agar konsisten */
+    .logo img { width: 130px; height: 50px; object-fit: contain; }
+    nav ul { list-style:none; margin:0; padding:0; display:flex; gap:30px; align-items: center; }
     nav li { position:relative; }
     nav a { text-decoration:none; color:#333; font-weight:600; padding:8px 4px; display:block; }
     nav li ul { display:none; position:absolute; top:100%; left:0; background:#fff; padding:10px 0; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.15); min-width:200px; z-index:999; }
@@ -146,8 +94,8 @@ $filtered_data = array_values($filtered_data);
     .page-title { font-size: 24px; font-weight: 600; text-align: center; margin-bottom: 30px; color: #1E105E; }
     
     /* Style untuk filter section */
-    .filter-section { background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 25px; }
-    .filter-row { display: flex; gap: 15px; align-items: end; flex-wrap: wrap; }
+    .filter-section { background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 25px; border: 1px solid #e0e0e0; }
+    .filter-row { display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; }
     .filter-group { display: flex; flex-direction: column; gap: 5px; }
     .filter-group label { font-weight: 600; font-size: 14px; color: #333; }
     .filter-group input { padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
@@ -155,12 +103,13 @@ $filtered_data = array_values($filtered_data);
     .filter-group.search-group { flex-grow: 1; min-width: 200px; }
     
     .action-bar { display: flex; gap: 10px; margin-top: 15px; }
-    .btn { padding: 10px 20px; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; color: #fff; cursor: pointer; transition: opacity 0.3s; }
+    .btn { padding: 10px 20px; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; color: #fff; cursor: pointer; transition: background-color 0.3s; text-decoration: none; text-align: center; }
     .btn-cari { background-color: #4a3f81; }
     .btn-cari:hover { background-color: #3a3162; }
     .btn-reset { background-color: #6c757d; }
     .btn-reset:hover { background-color: #545b62; }
     
+    .data-table-container { overflow-x: auto; }
     .data-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 20px; }
     .data-table th, .data-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #ddd; }
     .data-table th { background-color: #f8f9fa; font-weight: 600; color: #333; position: sticky; top: 0; }
@@ -173,36 +122,19 @@ $filtered_data = array_values($filtered_data);
     
     .no-data { text-align: center; padding: 40px; color: #666; font-style: italic; }
     
-    .filter-info { 
-        background: #e7f3ff; 
-        padding: 10px 15px; 
-        border-radius: 6px; 
-        margin-bottom: 15px; 
-        font-size: 14px; 
-        border-left: 4px solid #4a3f81;
-    }
-    
-    .table-section { 
-        background: #f8f9fa; 
-        padding: 8px 12px; 
-        font-weight: 600; 
-        color: #4a3f81; 
-        border-bottom: 2px solid #4a3f81;
-        font-size: 14px;
-    }
+    .filter-info { background: #e7f3ff; padding: 10px 15px; border-radius: 6px; margin-bottom: 20px; font-size: 14px; border-left: 4px solid #4a3f81; display: flex; justify-content: space-between; align-items: center; }
     
     /* Responsive */
-    @media (max-width: 1200px) {
-        .data-table { font-size: 12px; }
-        .data-table th, .data-table td { padding: 8px 10px; }
+    @media (max-width: 992px) {
+        header { flex-direction: column; align-items: flex-start; }
+        nav ul { flex-direction: column; gap: 10px; width: 100%; margin-top: 15px; align-items: flex-start; }
+        nav li ul { position: static; box-shadow: none; border: none; padding-left: 20px; }
     }
-    
     @media (max-width: 768px) {
-        .filter-row { flex-direction: column; }
+        .filter-row { flex-direction: column; align-items: stretch; }
         .filter-group { width: 100%; }
         .action-bar { flex-direction: column; }
-        .btn { width: 100%; }
-        .data-table-container { overflow-x: auto; }
+        .btn { width: 100%; box-sizing: border-box; }
     }
 </style>
 </head>
@@ -210,32 +142,37 @@ $filtered_data = array_values($filtered_data);
 
 <header>
     <div class="logo">
-        <img src="https://yt3.googleusercontent.com/ytc/AIdro_k21dE_e_T4s2-9e5aB2H3-_hDUa8sGAky5TTsD=s900-c-k-c0x00ffffff-no-rj" alt="Logo Yayasan">
+        <img src="image/namayayasan.png" alt="Logo Yayasan">
         <span>Yayasan Purba Danarta</span>
     </div>
     <nav>
         <ul>
-        <li><a href="dashboardadmin.php">Beranda</a></li>
-        <li><a href="#">Cuti ▾</a>
-            <ul>
-            <li><a href="administrasi_cuti.php">Administrasi Cuti</a></li>
-            <li><a href="riwayat_cuti_pegawai.php">Riwayat Cuti Pegawai</a></li>
-            </ul>
-        </li>
-        <li><a href="#">KHL ▾</a>
-            <ul>
-                <li><a href="administrasi_khl.php">Administrasi KHL</a></li>
-                <li><a href="riwayat_khl.php">Riwayat KHL Pegawai</a></li>
-            </ul>
-        </li>
-        <li><a href="#">Lamaran Kerja ▾</a>
-            <ul>
-                <li><a href="administrasi_pelamar.php">Administrasi Pelamar</a></li>
-                <li><a href="riwayat_pelamar.php">Riwayat Pelamar</a></li>
-            </ul>
-        </li>
-        <li><a href="#">Karyawan ▾</a></li>
-        <li><a href="#">Profil ▾</a></li>
+            <li><a href="dashboardadmin.php">Beranda</a></li>
+            <li><a href="#">Cuti ▾</a>
+                <ul>
+                    <li><a href="riwayat_cuti.php">Riwayat Cuti</a></li>
+                    <li><a href="kalender_cuti.php">Kalender Cuti</a></li>
+                    <li><a href="daftar_sisa_cuti.php">Sisa Cuti Karyawan</a></li>
+                </ul>
+            </li>
+            <li><a href="#">KHL ▾</a>
+                <ul>
+                    <li><a href="riwayat_khl.php">Riwayat KHL</a></li>
+                    <li><a href="kalender_khl.php">Kalender KHL</a></li>
+                </ul>
+            </li>
+            <li><a href="#">Lamaran Kerja ▾</a>
+                <ul>
+                    <li><a href="administrasi_pelamar.php">Administrasi Pelamar</a></li>
+                    <li><a href="riwayat_pelamar.php">Riwayat Pelamar</a></li>
+                </ul>
+            </li>
+            <li><a href="#">Karyawan ▾</a>
+                <ul>
+                    <li><a href="data_karyawan.php">Data Karyawan</a></li>
+                </ul>
+            </li>
+            <li><a href="logout2.php">Logout</a></li>
         </ul>
     </nav>
 </header>
@@ -247,9 +184,8 @@ $filtered_data = array_values($filtered_data);
     <div class="card">
         <h2 class="page-title">Riwayat KHL Pegawai</h2>
         
-        <!-- Filter Section -->
         <div class="filter-section">
-            <form method="GET" action="riwayat_khl.php">
+            <form method="GET" action="">
                 <div class="filter-row">
                     <div class="filter-group date-group">
                         <label for="start_date">Dari Tanggal</label>
@@ -274,19 +210,20 @@ $filtered_data = array_values($filtered_data);
             </form>
         </div>
 
-        <!-- Info Filter Aktif -->
         <?php if (!empty($start_date) || !empty($end_date) || !empty($search_query)): ?>
             <div class="filter-info">
-                <strong>Filter Aktif:</strong>
-                <?php 
-                $filters = [];
-                if (!empty($start_date)) $filters[] = "Dari: " . date('d/m/Y', strtotime($start_date));
-                if (!empty($end_date)) $filters[] = "Sampai: " . date('d/m/Y', strtotime($end_date));
-                if (!empty($search_query)) $filters[] = "Pencarian: '" . htmlspecialchars($search_query) . "'";
-                echo implode(' | ', $filters);
-                ?>
-                <span style="float: right; color: #666;">
-                    Data ditemukan: <?= count($filtered_data) ?>
+                <span>
+                    <strong>Filter Aktif:</strong>
+                    <?php 
+                    $filters = [];
+                    if (!empty($start_date)) $filters[] = "Dari: " . date('d/m/Y', strtotime($start_date));
+                    if (!empty($end_date)) $filters[] = "Sampai: " . date('d/m/Y', strtotime($end_date));
+                    if (!empty($search_query)) $filters[] = "Pencarian: '" . htmlspecialchars($search_query) . "'";
+                    echo implode(' | ', $filters);
+                    ?>
+                </span>
+                <span style="color: #666;">
+                    <strong>Data ditemukan: <?= count($filtered_data) ?></strong>
                 </span>
             </div>
         <?php endif; ?>
@@ -365,6 +302,3 @@ $filtered_data = array_values($filtered_data);
         endDate.addEventListener('change', validateDates);
     });
 </script>
-
-</body>
-</html>

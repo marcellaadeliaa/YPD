@@ -151,7 +151,7 @@ session_start();
     <h2>Pengajuan Cuti</h2>
     <form method="post" action="prosescuti_karyawan.php" id="formCuti">
       <label>No. Induk Karyawan</label>
-      <input type="text" name="nik" value="123456789" readonly>
+      <input type="text" name="nik" value="YPD002" readonly>
 
       <label>Jenis Cuti</label>
       <select name="jenis_cuti" id="jenisCuti" required onchange="toggleManualInput()">

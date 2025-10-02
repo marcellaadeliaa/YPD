@@ -255,22 +255,24 @@ $pelamarTidakLolos = getApplicantsByStatus($conn, 'Tidak Lolos');
 </div>
 
 <header>
-    <div class="logo"> <img src="image/namayayasan.png" alt="Logo Yayasan"> <span>Yayasan Purba Danarta</span> </div>
+    <div class="logo">
+    <img src="image/namayayasan.png" alt="Logo Yayasan">
+    <span>Yayasan Purba Danarta</span>
+  </div>
     <nav>
         <ul>
         <li><a href="dashboardadmin.php">Beranda</a></li>
         <li><a href="#">Cuti ▾</a>
             <ul>
-                <li><a href="administrasi_cuti.php">Administrasi Cuti</a></li>
-                <li><a href="riwayat_cuti.php">Riwayat Cuti Pegawai</a></li>
-                <li><a href="kalender_cuti.php">Kalender Cuti Pegawai</a></li>
-                <li><a href="daftar_sisa_cuti.php">Daftar Sisa Cuti Pegawai</a></li>
+            <li><a href="riwayat_cuti.php">Riwayat Cuti</a></li>
+            <li><a href="kalender_cuti.php">Kalender Cuti</a></li>
+            <li><a href="daftar_sisa_cuti.php">Sisa Cuti Karyawan</a></li>
             </ul>
         </li>
         <li><a href="#">KHL ▾</a>
             <ul>
-                <li><a href="administrasi_khl.php">Administrasi KHL</a></li>
-                <li><a href="riwayat_khl.php">Riwayat KHL Pegawai</a></li>
+                <li><a href="riwayat_khl.php">Riwayat KHL</a></li>
+                <li><a href="kalender_khl.php">Kalender KHL</a></li>
             </ul>
         </li>
         <li><a href="#">Lamaran Kerja ▾</a>
@@ -279,88 +281,22 @@ $pelamarTidakLolos = getApplicantsByStatus($conn, 'Tidak Lolos');
                 <li><a href="riwayat_pelamar.php">Riwayat Pelamar</a></li>
             </ul>
         </li>
-        <li><a href="#">Karyawan ▾</a></li>
+        <li><a href="#">Karyawan ▾</a>
             <ul>
                 <li><a href="data_karyawan.php">Data Karyawan</a></li>
             </ul>
-        <li><a href="#">Profil ▾</a></li>
-            <ul>
-                <li><a href="#">Hai, Adel! as Administrator</a></li>
-                <li><a href="logout.php">Logout</a></li>
+        </li>
+          <ul>
+                <li><a href="logout2.php">Logout</a></li>
             </ul>
+        </li>
         </ul>
     </nav>
 </header>
 
 <main>
-    <h1>Welcome, Adel!</h1>
+    <h1>Welcome, Cell!</h1>
     <p class="admin-title">Administrator</p>
-
-    <!-- Kelola Pengumuman Umum -->
-    <div class="card" style="margin-bottom: 30px;">
-        <h2 class="page-title">Kelola Pengumuman Umum</h2>
-        
-        <!-- Form Tambah Pengumuman -->
-        <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
-            <h3 style="color: #1E105E; margin-bottom: 15px;">Tambah Pengumuman Baru</h3>
-            <form method="POST">
-                <input type="hidden" name="action_pengumuman" value="tambah">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
-                    <div>
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Judul:</label>
-                        <input type="text" name="judul" placeholder="Judul pengumuman" required 
-                               style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
-                    </div>
-                    <div>
-                        <label style="display: block; margin-bottom: 5px; font-weight: 600;">Tanggal:</label>
-                        <input type="date" name="tanggal" required 
-                               style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
-                    </div>
-                </div>
-                <div style="margin-bottom: 15px;">
-                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Isi Pengumuman:</label>
-                    <textarea name="isi" placeholder="Isi pengumuman..." required 
-                              style="width: 100%; height: 100px; padding: 8px; border: 1px solid #ddd; border-radius: 5px;"></textarea>
-                </div>
-                <button type="submit" style="padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                    Tambah Pengumuman
-                </button>
-            </form>
-        </div>
-
-        <!-- Daftar Pengumuman -->
-        <h3 style="color: #1E105E; margin-bottom: 15px;">Daftar Pengumuman Aktif</h3>
-        <?php if ($pengumuman_umum->num_rows > 0): ?>
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th class="text-left">Judul</th>
-                        <th>Tanggal</th>
-                        <th>Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php while($pengumuman = $pengumuman_umum->fetch_assoc()): ?>
-                    <tr>
-                        <td class="text-left"><?= htmlspecialchars($pengumuman['judul']) ?></td>
-                        <td><?= date('d/m/Y', strtotime($pengumuman['tanggal'])) ?></td>
-                        <td>
-                            <button onclick="editPengumuman(<?= $pengumuman['id'] ?>, '<?= htmlspecialchars($pengumuman['judul']) ?>', '<?= htmlspecialchars($pengumuman['isi']) ?>', '<?= $pengumuman['tanggal'] ?>')" 
-                                    class="btn-aksi btn-lihat">Edit</button>
-                            <form method="POST" style="display: inline;">
-                                <input type="hidden" name="action_pengumuman" value="hapus">
-                                <input type="hidden" name="id" value="<?= $pengumuman['id'] ?>">
-                                <button type="submit" class="btn-aksi btn-tidak" onclick="return confirm('Hapus pengumuman ini?')">Hapus</button>
-                            </form>
-                        </td>
-                    </tr>
-                    <?php endwhile; ?>
-                </tbody>
-            </table>
-        <?php else: ?>
-            <p class="no-data">Belum ada pengumuman umum.</p>
-        <?php endif; ?>
-    </div>
 
     <!-- Data Pelamar -->
     <div class="card">

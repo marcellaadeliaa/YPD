@@ -91,9 +91,12 @@ if (!isset($_SESSION['user_id'])) {
         <div class="form-group"><label>Posisi yang Dilamar</label>
           <select name="posisiDilamar" required>
             <option value="">Pilih Posisi</option>
-            <option value="Training">Training</option>
-            <option value="Wisma">Wisma</option>
-            <option value="Konsultasi">Konsultasi</option>
+              <option value="Training">Training</option>
+              <option value="Wisma">Wisma</option>
+              <option value="Konsultasi">Konsultasi</option>
+              <option value="Keuangan">Keuangan</option>
+              <option value="SDM">SDM</option>
+              <option value="Sekretariat">Sekretariat</option>
           </select>
         </div>
         <div class="form-group"><label>Jenis Kelamin</label>
