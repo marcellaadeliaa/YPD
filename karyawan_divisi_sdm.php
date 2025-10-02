@@ -1,20 +1,18 @@
 <?php
-// FILE: karyawan_divisi.php
-$divisi_pj = "Training";
+// FILE: karyawan_divisi_sdm.php
+session_start();
+$divisi_pj = "SDM";
 $karyawan_divisi = [
-    ['id' => 1, 'nama' => 'Andi', 'jabatan' => 'Trainer', 'sisa_cuti' => 10],
-    ['id' => 2, 'nama' => 'Citra', 'jabatan' => 'Manager', 'sisa_cuti' => 12],
-    ['id' => 3, 'nama' => 'Dewi', 'jabatan' => 'Coordinator', 'sisa_cuti' => 5],
-    ['id' => 4, 'nama' => 'Eko', 'jabatan' => 'Trainer', 'sisa_cuti' => 8],
-    ['id' => 5, 'nama' => 'Fani', 'jabatan' => 'Trainer', 'sisa_cuti' => 8],
+    ['id' => 1, 'nama' => 'Dian', 'jabatan' => 'Penanggung Jawab', 'sisa_cuti' => 12],
+    ['id' => 2, 'nama' => 'Gilang', 'jabatan' => 'Staff Rekrutmen', 'sisa_cuti' => 8],
+    ['id' => 3, 'nama' => 'Hana', 'jabatan' => 'Staff Administrasi', 'sisa_cuti' => 10],
+    ['id' => 4, 'nama' => 'Ivan', 'jabatan' => 'Staff Pelatihan', 'sisa_cuti' => 9],
 ];
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Karyawan Divisi</title>
+    <title>Data Karyawan Divisi - SDM</title>
     <style>
         :root { --primary-color: #1E105E; --secondary-color: #8897AE; --accent-color: #4a3f81; --card-bg: #FFFFFF; --text-color-light: #fff; --text-color-dark: #2e1f4f; --shadow-light: rgba(0,0,0,0.15); }
         body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg, var(--primary-color) 0%, #a29bb8 100%); min-height: 100vh; padding-bottom: 40px; }
@@ -31,6 +29,7 @@ $karyawan_divisi = [
         nav li ul li a { color: var(--text-color-dark); font-weight: 400; white-space: nowrap; }
         main { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
         .card { background: var(--card-bg); color: var(--text-color-dark); border-radius: 20px; padding: 30px 40px; box-shadow: 0 5px 20px var(--shadow-light); }
+        h2 { color: var(--primary-color); }
         .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         .data-table th, .data-table td { padding: 15px; text-align: left; border-bottom: 1px solid #ddd; }
         .data-table th { background-color: #f8f9fa; }
@@ -44,32 +43,32 @@ $karyawan_divisi = [
     </div>
     <nav>
         <ul>
-            <li><a href="dashboardpenanggungjawab.php">Beranda</a></li>
+            <li><a href="dashboardpenanggungjawab_sdm.php">Beranda</a></li>
             <li><a href="#">Cuti ▾</a>
                 <ul>
-                    <li><a href="persetujuancuti_penanggungjawab.php">Persetujuan Cuti Karyawan</a></li>
-                    <li><a href="riwayatcuti_penanggungjawab.php">Riwayat Cuti Karyawan</a></li>
-                    <li><a href="pengajuancuti_penanggungjawab.php">Ajukan Cuti Pribadi</a></li>
-                    <li><a href="kalender_cuti_penanggungjawab.php">Kalender Cuti Divisi</a></li>
-                    <li><a href="riwayat_cuti_pribadi_penanggungjawab.php">Riwayat Cuti Pribadi</a></li>
+                    <li><a href="persetujuancuti_penanggungjawab_sdm.php">Persetujuan Cuti Karyawan</a></li>
+                    <li><a href="riwayatcuti_penanggungjawab_sdm.php">Riwayat Cuti Karyawan</a></li>
+                    <li><a href="pengajuancuti_penanggungjawab_sdm.php">Ajukan Cuti Pribadi</a></li>
+                    <li><a href="kalender_cuti_penanggungjawab_sdm.php">Kalender Cuti Divisi</a></li>
+                    <li><a href="riwayat_cuti_pribadi_penanggungjawab_sdm.php">Riwayat Cuti Pribadi</a></li>
                 </ul>
             </li>
             <li><a href="#">KHL ▾</a>
                 <ul>
-                    <li><a href="persetujuankhl_penanggungjawab.php">Persetujuan KHL Karyawan</a></li>
-                    <li><a href="riwayatkhl_penanggungjawab.php">Riwayat KHL Karyawan</a></li>
-                    <li><a href="pengajuankhl_penanggungjawab.php">Ajukan KHL Pribadi</a></li>
-                    <li><a href="kalender_khl_penanggungjawab.php">Kalender KHL Divisi</a></li>
-                    <li><a href="riwayat_cuti_pribadi_penanggungjawab.php">Riwayat Cuti Pribadi</a></li>
+                    <li><a href="persetujuankhl_penanggungjawab_sdm.php">Persetujuan KHL Karyawan</a></li>
+                    <li><a href="riwayatkhl_penanggungjawab_sdm.php">Riwayat KHL Karyawan</a></li>
+                    <li><a href="pengajuankhl_penanggungjawab_sdm.php">Ajukan KHL Pribadi</a></li>
+                    <li><a href="kalender_khl_penanggungjawab_sdm.php">Kalender KHL Divisi</a></li>
+                    <li><a href="riwayat_khl_pribadi_penanggungjawab_sdm.php">Riwayat KHL Pribadi</a></li>
                 </ul>
             </li>
-            <li><a href="karyawan_divisi.php">Karyawan Divisi</a></li>
+            <li><a href="karyawan_divisi_sdm.php">Karyawan Divisi</a></li>
             <li><a href="#">Profil ▾</a>
-    <ul>
-        <li><a href="profil_penanggungjawab.php">Profil Saya</a></li>
-        <li><a href="logout2.php">Logout</a></li>
-    </ul>
-</li>
+                <ul>
+                    <li><a href="profil_penanggungjawab_sdm.php">Profil Saya</a></li>
+                    <li><a href="logout2.php">Logout</a></li>
+                </ul>
+            </li>
         </ul>
     </nav>
 </header>

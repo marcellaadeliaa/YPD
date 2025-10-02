@@ -16,11 +16,23 @@ if ($role === 'penanggung jawab') {
     // Ambil data divisi dari session.
     $divisi = $user['divisi'] ?? null;
 
-    if ($divisi === 'Training') { // Sesuaikan dengan nilai di database Anda
+    if ($divisi === 'Training') {
         header("Location: dashboardpenanggungjawab.php");
         exit();
-    } elseif ($divisi === 'Konsultasi') { // Sesuaikan dengan nilai di database Anda
+    } elseif ($divisi === 'Konsultasi') {
         header("Location: dashboardpenanggungjawab_konsultasi.php");
+        exit();
+    } elseif ($divisi === 'Wisma') { // Penambahan Divisi Wisma
+        header("Location: dashboardpenanggungjawab_wisma.php");
+        exit();
+    } elseif ($divisi === 'SDM') { // Penambahan Divisi SDM
+        header("Location: dashboardpenanggungjawab_sdm.php");
+        exit();
+    } elseif ($divisi === 'Sekretariat') { // Penambahan Divisi Sekretariat
+        header("Location: dashboardpenanggungjawab_sekretariat.php");
+        exit();
+    } elseif ($divisi === 'Keuangan') { // Penambahan Divisi Keuangan
+        header("Location: dashboardpenanggungjawab_keuangan.php");
         exit();
     } else {
         // Jika divisi tidak valid, kembalikan ke halaman login
