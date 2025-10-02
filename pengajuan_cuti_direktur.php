@@ -19,18 +19,16 @@ if ($conn->connect_error) {
 }
 
 // ===========================================
-// AMBIL DATA KARYAWAN YANG SEDANG LOGIN (Digunakan hanya untuk tampilan sisa cuti Direktur)
+// AMBIL DATA KARYAWAN YANG SEDANG LOGIN (Direktur)
 // ===========================================
-// ASUMSI: Gunakan kode karyawan dari SESSION untuk menampilkan sisa cuti
-// yang bersangkutan, meski nanti form diisi dengan kode karyawan lain.
-$user_kode_session = isset($_SESSION['kode_karyawan']) ? $_SESSION['kode_karyawan'] : 'YPD9999';
+// *Pastikan SESSION kode_karyawan sudah diset saat login*
+$user_kode_session = isset($_SESSION['kode_karyawan']) ? $_SESSION['kode_karyawan'] : 'YPD9999'; 
 
-$nama_karyawan = "";
+$nama_karyawan_login = "";
 $sisa_cuti_tahunan = 0;
 $sisa_cuti_lustrum = 0;
 $divisi_karyawan = "";
 
-// Query untuk mengambil data karyawan berdasarkan user yang login (untuk welcome message & sisa cuti)
 $stmt_user = $conn->prepare("SELECT nama_lengkap, divisi, sisa_cuti_tahunan, sisa_cuti_lustrum FROM data_karyawan WHERE kode_karyawan = ?");
 $stmt_user->bind_param("s", $user_kode_session);
 $stmt_user->execute();
@@ -38,29 +36,25 @@ $result_user = $stmt_user->get_result();
 
 if ($result_user->num_rows > 0) {
     $data_user = $result_user->fetch_assoc();
-    $nama_karyawan = htmlspecialchars($data_user['nama_lengkap']);
+    $nama_karyawan_login = htmlspecialchars($data_user['nama_lengkap']);
     $divisi_karyawan = htmlspecialchars($data_user['divisi']);
     $sisa_cuti_tahunan = $data_user['sisa_cuti_tahunan'];
     $sisa_cuti_lustrum = $data_user['sisa_cuti_lustrum'];
 } else {
-    $nama_karyawan = "Pengguna Tidak Dikenal";
+    $nama_karyawan_login = "Pengguna Tidak Dikenal";
 }
 $stmt_user->close();
 
 
 // ===========================================
-// BAGIAN 2: LOGIKA PEMROSESAN PENGAJUAN CUTI (POST) - MENGGUNAKAN INPUT MANUAL
+// BAGIAN 2: LOGIKA PEMROSESAN PENGAJUAN CUTI (POST)
 // ===========================================
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && 
-    isset($_POST['no_karyawan']) && 			
-    isset($_POST['jenis_cuti']) && 
-    isset($_POST['tanggal_mulai']) && 
-    isset($_POST['jumlah_hari']) && 
-    isset($_POST['alasan'])) {
+    isset($_POST['no_karyawan'])) {
         
     // Ambil data POST
-    $kode_karyawan_input = trim($_POST['no_karyawan']); // Menggunakan input dari form
+    $kode_karyawan_input = trim($_POST['no_karyawan']); 
     $jenis_cuti = $_POST['jenis_cuti'];
     $tanggal_mulai = $_POST['tanggal_mulai']; 
     $jumlah_hari = (int)$_POST['jumlah_hari']; 
@@ -69,7 +63,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" &&
     $is_valid = true;
     $error_message = "";
     
-    // 1. Validasi Kode Karyawan yang di-input harus ada di database
+    // 1. Validasi & Ambil Data Karyawan yang diajukan
     $stmt_check = $conn->prepare("SELECT nama_lengkap, divisi, sisa_cuti_tahunan, sisa_cuti_lustrum FROM data_karyawan WHERE kode_karyawan = ?");
     $stmt_check->bind_param("s", $kode_karyawan_input);
     $stmt_check->execute();
@@ -77,7 +71,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" &&
 
     if ($result_check->num_rows == 0) {
         $is_valid = false;
-        $error_message = "Gagal: Kode Karyawan ($kode_karyawan_input) tidak ditemukan dalam database. Pastikan kode benar.";
+        $error_message = "Gagal: Kode Karyawan ($kode_karyawan_input) tidak ditemukan.";
     } else {
         $data_check = $result_check->fetch_assoc();
         $nama_karyawan_post = $data_check['nama_lengkap'];
@@ -85,54 +79,67 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" &&
         $sisa_cuti_tahunan_db = $data_check['sisa_cuti_tahunan'];
         $sisa_cuti_lustrum_db = $data_check['sisa_cuti_lustrum'];
         
-        // 2. Hitung tanggal akhir cuti
-        $start_date = new DateTime($tanggal_mulai);
-        $end_date = clone $start_date;
+        // Hitung tanggal akhir cuti
+        $start_date_dt = new DateTime($tanggal_mulai);
+        $end_date_dt = clone $start_date_dt;
         if ($jumlah_hari > 0) {
-             $end_date->modify('+'.($jumlah_hari - 1).' day');
+             $end_date_dt->modify('+'.($jumlah_hari - 1).' day');
         }
-        $tanggal_akhir = $end_date->format('Y-m-d');
+        $tanggal_akhir = $end_date_dt->format('Y-m-d');
         
-        // 3. Validasi Sisa Cuti (Hanya untuk Cuti Tahunan dan Lustrum)
+        // Validasi Sisa Cuti
         if ($jenis_cuti == 'Tahunan') {
             if ($jumlah_hari > $sisa_cuti_tahunan_db) {
                 $is_valid = false;
-                $error_message = "Gagal: Jumlah hari cuti tahunan melebihi sisa cuti ($sisa_cuti_tahunan_db hari) untuk karyawan $nama_karyawan_post.";
+                $error_message = "Gagal: Jumlah hari cuti tahunan melebihi sisa cuti ($sisa_cuti_tahunan_db hari).";
             }
         } elseif ($jenis_cuti == 'Lustrum') {
             if ($jumlah_hari > $sisa_cuti_lustrum_db) {
                 $is_valid = false;
-                $error_message = "Gagal: Jumlah hari cuti lustrum melebihi sisa cuti ($sisa_cuti_lustrum_db hari) untuk karyawan $nama_karyawan_post.";
+                $error_message = "Gagal: Jumlah hari cuti lustrum melebihi sisa cuti ($sisa_cuti_lustrum_db hari).";
             }
         }
     }
     $stmt_check->close();
 
-    // 4. Jika valid, masukkan ke database
+    // 4. Proses Insert ke Database
     if ($is_valid) {
-        // Status awal untuk Direktur/PJ: Menunggu Persetujuan Direktur
-        $status = "Menunggu Persetujuan Direktur"; 
+        
+        $waktu_persetujuan = NULL; 
+        
+        // --- LOGIKA AUTO-APPROVE DIREKTUR ---
+        if ($kode_karyawan_input === $user_kode_session) {
+            $status = "Disetujui Direktur"; 
+            $waktu_persetujuan = date('Y-m-d H:i:s'); 
+            $success_message = "Pengajuan Cuti Anda berhasil diajukan dan telah disetujui otomatis. Status: Disetujui Direktur.";
+        } else {
+            $status = "Menunggu Persetujuan Direktur"; 
+            $success_message = "Pengajuan Cuti berhasil diajukan dan menunggu persetujuan Direktur.";
+        }
+        
         $created_at = date('Y-m-d H:i:s');
         
-        // Query INSERT
-        $stmt_insert = $conn->prepare("INSERT INTO pengajuan_cuti (kode_karyawan, nama_karyawan, divisi, jenis_cuti, tanggal_mulai, tanggal_akhir, alasan, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        // Query INSERT 
+        $stmt_insert = $conn->prepare("INSERT INTO pengajuan_cuti (kode_karyawan, nama_karyawan, divisi, jenis_cuti, tanggal_mulai, tanggal_akhir, alasan, status, created_at, waktu_persetujuan) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         
-        $stmt_insert->bind_param("sssssssss", $kode_karyawan_input, $nama_karyawan_post, $divisi, $jenis_cuti, $tanggal_mulai, $tanggal_akhir, $alasan, $status, $created_at);
+        $stmt_insert->bind_param("ssssssssss", $kode_karyawan_input, $nama_karyawan_post, $divisi, $jenis_cuti, $tanggal_mulai, $tanggal_akhir, $alasan, $status, $created_at, $waktu_persetujuan);
         
         if ($stmt_insert->execute()) { 
-            $success_message = "Pengajuan Cuti untuk $nama_karyawan_post berhasil diajukan dan menunggu persetujuan Direktur.";
             
-            // Logika Update Sisa Cuti
-            if ($jenis_cuti == 'Tahunan' || $jenis_cuti == 'Lustrum') {
+            // Logika Update Sisa Cuti hanya untuk cuti yang mengurangi jatah
+            if (($jenis_cuti == 'Tahunan' && $status == 'Disetujui Direktur') || ($jenis_cuti == 'Lustrum' && $status == 'Disetujui Direktur')) {
                 $cuti_kolom = ($jenis_cuti == 'Tahunan') ? 'sisa_cuti_tahunan' : 'sisa_cuti_lustrum';
                 
-                // Update sisa cuti di tabel data_karyawan berdasarkan kode karyawan yang di-input
+                // Catatan: Jika tidak auto-approve (yaitu status: Menunggu Persetujuan Direktur), 
+                // pengurangan sisa cuti idealnya dilakukan di halaman persetujuan.
+                
                 $stmt_update = $conn->prepare("UPDATE data_karyawan SET $cuti_kolom = $cuti_kolom - ? WHERE kode_karyawan = ?");
                 $stmt_update->bind_param("is", $jumlah_hari, $kode_karyawan_input);
                 $stmt_update->execute();
                 $stmt_update->close();
             }
             
+            // Redirect ke Riwayat Cuti Direktur
             echo "<script>alert('$success_message'); window.location.href='riwayat_cuti_direktur.php';</script>";
             exit();
         } else {
@@ -155,7 +162,6 @@ $conn->close();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pengajuan Cuti - Yayasan Purba Danarta</title>
     <style>
-        /* [CSS TIDAK BERUBAH] */
         :root {
             --primary-color: #1E105E;
             --secondary-color: #a29bb8;
@@ -176,7 +182,6 @@ $conn->close();
             color: var(--text-light);
         }
 
-        /* ===== HEADER & NAVIGASI (Dibuat konsisten) ===== */
         header {
             background: var(--header-bg);
             padding: 20px 40px;
@@ -237,7 +242,6 @@ $conn->close();
             white-space: nowrap;
         }
 
-        /* ===== MAIN CONTENT & FORM ===== */
         main {
             padding: 40px 20px;
             display: flex;
@@ -276,7 +280,6 @@ $conn->close();
             opacity: 0.8;
         }
         
-        /* ===== FORM INPUT LAYOUT ===== */
         .form-group {
             margin-bottom: 25px;
         }
@@ -287,7 +290,6 @@ $conn->close();
             color: var(--text-dark);
         }
         
-        /* Input Teks, Select, dan Date akan menggunakan style normal */
         .input-text, .input-select, .input-date {
             width: 100%;
             padding: 15px;
@@ -314,7 +316,6 @@ $conn->close();
             background-size: 18px;
         }
         
-        /* Grouping Tombol dan Sisa Cuti */
         .action-group {
             display: flex;
             justify-content: space-between;
@@ -348,7 +349,6 @@ $conn->close();
             font-size: 18px;
         }
 
-        /* Responsive */
         @media (max-width: 768px) {
             header { 
                 padding: 15px 20px; 
@@ -421,7 +421,7 @@ $conn->close();
     </nav>
 </header>
 <main>
-    <div class="welcome">Welcome, <?= htmlspecialchars($nama_karyawan) ?>!</div>
+    <div class="welcome">Welcome, <?= htmlspecialchars($nama_karyawan_login) ?>!</div>
 
     <div class="form-card">
         <h2>Pengajuan Cuti Pribadi/Karyawan</h2>
@@ -432,7 +432,7 @@ $conn->close();
             <div class="form-group">
                 <label for="no_karyawan">No. Kode Karyawan</label>
                 <input type="text" id="no_karyawan" name="no_karyawan" class="input-text" 
-                       placeholder="Contoh: YPD0001" required> 
+                        placeholder="Contoh: YPD0001" required> 
             </div>
             
             <div class="form-group">
@@ -467,7 +467,7 @@ $conn->close();
                 <button type="submit" class="btn-submit">Ajukan Cuti</button>
                 
                 <div class="sisa-cuti">
-                    <strong>Sisa Cuti <?= $nama_karyawan ?> (Anda)</strong>
+                    <strong>Sisa Cuti <?= $nama_karyawan_login ?> (Anda)</strong>
                     Cuti Tahunan: **<?= $sisa_cuti_tahunan ?>** hari<br>
                     Cuti Lustrum: **<?= $sisa_cuti_lustrum ?>** hari
                 </div>
@@ -475,6 +475,8 @@ $conn->close();
         </form>
     </div>
 </main>
-
+<script>
+    // Opsional: Anda bisa menambahkan logika JS untuk menampilkan sisa cuti karyawan yang di-input (jika data tersedia melalui AJAX)
+</script>
 </body>
 </html>

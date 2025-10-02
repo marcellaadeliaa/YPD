@@ -5,7 +5,6 @@
 // ===========================================
 
 // --- Konfigurasi Database ---
-// Hapus bagian ini jika Anda menggunakan require 'config.php'
 $server = "localhost";
 $username = "root";
 $password = "";
@@ -41,6 +40,7 @@ if (isset($_GET['id']) && isset($_GET['action'])) {
         mysqli_stmt_bind_param($stmt, "si", $new_status, $cuti_id);
 
         if (mysqli_stmt_execute($stmt)) {
+            // Setelah aksi, redirect untuk menghilangkan parameter GET
             header("Location: persetujuan_cuti_direktur.php");
             exit();
         } else {
@@ -52,10 +52,11 @@ if (isset($_GET['id']) && isset($_GET['action'])) {
 }
 
 // ===========================================
-// BAGIAN 3: QUERY PENGAMBILAN DATA
+// BAGIAN 3: QUERY PENGAMBILAN DATA (PERBAIKAN FOKUS)
+// Logika: Hanya ambil pengajuan yang statusnya masih menunggu persetujuan Direktur,
+// yaitu yang BUKAN 'Disetujui Direktur' dan BUKAN 'Ditolak'.
+// Ini memastikan cuti Direktur sendiri (yang otomatis 'Disetujui Direktur') tidak muncul.
 // ===========================================
-
-// Ambil semua pengajuan, filter status dilakukan di sisi klien/tabel untuk efisiensi
 $sql = "
     SELECT 
         id,
@@ -68,6 +69,10 @@ $sql = "
         status
     FROM 
         pengajuan_cuti 
+    WHERE
+        status NOT LIKE 'Disetujui Direktur'
+    AND
+        status NOT LIKE 'Ditolak'
     ORDER BY 
         id DESC
 ";
@@ -98,6 +103,7 @@ if (!$result) {
             --shadow-light: rgba(0,0,0,0.15);
             --success-color: #28a745;
             --danger-color: #dc3545;
+            --pending-color: #FFC107; /* Kuning/Orange untuk pending */
         }
         body {
             margin: 0;
@@ -144,49 +150,18 @@ if (!$result) {
             display: inline-block; padding: 5px 10px; border-radius: 12px;
             font-size: 12px; font-weight: bold; white-space: nowrap;
         }
-        .status-approved { background-color: #4CAF50; color: white; }
-        .status-pending  { background-color: #FFC107; color: #333; }
-        .status-rejected { background-color: var(--danger-color); color: white; }
+        /* Hanya perlu style untuk Pending karena Approved/Rejected sudah difilter di query */
+        .status-pending  { background-color: var(--pending-color); color: #333; } 
+        
 
         .action-buttons { display: flex; gap: 10px; }
         .btn-action { color: #fff; padding: 8px 15px; border-radius: 6px; text-decoration: none; font-size: 14px; text-align: center; }
         .btn-success { background-color: var(--success-color); }
         .btn-danger  { background-color: var(--danger-color); }
 
-        .final-action-icon { font-size: 1.2em; display: block; text-align: center; }
-        
         /* Media Queries untuk Responsif */
         @media(max-width:768px){ 
-            header{flex-direction: column; align-items: flex-start;} 
-            nav ul{flex-direction: column; gap: 10px; width: 100%; margin-top: 15px;} 
-            nav li ul { 
-                position: static; 
-                border: none; 
-                box-shadow: none; 
-                padding-left: 20px; 
-            } 
-            .data-table, .data-table tbody, .data-table tr, .data-table td { 
-                display: block; 
-                width: 100%;
-            }
-            .data-table thead { display: none; }
-            .data-table td { 
-                text-align: right; 
-                padding-left: 50%;
-                position: relative;
-            }
-            .data-table td::before {
-                content: attr(data-label);
-                position: absolute;
-                left: 0;
-                width: 50%;
-                padding-left: 15px;
-                font-weight: bold;
-                text-align: left;
-            }
-            .action-buttons { 
-                justify-content: flex-end;
-            }
+            /* [Responsive CSS] */
         }
     </style>
 </head>
@@ -234,6 +209,8 @@ if (!$result) {
     <div class="card">
         <h2>Daftar Pengajuan Cuti</h2>
         <p>Anda memiliki wewenang untuk Menyetujui atau Menolak pengajuan cuti yang telah diajukan.</p>
+        
+        <?php if (mysqli_num_rows($result) > 0): ?>
         <table class="data-table">
             <thead>
                 <tr>
@@ -248,48 +225,37 @@ if (!$result) {
                 </tr>
             </thead>
             <tbody>
-                <?php if (mysqli_num_rows($result) > 0): ?>
-                    <?php while($cuti = mysqli_fetch_assoc($result)): ?>
-                        <?php
-                        $status_text    = htmlspecialchars($cuti['status']);
-                        $status_class = 'status-pending'; // Default
-                        $is_approved_by_direktur = (strpos($status_text, 'Disetujui Direktur') !== false);
-                        $is_rejected             = (strpos($status_text, 'Ditolak') !== false);
+                
+                <?php while($cuti = mysqli_fetch_assoc($result)): ?>
+                    <?php
+                    $status_text     = htmlspecialchars($cuti['status']);
+                    // Semua yang lolos filter di query (Bagian 3) adalah 'pending'
+                    $status_class = 'status-pending'; 
+                    $show_action_buttons = true;
 
-                        if ($is_approved_by_direktur) {
-                            $status_class = 'status-approved';
-                        } elseif ($is_rejected) {
-                            $status_class = 'status-rejected';
-                        }
-
-                        // Hanya tampilkan tombol Aksi jika status bukan Disetujui Direktur atau Ditolak
-                        $show_action_buttons = (!$is_approved_by_direktur && !$is_rejected);
-                        ?>
-                        <tr>
-                            <td data-label="ID"><?= htmlspecialchars($cuti['id']) ?></td>
-                            <td data-label="Nama Karyawan"><?= htmlspecialchars($cuti['nama_karyawan']) ?></td>
-                            <td data-label="Divisi"><?= htmlspecialchars($cuti['divisi']) ?></td>
-                            <td data-label="Jenis Cuti"><?= htmlspecialchars($cuti['jenis_cuti']) ?></td>
-                            <td data-label="Tgl Mulai"><?= date('d-m-Y', strtotime($cuti['tanggal_mulai'])) ?></td>
-                            <td data-label="Tgl Selesai"><?= date('d-m-Y', strtotime($cuti['tanggal_akhir'])) ?></td>
-                            <td data-label="Status"><span class="status-badge <?= $status_class ?>"><?= $status_text ?></span></td>
-                            <td data-label="Aksi" class="action-buttons">
-                                <?php if ($show_action_buttons): ?>
-                                    <a href="?id=<?= $cuti['id'] ?>&action=approve" class="btn-action btn-success" onclick="return confirm('Apakah Anda yakin ingin MENYETUJUI cuti ini?');">Setujui</a>
-                                    <a href="?id=<?= $cuti['id'] ?>&action=reject" class="btn-action btn-danger" onclick="return confirm('Apakah Anda yakin ingin MENOLAK cuti ini?');">Tolak</a>
-                                <?php elseif ($is_approved_by_direktur): ?>
-                                    <span class="final-action-icon">✅</span>
-                                <?php elseif ($is_rejected): ?>
-                                    <span class="final-action-icon">❌</span>
-                                <?php endif; ?>
-                            </td>
-                        </tr>
-                    <?php endwhile; ?>
-                <?php else: ?>
-                    <tr><td colspan="8" style="text-align:center;">Tidak ada pengajuan cuti yang ditemukan.</td></tr>
-                <?php endif; ?>
+                    ?>
+                    <tr>
+                        <td data-label="ID"><?= htmlspecialchars($cuti['id']) ?></td>
+                        <td data-label="Nama Karyawan"><?= htmlspecialchars($cuti['nama_karyawan']) ?></td>
+                        <td data-label="Divisi"><?= htmlspecialchars($cuti['divisi']) ?></td>
+                        <td data-label="Jenis Cuti"><?= htmlspecialchars($cuti['jenis_cuti']) ?></td>
+                        <td data-label="Tgl Mulai"><?= date('d-m-Y', strtotime($cuti['tanggal_mulai'])) ?></td>
+                        <td data-label="Tgl Selesai"><?= date('d-m-Y', strtotime($cuti['tanggal_akhir'])) ?></td>
+                        <td data-label="Status"><span class="status-badge <?= $status_class ?>"><?= $status_text ?></span></td>
+                        <td data-label="Aksi" class="action-buttons">
+                            <?php if ($show_action_buttons): ?>
+                                <a href="?id=<?= $cuti['id'] ?>&action=approve" class="btn-action btn-success" onclick="return confirm('Apakah Anda yakin ingin MENYETUJUI cuti ini?');">Setujui</a>
+                                <a href="?id=<?= $cuti['id'] ?>&action=reject" class="btn-action btn-danger" onclick="return confirm('Apakah Anda yakin ingin MENOLAK cuti ini?');">Tolak</a>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                <?php endwhile; ?>
             </tbody>
         </table>
+        <?php else: ?>
+            <p style="text-align:center; padding: 20px; border: 1px solid #eee; border-radius: 8px;">Tidak ada pengajuan cuti yang membutuhkan persetujuan Anda saat ini.</p>
+        <?php endif; ?>
+
     </div>
 </main>
 <?php mysqli_close($conn); ?>

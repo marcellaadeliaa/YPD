@@ -45,26 +45,42 @@ $stmt_direktur->close();
 // Data proyek (dropdown)
 $proyek_list = ["Proyek A (Jakarta)", "Proyek B (Bandung)", "Proyek C (Surabaya)", "Proyek Internal"];
 
-// Untuk menjaga nilai input kode_karyawan
+// Data Jam (untuk dropdown Jam Mulai/Akhir) - Kelipatan 30 menit
+$time_list = [];
+for ($h = 0; $h < 24; $h++) {
+    for ($m = 0; $m < 60; $m += 30) {
+        $time_list[] = sprintf('%02d:%02d:00', $h, $m);
+    }
+}
+
+// Untuk menjaga nilai input
 $kode_karyawan_input_value = $_POST['kode_karyawan'] ?? ""; 
 
 // ===========================================
-// 3. LOGIKA SIMPAN PENGAJUAN KHL
+// 3. LOGIKA SIMPAN PENGAJUAN KHL (DENGAN PENGHAPUSAN ALASAN)
 // ===========================================
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // 1. Ambil semua data dari form (alasan dihapus)
     $kode_karyawan_input = trim($_POST['kode_karyawan'] ?? ""); 
     $proyek = $_POST['proyek'] ?? "";
-    $tanggal_khl = $_POST['tanggal_khl'] ?? "";
+    $tanggal_mulai_khl = $_POST['tanggal_mulai_khl'] ?? ""; 
+    $tanggal_akhir_khl = $_POST['tanggal_akhir_khl'] ?? ""; 
+    $jam_mulai_kerja = $_POST['jam_mulai_kerja'] ?? ""; 
+    $jam_akhir_kerja = $_POST['jam_akhir_kerja'] ?? ""; 
+    $jam_mulai_libur = $_POST['jam_mulai_libur'] ?? ""; 
+    $jam_akhir_libur = $_POST['jam_akhir_libur'] ?? ""; 
+    // $alasan_khl Dihapus
 
     $is_valid = true;
 
     // --- Validasi Mandatory Field ---
-    if (empty($kode_karyawan_input) || empty($proyek) || empty($tanggal_khl)) {
+    // Validasi alasan dihapus
+    if (empty($kode_karyawan_input) || empty($proyek) || empty($tanggal_mulai_khl)) {
         $is_valid = false;
-        $_SESSION['error_message'] = "Gagal: Semua field wajib diisi.";
+        $_SESSION['error_message'] = "Gagal: Kode Karyawan, Proyek, dan Tanggal Mulai KHL wajib diisi.";
     }
 
-    // --- Cek karyawan ---
+    // --- Cek karyawan & Ambil Nama/Divisi ---
     if ($is_valid) {
         $stmt_check = $conn->prepare("SELECT nama_lengkap, divisi FROM data_karyawan WHERE kode_karyawan = ?");
         $stmt_check->bind_param("s", $kode_karyawan_input);
@@ -81,19 +97,37 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
         $stmt_check->close();
     }
+    
+    // --- Penanganan Nilai Kosong/Default untuk Kolom TIME/DATE Opsional ---
+    $tanggal_akhir_khl = empty($tanggal_akhir_khl) ? $tanggal_mulai_khl : $tanggal_akhir_khl;
+    $jam_mulai_kerja = empty($jam_mulai_kerja) ? NULL : $jam_mulai_kerja;
+    $jam_akhir_kerja = empty($jam_akhir_kerja) ? NULL : $jam_akhir_kerja;
+    $jam_mulai_libur = empty($jam_mulai_libur) ? NULL : $jam_mulai_libur;
+    $jam_akhir_libur = empty($jam_akhir_libur) ? NULL : $jam_akhir_libur;
 
-    // --- Simpan ke database ---
+    // --- Simpan ke database (Modified Query - Alasan Dihapus) ---
     if ($is_valid) {
-        $status = "Menunggu Persetujuan Direktur";
-        // Query disesuaikan dengan kolom yang Anda berikan
-        $sql = "INSERT INTO pengajuan_khl (kode_karyawan, nama_karyawan, divisi, tanggal_khl, nama_proyek, status) 
-                VALUES (?, ?, ?, ?, ?, ?)";
+        $status = "Menunggu Persetujuan Direktur"; 
+        
+        // Perhatikan urutan kolom dan tipe datanya (alasan_khl dihapus)
+        $sql = "INSERT INTO pengajuan_khl (kode_karyawan, nama_karyawan, divisi, tanggal_khl, tanggal_akhir_khl, 
+                                          jam_mulai_kerja, jam_akhir_kerja, jam_mulai_libur, jam_akhir_libur, 
+                                          nama_proyek, status) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                
         $stmt_insert = $conn->prepare($sql);
-        $stmt_insert->bind_param("ssssss", 
+        // Tipe parameter: ssssssssss
+        // Ada 11 parameter string (karena semua di-bind sebagai string, bahkan waktu dan tanggal)
+        $stmt_insert->bind_param("sssssssssss", 
             $kode_karyawan_input, 
             $nama_karyawan_post, 
             $divisi_karyawan_post, 
-            $tanggal_khl, 
+            $tanggal_mulai_khl, 
+            $tanggal_akhir_khl, 
+            $jam_mulai_kerja, 
+            $jam_akhir_kerja, 
+            $jam_mulai_libur, 
+            $jam_akhir_libur, 
             $proyek,
             $status
         );
@@ -254,7 +288,8 @@ $conn->close();
         }
         
         .form-group input, 
-        .form-group select {
+        .form-group select,
+        .form-group textarea { /* Tambah textarea */
             width: 100%;
             padding: 15px;
             border: 1px solid #ccc;
@@ -429,9 +464,71 @@ $conn->close();
             </div>
             
             <div class="form-group">
-                <label for="tanggal_khl">Tanggal KHL</label>
-                <input type="date" id="tanggal_khl" name="tanggal_khl" 
-                        value="<?= $_POST['tanggal_khl'] ?? '' ?>" required>
+                <label for="tanggal_mulai_khl">Tanggal Mulai KHL</label>
+                <input type="date" id="tanggal_mulai_khl" name="tanggal_mulai_khl" 
+                        value="<?= $_POST['tanggal_mulai_khl'] ?? '' ?>" required>
+            </div>
+
+            <div class="form-group">
+                <label for="tanggal_akhir_khl">Tanggal Akhir KHL (Opsional)</label>
+                <input type="date" id="tanggal_akhir_khl" name="tanggal_akhir_khl" 
+                        value="<?= $_POST['tanggal_akhir_khl'] ?? '' ?>">
+            </div>
+
+            <div class="form-group select-wrapper">
+                <label for="jam_mulai_kerja">Jam Mulai Kerja (Waktu Normal)</label>
+                <select id="jam_mulai_kerja" name="jam_mulai_kerja">
+                    <option value="" selected>Pilih Jam Mulai Kerja</option>
+                    <?php 
+                    $selected_jm = $_POST['jam_mulai_kerja'] ?? '';
+                    foreach ($time_list as $time): ?>
+                        <option value="<?= $time ?>" <?= $selected_jm == $time ? 'selected' : '' ?>>
+                            <?= substr($time, 0, 5) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="form-group select-wrapper">
+                <label for="jam_akhir_kerja">Jam Akhir Kerja (Waktu Normal)</label>
+                <select id="jam_akhir_kerja" name="jam_akhir_kerja">
+                    <option value="" selected>Pilih Jam Akhir Kerja</option>
+                    <?php 
+                    $selected_ja = $_POST['jam_akhir_kerja'] ?? '';
+                    foreach ($time_list as $time): ?>
+                        <option value="<?= $time ?>" <?= $selected_ja == $time ? 'selected' : '' ?>>
+                            <?= substr($time, 0, 5) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            
+            <div class="form-group select-wrapper">
+                <label for="jam_mulai_libur">Jam Mulai Libur / Cuti Parsial (Opsional)</label>
+                <select id="jam_mulai_libur" name="jam_mulai_libur">
+                    <option value="" selected>Pilih Jam Mulai Libur</option>
+                    <?php 
+                    $selected_jml = $_POST['jam_mulai_libur'] ?? '';
+                    foreach ($time_list as $time): ?>
+                        <option value="<?= $time ?>" <?= $selected_jml == $time ? 'selected' : '' ?>>
+                            <?= substr($time, 0, 5) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="form-group select-wrapper">
+                <label for="jam_akhir_libur">Jam Akhir Libur / Cuti Parsial (Opsional)</label>
+                <select id="jam_akhir_libur" name="jam_akhir_libur">
+                    <option value="" selected>Pilih Jam Akhir Libur</option>
+                    <?php 
+                    $selected_jal = $_POST['jam_akhir_libur'] ?? '';
+                    foreach ($time_list as $time): ?>
+                        <option value="<?= $time ?>" <?= $selected_jal == $time ? 'selected' : '' ?>>
+                            <?= substr($time, 0, 5) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
             </div>
             
             <button type="submit" class="submit-btn">Ajukan KHL</button>
