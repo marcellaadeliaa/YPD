@@ -1,18 +1,12 @@
 <?php
 session_start();
 
-// --- INFORMASI PENANGGUNG JAWAB (Placeholder) ---
-$nama_pj = "Ria";
-$divisi_pj = "Training"; 
+// --- INFORMASI PENANGGUNG JAWAB (DIUBAH) ---
+$nama_pj = "Budi";
+$divisi_pj = "Konsultasi";
 
-// --- DUMMY DATA ---
-$semua_data_pengajuan = [
-    [ 'id' => 1, 'nama_karyawan' => 'Andi', 'divisi' => 'Training', 'tanggal_pengajuan' => '2025-10-01', 'jenis' => 'Cuti', 'status' => 'Diterima' ],
-    [ 'id' => 2, 'nama_karyawan' => 'Citra', 'divisi' => 'Training', 'tanggal_pengajuan' => '2025-09-30', 'jenis' => 'KHL', 'status' => 'Menunggu Proses' ],
-    [ 'id' => 3, 'nama_karyawan' => 'Dewi', 'divisi' => 'Training', 'tanggal_pengajuan' => '2025-09-29', 'jenis' => 'Cuti', 'status' => 'Diterima' ],
-    [ 'id' => 4, 'nama_karyawan' => 'Eko dari Keuangan', 'divisi' => 'Keuangan', 'tanggal_pengajuan' => '2025-10-10', 'jenis' => 'KHL', 'status' => 'Diterima' ],
-    [ 'id' => 5, 'nama_karyawan' => 'Joko', 'divisi' => 'Training', 'tanggal_pengajuan' => '2025-09-28', 'jenis' => 'KHL', 'status' => 'Diterima' ],
-];
+// --- DUMMY DATA (DIKOSONGKAN AGAR KALENDER BERSIH) ---
+$semua_data_pengajuan = [];
 
 // --- LOGIKA UTAMA: Filter data hanya untuk KHL di divisi Penanggung Jawab ---
 $data_khl_divisi = [];
@@ -22,9 +16,9 @@ foreach ($semua_data_pengajuan as $pengajuan) {
     }
 }
 
-// Mengatur default ke September 2025
-$month = isset($_GET['month']) ? (int)$_GET['month'] : 9;
-$year = isset($_GET['year']) ? (int)$_GET['year'] : 2025;
+// Mengatur default ke bulan dan tahun saat ini
+$month = isset($_GET['month']) ? (int)$_GET['month'] : date('n');
+$year = isset($_GET['year']) ? (int)$_GET['year'] : date('Y');
 
 // Logika navigasi kalender
 $prev_month = $month - 1; $prev_year = $year;
@@ -37,7 +31,7 @@ $days_in_month = date('t', $first_day);
 $first_day_of_week = date('w', $first_day);
 $first_day_of_week = $first_day_of_week == 0 ? 6 : $first_day_of_week - 1;
 
-// Mengelompokkan data KHL berdasarkan tanggal
+// Mengelompokkan data KHL yang sudah difilter berdasarkan tanggal
 $khl_by_date = [];
 foreach ($data_khl_divisi as $khl) {
     $date = $khl['tanggal_pengajuan'];
@@ -73,16 +67,11 @@ $month_names = [1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 =
     .nav-btn { padding: 8px 16px; background: #4a3f81; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; text-decoration: none; }
     .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #ddd; border: 1px solid #ddd; border-radius: 10px; overflow: hidden; }
     .calendar-day-header { background: #4a3f81; color: white; padding: 15px; text-align: center; font-weight: 600; }
-    .calendar-day { background: white; min-height: 120px; padding: 8px; position: relative; cursor: pointer; }
+    .calendar-day { background: white; min-height: 120px; padding: 8px; position: relative; }
     .day-number { font-weight: 600; margin-bottom: 5px; }
-    .khl-indicator { background: #ffc107; color: #333; padding: 2px 6px; border-radius: 3px; font-size: 11px; display: inline-block; }
+    .khl-indicator { background: #28a745; color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px; display: block; margin-bottom: 3px; }
     .today { background: #e7f3ff !important; border: 2px solid #4a3f81; }
-    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
-    .modal-content { background-color: white; margin: 5% auto; padding: 20px; border-radius: 10px; width: 80%; max-width: 600px; }
-    .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
-    .modal-title { font-size: 20px; font-weight: 600; margin-bottom: 15px; color: #1E105E; }
-    .karyawan-list { max-height: 400px; overflow-y: auto; }
-    .karyawan-item { padding: 10px; border-bottom: 1px solid #eee; }
+    .modal { display: none; } /* Modal disembunyikan karena tidak ada data untuk ditampilkan */
 </style>
 </head>
 <body>
@@ -94,26 +83,26 @@ $month_names = [1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 =
     </div>
     <nav>
         <ul>
-            <li><a href="dashboardpenanggungjawab.php">Beranda</a></li>
+            <li><a href="dashboardpenanggungjawab_konsultasi.php">Beranda</a></li>
             <li><a href="#">Cuti ▾</a>
                 <ul>
-                    <li><a href="persetujuancuti_penanggungjawab.php">Persetujuan Cuti Karyawan</a></li>
-                    <li><a href="riwayatcuti_penanggungjawab.php">Riwayat Cuti Karyawan</a></li>
-                    <li><a href="pengajuancuti_penanggungjawab.php">Ajukan Cuti Pribadi</a></li>
-                    <li><a href="kalender_cuti_penanggungjawab.php">Kalender Cuti Divisi</a></li>
-                    <li><a href="riwayat_cuti_pribadi_penanggungjawab.php">Riwayat Cuti Pribadi</a></li>
+                    <li><a href="persetujuancuti_penanggungjawab_konsultasi.php">Persetujuan Cuti Karyawan</a></li>
+                    <li><a href="riwayatcuti_penanggungjawab_konsultasi.php">Riwayat Cuti Karyawan</a></li>
+                    <li><a href="pengajuancuti_penanggungjawab_konsultasi.php">Ajukan Cuti Pribadi</a></li>
+                    <li><a href="kalender_cuti_penanggungjawab_konsultasi.php">Kalender Cuti Divisi</a></li>
+                    <li><a href="riwayat_cuti_pribadi_penanggungjawab_konsultasi.php">Riwayat Cuti Pribadi</a></li>
                 </ul>
             </li>
             <li><a href="#">KHL ▾</a>
                 <ul>
-                    <li><a href="persetujuankhl_penanggungjawab.php">Persetujuan KHL Karyawan</a></li>
-                    <li><a href="riwayatkhl_penanggungjawab.php">Riwayat KHL Karyawan</a></li>
-                    <li><a href="pengajuankhl_penanggungjawab.php">Ajukan KHL Pribadi</a></li>
-                    <li><a href="kalender_khl_penanggungjawab.php">Kalender KHL Divisi</a></li>
-                    <li><a href="riwayat_cuti_pribadi_penanggungjawab.php">Riwayat Cuti Pribadi</a></li>
+                    <li><a href="persetujuankhl_penanggungjawab_konsultasi.php">Persetujuan KHL Karyawan</a></li>
+                    <li><a href="riwayatkhl_penanggungjawab_konsultasi.php">Riwayat KHL Karyawan</a></li>
+                    <li><a href="pengajuankhl_penanggungjawab_konsultasi.php">Ajukan KHL Pribadi</a></li>
+                    <li><a href="kalender_khl_penanggungjawab_konsultasi.php">Kalender KHL Divisi</a></li>
+                    <li><a href="riwayat_cuti_pribadi_penanggungjawab_konsultasi.php">Riwayat Cuti Pribadi</a></li>
                 </ul>
             </li>
-            <li><a href="karyawan_divisi.php">Karyawan Divisi</a></li>
+            <li><a href="karyawan_divisi_konsultasi.php">Karyawan Divisi</a></li>
             <li><a href="#">Profil ▾</a>
                 <ul>
                     <li><a href="profil_penanggungjawab.php">Profil Saya</a></li>
@@ -132,7 +121,7 @@ $month_names = [1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 =
                 <span class="calendar-title"><?= $month_names[$month] ?> <?= $year ?></span>
                 <a href="?month=<?= $next_month ?>&year=<?= $next_year ?>" class="nav-btn">Berikutnya →</a>
             </div>
-            <a href="kalender_khl_penanggungjawab.php" class="nav-btn">Bulan Ini</a>
+            <a href="kalender_khl_penanggungjawab_konsultasi.php" class="nav-btn">Bulan Ini</a>
         </div>
 
         <div class="calendar">
@@ -150,62 +139,15 @@ $month_names = [1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 =
                 <?php
                 $current_date = date('Y-m-d', mktime(0, 0, 0, $month, $day, $year));
                 $is_today = $current_date == date('Y-m-d');
-                $has_khl = isset($khl_by_date[$current_date]);
                 ?>
-                <div class="calendar-day <?= $is_today ? 'today' : '' ?>" onclick="showDetails('<?= $current_date ?>')">
+                <div class="calendar-day <?= $is_today ? 'today' : '' ?>">
                     <div class="day-number"><?= $day ?></div>
-                    <?php if ($has_khl): ?>
-                        <?php foreach ($khl_by_date[$current_date] as $item): ?>
-                            <span class="khl-indicator"><?= htmlspecialchars($item['nama_karyawan']) ?> (KHL)</span>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
+                    <?php // Tidak ada data KHL yang ditampilkan karena array dikosongkan ?>
                 </div>
             <?php endfor; ?>
         </div>
     </div>
 </main>
-
-<div id="detailModal" class="modal">
-    <div class="modal-content">
-        <span class="close">×</span>
-        <div class="modal-title" id="modalTitle">Detail Pengajuan</div>
-        <div class="karyawan-list" id="karyawanList"></div>
-    </div>
-</div>
-
-<script>
-    const modal = document.getElementById('detailModal');
-    const closeBtn = document.querySelector('.close');
-    const modalTitle = document.getElementById('modalTitle');
-    const karyawanList = document.getElementById('karyawanList');
-    
-    const dataByDate = <?= json_encode($khl_by_date) ?>;
-    
-    function showDetails(date) {
-        const itemsOnDate = dataByDate[date] || [];
-        if (itemsOnDate.length === 0) { return; }
-        
-        const dateObj = new Date(date + 'T00:00:00');
-        modalTitle.textContent = `Detail KHL - ${dateObj.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`;
-        
-        let html = '';
-        itemsOnDate.forEach(item => {
-            html += `
-                <div class="karyawan-item">
-                    <strong>${item['nama_karyawan']}</strong><br>
-                    <small>Jenis Pengajuan: ${item['jenis']}</small><br>
-                    <small>Status: <span style="color: #28a745;">${item['status']}</span></small>
-                </div>
-            `;
-        });
-        
-        karyawanList.innerHTML = html;
-        modal.style.display = 'block';
-    }
-    
-    closeBtn.onclick = function() { modal.style.display = 'none'; }
-    window.onclick = function(event) { if (event.target == modal) { modal.style.display = 'none'; } }
-</script>
 
 </body>
 </html>

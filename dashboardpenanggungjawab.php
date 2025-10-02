@@ -139,7 +139,7 @@ $latest_requests = [
         </div>
         </div>
     <div class="card">
-        <h3>4 Pengajuan Terbaru di Divisi Anda</h3>
+        <h3>Pengajuan Terbaru di Divisi Anda</h3>
         <table class="data-table">
             <thead><tr><th>Jenis</th><th>Nama Karyawan</th><th>Tanggal Pengajuan</th></tr></thead>
             <tbody>

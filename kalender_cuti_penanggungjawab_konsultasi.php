@@ -1,35 +1,27 @@
 <?php
 session_start();
 
-// --- INFORMASI PENANGGUNG JAWAB (Placeholder) ---
-$nama_pj = "Ria";
-$divisi_pj = "Training"; 
+// --- INFORMASI PENANGGUNG JAWAB (DIUBAH) ---
+$nama_pj = "Budi";
+$divisi_pj = "Konsultasi"; 
 
-// --- DUMMY DATA CUTI ---
+// --- DUMMY DATA CUTI (DIUBAH SESUAI PERMINTAAN) ---
 $semua_data_pengajuan = [
     [
         'id' => 1,
-        'nama_karyawan' => 'Andi',
-        'divisi' => 'Training', 
-        'tanggal_pengajuan' => '2025-10-01',
+        'nama_karyawan' => 'Gita', // Hanya Gita
+        'divisi' => 'Konsultasi', 
+        'tanggal_pengajuan' => '2025-10-20',
         'jenis' => 'Cuti',
-        'status' => 'Diterima'
+        'status' => 'Menunggu Proses' // Diubah menjadi Menunggu Proses
     ],
     [
         'id' => 2,
-        'nama_karyawan' => 'Eko',
-        'divisi' => 'Training',
-        'tanggal_pengajuan' => '2025-10-08',
+        'nama_karyawan' => 'Indra', // Hanya Indra
+        'divisi' => 'Konsultasi',
+        'tanggal_pengajuan' => '2025-10-10',
         'jenis' => 'Cuti',
-        'status' => 'Ditolak'
-    ],
-    [
-        'id' => 3,
-        'nama_karyawan' => 'Fani',
-        'divisi' => 'Training',
-        'tanggal_pengajuan' => '2025-10-15',
-        'jenis' => 'Cuti',
-        'status' => 'Menunggu'
+        'status' => 'Menunggu Proses' // Diubah menjadi Menunggu Proses
     ],
 ];
 
@@ -41,7 +33,7 @@ foreach ($semua_data_pengajuan as $pengajuan) {
     }
 }
 
-// Mengatur default ke Oktober 2025 agar data terlihat
+// Mengatur default ke Oktober 2025 agar data baru terlihat
 $month = isset($_GET['month']) ? (int)$_GET['month'] : 10;
 $year = isset($_GET['year']) ? (int)$_GET['year'] : 2025;
 
@@ -56,7 +48,7 @@ $days_in_month = date('t', $first_day);
 $first_day_of_week = date('w', $first_day);
 $first_day_of_week = $first_day_of_week == 0 ? 6 : $first_day_of_week - 1;
 
-// Mengelompokkan data cuti berdasarkan tanggal
+// Mengelompokkan data cuti yang sudah difilter berdasarkan tanggal
 $cuti_by_date = [];
 foreach ($data_cuti_divisi as $cuti) {
     $date = $cuti['tanggal_pengajuan'];
@@ -96,7 +88,7 @@ $month_names = [1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 =
     .cuti-indicator { color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px; display: block; margin-bottom: 3px; }
     .status-diterima { background-color: #28a745; }
     .status-ditolak { background-color: #dc3545; }
-    .status-menunggu { background-color: #ffc107; color: #333; }
+    .status-menunggu-proses { background-color: #ffc107; color: #333; }
     .today { background: #e7f3ff !important; border: 2px solid #4a3f81; }
     .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
     .modal-content { background-color: white; margin: 5% auto; padding: 20px; border-radius: 10px; width: 80%; max-width: 600px; }
@@ -115,26 +107,26 @@ $month_names = [1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 =
     </div>
     <nav>
         <ul>
-            <li><a href="dashboardpenanggungjawab.php">Beranda</a></li>
+            <li><a href="dashboardpenanggungjawab_konsultasi.php">Beranda</a></li>
             <li><a href="#">Cuti ▾</a>
                 <ul>
-                    <li><a href="persetujuancuti_penanggungjawab.php">Persetujuan Cuti Karyawan</a></li>
-                    <li><a href="riwayatcuti_penanggungjawab.php">Riwayat Cuti Karyawan</a></li>
-                    <li><a href="pengajuancuti_penanggungjawab.php">Ajukan Cuti Pribadi</a></li>
-                    <li><a href="kalender_cuti_penanggungjawab.php">Kalender Cuti Divisi</a></li>
-                    <li><a href="riwayat_cuti_pribadi_penanggungjawab.php">Riwayat Cuti Pribadi</a></li>
+                    <li><a href="persetujuancuti_penanggungjawab_konsultasi.php">Persetujuan Cuti Karyawan</a></li>
+                    <li><a href="riwayatcuti_penanggungjawab_konsultasi.php">Riwayat Cuti Karyawan</a></li>
+                    <li><a href="pengajuancuti_penanggungjawab_konsultasi.php">Ajukan Cuti Pribadi</a></li>
+                    <li><a href="kalender_cuti_penanggungjawab_konsultasi.php">Kalender Cuti Divisi</a></li>
+                    <li><a href="riwayat_cuti_pribadi_penanggungjawab_konsultasi.php">Riwayat Cuti Pribadi</a></li>
                 </ul>
             </li>
             <li><a href="#">KHL ▾</a>
                 <ul>
-                    <li><a href="persetujuankhl_penanggungjawab.php">Persetujuan KHL Karyawan</a></li>
-                    <li><a href="riwayatkhl_penanggungjawab.php">Riwayat KHL Karyawan</a></li>
-                    <li><a href="pengajuankhl_penanggungjawab.php">Ajukan KHL Pribadi</a></li>
-                    <li><a href="kalender_khl_penanggungjawab.php">Kalender KHL Divisi</a></li>
-                    <li><a href="riwayat_cuti_pribadi_penanggungjawab.php">Riwayat Cuti Pribadi</a></li>
+                    <li><a href="persetujuankhl_penanggungjawab_konsultasi.php">Persetujuan KHL Karyawan</a></li>
+                    <li><a href="riwayatkhl_penanggungjawab_konsultasi.php">Riwayat KHL Karyawan</a></li>
+                    <li><a href="pengajuankhl_penanggungjawab_konsultasi.php">Ajukan KHL Pribadi</a></li>
+                    <li><a href="kalender_khl_penanggungjawab_konsultasi.php">Kalender KHL Divisi</a></li>
+                    <li><a href="riwayat_cuti_pribadi_penanggungjawab_konsultasi.php">Riwayat Cuti Pribadi</a></li>
                 </ul>
             </li>
-            <li><a href="karyawan_divisi.php">Karyawan Divisi</a></li>
+            <li><a href="karyawan_divisi_konsultasi.php">Karyawan Divisi</a></li>
             <li><a href="#">Profil ▾</a>
                 <ul>
                     <li><a href="profil_penanggungjawab.php">Profil Saya</a></li>
@@ -153,7 +145,7 @@ $month_names = [1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 =
                 <span class="calendar-title"><?= $month_names[$month] ?> <?= $year ?></span>
                 <a href="?month=<?= $next_month ?>&year=<?= $next_year ?>" class="nav-btn">Berikutnya →</a>
             </div>
-            <a href="kalender_cuti_penanggungjawab.php" class="nav-btn">Bulan Ini</a>
+            <a href="kalender_cuti_penanggungjawab_konsultasi.php" class="nav-btn">Bulan Ini</a>
         </div>
 
         <div class="calendar">
@@ -178,7 +170,7 @@ $month_names = [1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 =
                     <?php if ($has_cuti): ?>
                         <?php foreach ($cuti_by_date[$current_date] as $item): ?>
                             <?php
-                                $status_class = 'status-menunggu'; // Default
+                                $status_class = 'status-menunggu-proses'; // Default
                                 if ($item['status'] === 'Diterima') {
                                     $status_class = 'status-diterima';
                                 } elseif ($item['status'] === 'Ditolak') {
