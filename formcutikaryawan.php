@@ -157,10 +157,10 @@ session_start();
       <select name="jenis_cuti" id="jenisCuti" required onchange="toggleManualInput()">
         <option value="">Pilih Jenis Cuti</option>
         <option value="Tahunan">Cuti Tahunan</option>
-        <option value="Melahirkan">Cuti Melahirkan</option>
-        <option value="Khusus">Cuti Khusus</option>
-        <option value="Sakit">Cuti Sakit</option>
         <option value="Lustrum">Cuti Lustrum</option>
+        <option value="Khusus">Cuti Khusus</option>
+        <option value="Sakit">Cuti Diluar Tanggungan</option>
+        <option value="Sakit">Cuti Sakit</option>
         <option value="Ibadah">Cuti Ibadah</option>
         <option value="Lainnya">Lainnya</option>
       </select>

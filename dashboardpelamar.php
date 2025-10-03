@@ -9,9 +9,10 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $user_id = $_SESSION['user_id'];
+$nama_user = 'Pengguna'; // Default name
 
-// AMBIL DATA USER (nama_lengkap) dari tabel data_pelamar - PERBAIKAN
-$queryUser = $conn->prepare("SELECT nama_lengkap FROM data_pelamar WHERE user_id = ?");
+// AMBIL DATA USER (nama_lengkap) dari tabel data_pelamar
+$queryUser = $conn->prepare("SELECT nama_lengkap, id FROM data_pelamar WHERE user_id = ?");
 if ($queryUser) {
     $queryUser->bind_param("i", $user_id);
     $queryUser->execute();
@@ -19,9 +20,9 @@ if ($queryUser) {
     if ($resultUser && $resultUser->num_rows > 0) {
         $userData = $resultUser->fetch_assoc();
         $nama_user = $userData['nama_lengkap'] ?? 'Pengguna';
+        $pelamar_id = $userData['id'] ?? null;
     }
 } else {
-    // Debug: tampilkan error
     error_log("Error prepare: " . $conn->error);
 }
 
@@ -34,12 +35,11 @@ $rowCheck = $resultCheck->fetch_assoc();
 $hasData = $rowCheck['count'] > 0;
 
 if (!$hasData) {
-    // Jika belum mengisi form, redirect ke form
     header("Location: formpelamar.php");
     exit;
 }
 
-// AMBIL STATUS DARI data_pelamar (bukan dari tabel lamaran)
+// AMBIL STATUS DARI data_pelamar
 $queryStatus = $conn->prepare("SELECT status FROM data_pelamar WHERE user_id = ?");
 $queryStatus->bind_param("i", $user_id);
 $queryStatus->execute();
@@ -47,47 +47,62 @@ $resultStatus = $queryStatus->get_result();
 $rowStatus = $resultStatus->fetch_assoc();
 $status = $rowStatus['status'] ?? 'Menunggu Proses';
 
-// AMBIL PENGUMUMAN SPESIFIK UNTUK PELAMAR INI
-$queryPengumumanPelamar = $conn->prepare("
-    SELECT p.pesan, p.tanggal, p.tahap 
-    FROM pengumuman_pelamar p 
-    INNER JOIN data_pelamar dp ON p.pelamar_id = dp.id 
-    WHERE dp.user_id = ? 
-    ORDER BY p.id DESC 
-    LIMIT 1
-");
-$queryPengumumanPelamar->bind_param("i", $user_id);
-$queryPengumumanPelamar->execute();
-$pengumumanPelamar = $queryPengumumanPelamar->get_result()->fetch_assoc();
+// AMBIL PENGUMUMAN SPESIFIK UNTUK PELAMAR INI (HANYA JIKA ADA)
+$pengumumanPelamar = null;
+if (isset($pelamar_id)) {
+    $queryPengumumanPelamar = $conn->prepare("
+        SELECT p.pesan, p.tanggal, p.tahap 
+        FROM pengumuman_pelamar p 
+        WHERE p.pelamar_id = ? 
+        ORDER BY p.id DESC 
+        LIMIT 1
+    ");
+    $queryPengumumanPelamar->bind_param("i", $pelamar_id);
+    $queryPengumumanPelamar->execute();
+    $resultPengumuman = $queryPengumumanPelamar->get_result();
+    if ($resultPengumuman && $resultPengumuman->num_rows > 0) {
+        $pengumumanPelamar = $resultPengumuman->fetch_assoc();
+    }
+}
 
 // AMBIL PENGUMUMAN UMUM TERBARU
 $queryPengumumanUmum = $conn->query("SELECT judul, isi, tanggal FROM pengumuman_umum WHERE status = 'active' ORDER BY tanggal DESC, id DESC LIMIT 1");
-$pengumumanUmum = $queryPengumumanUmum->fetch_assoc();
+$pengumumanUmum = $queryPengumumanUmum ? $queryPengumumanUmum->fetch_assoc() : null;
 
-// Prioritaskan pengumuman spesifik untuk pelamar, jika tidak ada gunakan pengumuman umum
+// LOGIKA PENENTUAN PENGUMUMAN YANG DITAMPILKAN
+$show_pengumuman = false;
+$judul_pengumuman = '';
+$isi_pengumuman = '';
+$tanggal_pengumuman = '';
+
 if ($pengumumanPelamar) {
-    $judul_pengumuman = "Update Status - " . $pengumumanPelamar['tahap'];
-    $isi_pengumuman = $pengumumanPelamar['pesan'];
-    $tanggal_pengumuman = date('d/m/Y', strtotime($pengumumanPelamar['tanggal']));
-} elseif ($pengumumanUmum) {
-    $judul_pengumuman = $pengumumanUmum['judul'];
-    $isi_pengumuman = $pengumumanUmum['isi'];
-    $tanggal_pengumuman = date('d/m/Y', strtotime($pengumumanUmum['tanggal']));
+    // Jika ada pengumuman spesifik untuk pelamar ini
+    $judul_pengumuman = "Update Status - " . ($pengumumanPelamar['tahap'] ?? '');
+    $isi_pengumuman = $pengumumanPelamar['pesan'] ?? '';
+    $tanggal_pengumuman = !empty($pengumumanPelamar['tanggal']) ? date('d/m/Y', strtotime($pengumumanPelamar['tanggal'])) : '';
+    $show_pengumuman = true;
+} elseif ($pengumumanUmum && $status == 'Menunggu Proses') {
+    // Jika status masih Menunggu Proses, tampilkan pengumuman umum
+    $judul_pengumuman = $pengumumanUmum['judul'] ?? 'Pengumuman';
+    $isi_pengumuman = $pengumumanUmum['isi'] ?? '';
+    $tanggal_pengumuman = !empty($pengumumanUmum['tanggal']) ? date('d/m/Y', strtotime($pengumumanUmum['tanggal'])) : '';
+    $show_pengumuman = true;
 } else {
-    // Fallback jika tidak ada pengumuman sama sekali
+    // Tidak ada pengumuman yang relevan
+    $show_pengumuman = false;
     $judul_pengumuman = 'Tidak ada pengumuman';
-    $isi_pengumuman = 'Belum ada pengumuman saat ini.';
+    $isi_pengumuman = 'Belum ada pengumuman terbaru untuk Anda saat ini.';
     $tanggal_pengumuman = '';
 }
 
-// Tentukan class status untuk styling - Warna hijau untuk "Diterima"
+// Tentukan class status untuk styling
 $status_class = 'status-pending';
 if ($status == 'Diterima') {
-    $status_class = 'status-approve'; // HIJAU
+    $status_class = 'status-approve';
 } elseif ($status == 'Tidak Lolos') {
-    $status_class = 'status-reject'; // MERAH
+    $status_class = 'status-reject';
 } else {
-    $status_class = 'status-pending'; // KUNING untuk semua status proses
+    $status_class = 'status-pending';
 }
 ?>
 
@@ -349,6 +364,13 @@ if ($status == 'Diterima') {
       color: white;
       text-decoration: none;
     }
+    
+    .no-pengumuman {
+      color: #6c757d;
+      font-style: italic;
+      text-align: center;
+      padding: 20px 0;
+    }
 
     /* ===== Responsive ===== */
     @media(max-width:768px){
@@ -389,7 +411,7 @@ if ($status == 'Diterima') {
 <body>
   <header>
     <div class="logo">
-      <img src="img/logo.png" alt="Logo Yayasan Purba Danarta">
+      <img src="image/namayayasan.png" alt="Logo Yayasan Purba Danarta">
       <span>Yayasan Purba Danarta</span>
     </div>
     <nav>
@@ -412,7 +434,6 @@ if ($status == 'Diterima') {
       <p>Pantau status lamaran dan pengumuman terbaru di sini</p>
     </div>
 
-    <!-- Card Status Lamaran -->
     <div class="card">
       <h3>Status Lamaran Anda</h3>
       <div class="card-content">
@@ -426,27 +447,33 @@ if ($status == 'Diterima') {
             <h4>🎉 Selamat!</h4>
             <p><strong>Anda dinyatakan lolos sebagai karyawan Yayasan Purba Danarta.</strong></p>
             <p>Kami akan segera menghubungi Anda untuk proses selanjutnya. Silakan klik link di bawah ini untuk mengakses dashboard karyawan:</p>
-            <a href="dashboardkaryawan.php" class="link-karyawan">Akses Dashboard Karyawan</a>
+            <a href="login_karyawan.php" class="link-karyawan">Akses Dashboard Karyawan</a>
           </div>
+        <?php elseif ($status == 'Tidak Lolos'): ?>
+          <p>Terima kasih telah berpartisipasi dalam proses seleksi di Yayasan Purba Danarta. Mohon maaf, saat ini Anda belum dapat melanjutkan ke tahap berikutnya. Kami menghargai waktu dan usaha yang telah Anda berikan.</p>
         <?php else: ?>
           <p>Status lamaran Anda akan diperbarui secara berkala. Silakan pantau halaman ini untuk informasi terbaru.</p>
         <?php endif; ?>
-      </div>
+        </div>
     </div>
 
-    <!-- Card Pengumuman -->
     <div class="card">
       <h3>Pengumuman Terbaru</h3>
       <div class="card-content">
-        <?php if ($tanggal_pengumuman): ?>
-          <div class="pengumuman-date">Tanggal: <?= htmlspecialchars($tanggal_pengumuman) ?></div>
+        <?php if ($show_pengumuman): ?>
+          <?php if ($tanggal_pengumuman): ?>
+            <div class="pengumuman-date">Tanggal: <?= htmlspecialchars($tanggal_pengumuman) ?></div>
+          <?php endif; ?>
+          <h4 style="color: #4a3f81; margin-bottom: 15px;"><?= htmlspecialchars($judul_pengumuman) ?></h4>
+          <p style="white-space: pre-line;"><?= htmlspecialchars($isi_pengumuman) ?></p>
+        <?php else: ?>
+          <div class="no-pengumuman">
+            Belum ada pengumuman terbaru untuk Anda saat ini.
+          </div>
         <?php endif; ?>
-        <h4 style="color: #4a3f81; margin-bottom: 15px;"><?= htmlspecialchars($judul_pengumuman) ?></h4>
-        <p style="white-space: pre-line;"><?= htmlspecialchars($isi_pengumuman) ?></p>
       </div>
     </div>
 
-    <!-- Action Buttons -->
     <div class="action-buttons">
       <a href="edit_lamaran.php" class="btn">Edit Data Lamaran</a>
       <a href="lihat_lamaran.php" class="btn btn-secondary">Lihat Detail Lamaran</a>

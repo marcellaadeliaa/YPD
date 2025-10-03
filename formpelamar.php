@@ -1,9 +1,60 @@
 <?php
 session_start();
+require 'config.php'; 
+
+// Cek apakah user sudah login
 if (!isset($_SESSION['user_id'])) {
     echo "<script>alert('Silakan login terlebih dahulu!'); window.location.href='login.php';</script>";
     exit;
 }
+
+//UNTUK MENCEGAH PENGISIAN FORM BERULANG
+$user_id = $_SESSION['user_id'];
+
+// Siapkan query untuk mengecek apakah user sudah pernah mendaftar
+$stmt = $conn->prepare("SELECT status FROM data_pelamar WHERE user_id = ?");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result->num_rows > 0) {
+    // Jika data ditemukan, artinya user sudah pernah mendaftar.
+    $data_pelamar = $result->fetch_assoc();
+    $status_pelamar = htmlspecialchars($data_pelamar['status']);
+
+    //Tampilan pesan pemberitahuan dan hentikan script agar form tidak muncul.
+    ?>
+    <!DOCTYPE html>
+    <html lang="id">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Pemberitahuan Pendaftaran</title>
+        <style>
+            body { margin: 0; font-family: 'Segoe UI', sans-serif; background: linear-gradient(180deg, #1E105E 0%, #8897AE 100%); display: flex; align-items: center; justify-content: center; min-height: 100vh; color: #333; }
+            .notice-card { background: #fff; padding: 40px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); text-align: center; max-width: 500px; }
+            .notice-card h2 { color: #1E105E; margin-top: 0; }
+            .notice-card p { font-size: 1.1em; line-height: 1.6; }
+            .notice-card .status { font-weight: bold; font-size: 1.2em; padding: 10px; border-radius: 8px; background-color: #f0f0f0; display: inline-block; margin-top: 10px; }
+            .notice-card a { display: inline-block; margin-top: 30px; padding: 12px 25px; background-color: #4a3f81; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; transition: background-color 0.3s; }
+            .notice-card a:hover { background-color: #3a3162; }
+        </style>
+    </head>
+    <body>
+        <div class="notice-card">
+            <h2>Pemberitahuan</h2>
+            <p>Anda sudah pernah mengirimkan lamaran kerja. Anda tidak dapat mengisi formulir pendaftaran lagi.</p>
+            <p>Status lamaran Anda saat ini adalah:</p>
+            <div class="status"><?= $status_pelamar ?></div>
+            <a href="dashboardpelamar.php">Kembali ke Dashboard</a>
+        </div>
+    </body>
+    </html>
+    <?php
+    $stmt->close();
+    $conn->close();
+    exit; 
+}
+$stmt->close();
 ?>
 
 <!DOCTYPE html>
@@ -70,7 +121,6 @@ if (!isset($_SESSION['user_id'])) {
       font-size: 15px;
     }
     .submit-btn:hover { background-color: #3a3162; }
-
     @media (max-width: 700px) { form { flex-direction: column; } }
   </style>
 </head>
@@ -80,7 +130,6 @@ if (!isset($_SESSION['user_id'])) {
       <img src="image/namayayasan.png" alt="Logo Yayasan">
       <span>Yayasan Purba Danarta</span>
     </div>
-    <div class="form-title-header">Form Pendaftaran</div>
   </header>
 
   <main>
@@ -88,16 +137,9 @@ if (!isset($_SESSION['user_id'])) {
     <form action="proses_pelamar.php" method="POST" enctype="multipart/form-data">
       <div class="form-left">
         <div class="form-group"><label>Nama Lengkap</label><input type="text" name="namaLengkap" required></div>
-        <div class="form-group"><label>Posisi yang Dilamar</label>
-          <select name="posisiDilamar" required>
-            <option value="">Pilih Posisi</option>
-              <option value="Training">Training</option>
-              <option value="Wisma">Wisma</option>
-              <option value="Konsultasi">Konsultasi</option>
-              <option value="Keuangan">Keuangan</option>
-              <option value="SDM">SDM</option>
-              <option value="Sekretariat">Sekretariat</option>
-          </select>
+        <div class="form-group">
+            <label for="posisiDilamar">Posisi yang Dilamar</label>
+            <input type="text" id="posisiDilamar" name="posisiDilamar" required placeholder="Masukkan posisi yang dilamar">
         </div>
         <div class="form-group"><label>Jenis Kelamin</label>
           <select name="jenisKelamin" required>
@@ -110,6 +152,7 @@ if (!isset($_SESSION['user_id'])) {
         <div class="form-group"><label>Tanggal Lahir</label><input type="date" name="tanggalLahir" required></div>
         <div class="form-group"><label>Nomor Induk Keluarga</label><input type="text" name="nomorIndukKeluarga" required></div>
         <div class="form-group"><label>Alamat Rumah (Sesuai KTP)</label><input type="text" name="alamatRumah" required></div>
+        <div class="form-group"><label>Alamat Rumah (Sesuai Domisili Sekarang)</label><input type="text" name="alamatDomisili" required></div>
         <div class="form-group"><label>No. Telepon (WA) Aktif</label><input type="text" name="noTelp" required></div>
         <div class="form-group"><label>Email</label><input type="email" name="email" required></div>
         <div class="form-group"><label>Agama</label>
@@ -129,6 +172,9 @@ if (!isset($_SESSION['user_id'])) {
             <option value="">Pilih</option>
             <option value="SMA">SMA</option>
             <option value="SMK">SMK</option>
+            <option value="Diploma">Diploma</option>
+            <option value="Sarjana">Sarjana</option>
+            <option value="Magister">Magister</option>
           </select>
         </div>
       </div>

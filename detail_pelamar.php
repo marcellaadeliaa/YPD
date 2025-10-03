@@ -28,6 +28,7 @@ $pelamar = $result->fetch_assoc();
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Detail Pelamar - Admin SDM</title>
 <style>
+    /* Gaya CSS Anda tetap sama */
     body { margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg,#1E105E 0%,#8897AE 100%); min-height:100vh; color:#333; }
     header { background:rgba(255,255,255,1); padding:20px 40px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #34377c; }
     .logo { display:flex; align-items:center; gap:16px; font-weight:500; font-size:20px; color:#2e1f4f; }
@@ -67,7 +68,8 @@ $pelamar = $result->fetch_assoc();
             <div class="detail-group"><label>Tempat, Tanggal Lahir</label><p><?= htmlspecialchars($pelamar['tempat_lahir']) ?>, <?= date('d F Y', strtotime($pelamar['tanggal_lahir'])) ?></p></div>
             <div class="detail-group"><label>Agama</label><p><?= htmlspecialchars($pelamar['agama']) ?></p></div>
             <div class="detail-group"><label>Pendidikan Terakhir</label><p><?= htmlspecialchars($pelamar['pendidikan_terakhir']) ?></p></div>
-            <div class="detail-group"><label>Alamat Rumah</label><p><?= htmlspecialchars($pelamar['alamat_rumah']) ?></p></div>
+            <div class="detail-group"><label>Alamat Rumah (Sesuai KTP)</label><p><?= htmlspecialchars($pelamar['alamat_rumah']) ?></p></div>
+            <div class="detail-group"><label>Alamat Domisili</label><p><?= htmlspecialchars($pelamar['alamat_domisili']) ?></p></div>
             <div class="detail-group"><label>Email</label><p><?= htmlspecialchars($pelamar['email']) ?></p></div>
             <div class="detail-group"><label>No. Telepon</label><p><?= htmlspecialchars($pelamar['no_telp']) ?></p></div>
             <div class="detail-group"><label>Kontak Darurat</label><p><?= htmlspecialchars($pelamar['kontak_darurat']) ?></p></div>

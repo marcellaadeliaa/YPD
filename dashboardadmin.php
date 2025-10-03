@@ -249,10 +249,6 @@ p.admin-title {
     <div class="dashboard-grid">
         <div class="card">
             <h3>Lamaran Kerja</h3>
-            <p>Administrasi: ... orang</p>
-            <p>Wawancara: ... orang</p>
-            <p>Psikotes: ... orang</p>
-            <p>Kesehatan: ... orang</p>
             <p><strong>Total Pelamar Aktif: <?php echo $total_pelamar; ?> orang</strong></p>
             <a href="administrasi_pelamar.php" class="btn">Lihat Rincian</a>
         </div>
