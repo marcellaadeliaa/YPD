@@ -7,14 +7,6 @@
 session_start();
 
 // --- Koneksi ke Database ---
-// Pastikan file 'config.php' ada dan berisi koneksi database ($conn)
-// Jika Anda tidak memiliki config.php, ganti baris ini dengan koneksi manual:
-/*
-$conn = new mysqli("localhost", "root", "", "ypd_ibd");
-if ($conn->connect_error) {
-    die("Koneksi gagal: " . $conn->connect_error);
-}
-*/
 require 'config.php'; 
 
 // Cek autentikasi Direktur (dipertahankan dari kode Anda sebelumnya)
@@ -23,7 +15,18 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'direktur') {
     // exit();
 }
 
-// 1. Query untuk mengambil SEMUA data Karyawan
+// ====== Tambahkan fitur pencarian ======
+$filter = "";
+if (isset($_GET['cari']) && !empty($_GET['cari'])) {
+    $keyword = $conn->real_escape_string($_GET['cari']);
+    $filter = "WHERE kode_karyawan LIKE '%$keyword%'
+               OR nama_lengkap LIKE '%$keyword%'
+               OR jabatan LIKE '%$keyword%'
+               OR role LIKE '%$keyword%'
+               OR email LIKE '%$keyword%'";
+}
+
+// 1. Query untuk mengambil data Karyawan dengan filter
 $query_data_karyawan = "
     SELECT 
         kode_karyawan, 
@@ -34,15 +37,15 @@ $query_data_karyawan = "
         email, 
         sisa_cuti_tahunan, 
         status_aktif 
-    FROM data_karyawan 
+    FROM data_karyawan
+    $filter
     ORDER BY nama_lengkap ASC";
 
 $result_karyawan = $conn->query($query_data_karyawan);
 
 // Tutup koneksi database setelah mengambil data
-$conn->close();
+// (nanti ditutup di bawah setelah HTML agar bisa dipakai di tabel)
 ?>
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -51,9 +54,6 @@ $conn->close();
     <title>Data Karyawan | Direktur</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* ==================== */
-        /* CSS STYLING */
-        /* ==================== */
         :root {
             --primary-color: #1E105E;
             --accent-color: #4a3f81;
@@ -93,16 +93,8 @@ $conn->close();
           object-fit: contain;
           border-radius: 50%;
         }
-        nav ul {
-          list-style:none;
-          margin:0;
-          padding:0;
-          display:flex;
-          gap:30px;
-        }
-        nav li {
-          position:relative;
-        }
+        nav ul { list-style:none; margin:0; padding:0; display:flex; gap:30px; }
+        nav li { position:relative; }
         nav a {
           text-decoration:none;
           color:var(--text-color-dark);
@@ -112,12 +104,7 @@ $conn->close();
           transition: color 0.3s ease;
         }
         nav a:hover { color: var(--accent-color); }
-        .nav-active > a {
-            border-bottom: 2px solid var(--accent-color);
-            color: var(--accent-color);
-        }
-
-        /* ===== DROPDOWN ===== */
+        .nav-active > a { border-bottom: 2px solid var(--accent-color); color: var(--accent-color); }
         nav li ul {
           display:none;
           position:absolute;
@@ -132,24 +119,10 @@ $conn->close();
         }
         nav li:hover > ul { display:block; }
         nav li ul li { padding:5px 20px; }
-        nav li ul li a {
-          color:var(--text-color-dark);
-          font-weight:400;
-          white-space:nowrap;
-        }
+        nav li ul li a { color:var(--text-color-dark); font-weight:400; white-space:nowrap; }
 
-        /* ===== MAIN CONTENT ===== */
-        main {
-          max-width:1200px;
-          margin:40px auto;
-          padding:0 20px;
-        }
-        h1 {
-          text-align:left;
-          font-size:28px;
-          margin-bottom:10px;
-          color:#fff;
-        }
+        main { max-width:1200px; margin:40px auto; padding:0 20px; }
+        h1 { text-align:left; font-size:28px; margin-bottom:10px; color:#fff; }
         .card {
           background:var(--card-bg);
           color:var(--text-color-dark);
@@ -157,56 +130,38 @@ $conn->close();
           padding:30px 40px;
           box-shadow:0 5px 20px var(--shadow-light);
         }
-        .data-table-container {
-            overflow-x: auto; /* Memungkinkan tabel di-scroll secara horizontal di layar kecil */
-        }
+        .data-table-container { overflow-x: auto; }
         .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-            color: var(--text-color-dark);
-            min-width: 900px; /* Lebar minimum agar tidak terlalu sempit */
+            width: 100%; border-collapse: collapse; margin-top: 15px;
+            color: var(--text-color-dark); min-width: 900px;
         }
         .data-table th, .data-table td {
-            padding: 15px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
+            padding: 15px; text-align: left; border-bottom: 1px solid #ddd;
         }
-        .data-table th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-            text-align: center; 
-        }
-        .data-table td {
-            text-align: center; 
-        }
-        .data-table td:nth-child(2) {
-            text-align: left; /* Nama Karyawan rata kiri */
-        }
-        .data-table tbody tr:hover {
-            background-color: #f1f1f1;
-        }
-        .info-text {
-            color:#fff; 
-            margin-bottom: 20px; 
-            opacity: 0.9;
-        }
+        .data-table th { background-color: #f8f9fa; font-weight: 600; text-align: center; }
+        .data-table td { text-align: center; }
+        .data-table td:nth-child(2) { text-align: left; }
+        .data-table tbody tr:hover { background-color: #f1f1f1; }
+        .info-text { color:#fff; margin-bottom: 20px; opacity: 0.9; }
 
-        /* Responsive Styles for Table */
+        /* Form pencarian */
+        .search-form {
+            display:flex; gap:10px; margin-bottom:20px;
+        }
+        .search-form input {
+            flex:1; padding:10px; border-radius:8px; border:1px solid #ccc;
+        }
+        .search-form button, .search-form a {
+            padding:10px 20px; border:none; border-radius:8px;
+            background: var(--accent-color); color:white; font-weight:bold;
+            text-decoration:none; cursor:pointer;
+        }
+        .search-form a { background:#777; }
+
         @media (max-width: 768px) {
             header{flex-direction: column; align-items: flex-start;} 
             nav ul{flex-direction: column; gap: 10px; width: 100%; margin-top: 15px;} 
             nav li ul { position: static; border: none; box-shadow: none; padding-left: 20px; }
-            
-            .data-table {
-                /* Mengatur ulang tabel di mobile. Karena terlalu banyak kolom, 
-                   kita biarkan scroll horizontal */
-                display: block;
-                width: 900px; /* Memaksa lebar agar bisa di-scroll */
-            }
-            .data-table-container {
-                -webkit-overflow-scrolling: touch; /* Untuk iOS smooth scrolling */
-            }
         }
     </style>
 </head>
@@ -234,7 +189,6 @@ $conn->close();
             <li class="nav-active"><a href="#">Karyawan ▾</a>
                 <ul>
                     <li><a href="data_karyawan_direktur.php">Data Karyawan</a></li>
-        
                 </ul>
             </li>
             <li><a href="#">Pelamar ▾</a>
@@ -256,6 +210,14 @@ $conn->close();
         <h1>Data Karyawan</h1>
         <p class="info-text">Lihat semua data dan informasi detail seluruh karyawan perusahaan.</p>
         
+        <!-- Form Pencarian -->
+        <form method="GET" action="data_karyawan_direktur.php" class="search-form">
+            <input type="text" name="cari" placeholder="Cari nama, kode karyawan, jabatan, role, atau email..." 
+                   value="<?= isset($_GET['cari']) ? htmlspecialchars($_GET['cari']) : '' ?>">
+            <button type="submit">Cari</button>
+            <a href="data_karyawan_direktur.php">Reset</a>
+        </form>
+
         <div class="card">
             <div class="data-table-container">
                 <table class="data-table">
@@ -287,7 +249,7 @@ $conn->close();
                             <?php endwhile; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="8" style="text-align: center;">Tidak ada data karyawan ditemukan di database.</td>
+                                <td colspan="8" style="text-align: center;">Tidak ada data karyawan ditemukan.</td>
                             </tr>
                         <?php endif; ?>
                     </tbody>
@@ -295,5 +257,6 @@ $conn->close();
             </div>
         </div>
     </main>
+<?php $conn->close(); ?>
 </body>
 </html>
