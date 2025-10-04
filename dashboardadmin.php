@@ -231,7 +231,6 @@ p.admin-title {
         <li><a href="#">Karyawan ▾</a>
             <ul>
                 <li><a href="data_karyawan.php">Data Karyawan</a></li>
-                <li><a href="daftar_akun_karyawan.php">Daftar Akun Karyawan</a></li>
             </ul>
         </li>
           <ul>

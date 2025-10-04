@@ -57,7 +57,7 @@ $pelamar = $result->fetch_assoc();
     <div class="card">
         <div class="page-header">
             <h2 class="page-title">Detail Data Pelamar</h2>
-            <a href="administrasi_pelamar.php" class="btn-kembali">← Kembali</a>
+            <a href="riwayat_pelamar.php" class="btn-kembali">← Kembali</a>
         </div>
 
         <div class="detail-grid">

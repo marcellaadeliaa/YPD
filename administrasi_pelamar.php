@@ -443,7 +443,7 @@ $pelamarTidakLolos = getApplicantsByStatus($conn, 'Tidak Lolos');
             </tbody>
         </table>
 
-        <h3 class="section-title">🧠 Seleksi Psikotes</h3>
+        <h3 class="section-title">🧠 Seleksi Psikotes Saja</h3>
         <table class="data-table">
             <thead>
                 <tr>
