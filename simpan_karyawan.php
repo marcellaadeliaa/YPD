@@ -1,61 +1,92 @@
 <?php
 session_start();
+require_once 'config.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Ambil data dari form
     $kode_karyawan = $_POST['kode_karyawan'] ?? '';
-    $nama = $_POST['nama'] ?? '';
-    $jenis_kelamin = $_POST['jenis_kelamin'] ?? '';
-    $tanggal_lahir = $_POST['tanggal_lahir'] ?? '';
-    $alamat = $_POST['alamat'] ?? '';
-    $telepon = $_POST['telepon'] ?? '';
+    $nama_lengkap = $_POST['nama_lengkap'] ?? '';
     $email = $_POST['email'] ?? '';
+    $password = $_POST['password'] ?? '';
+    $jabatan = $_POST['jabatan'] ?? '';
     $divisi = $_POST['divisi'] ?? '';
     $role = $_POST['role'] ?? '';
-    $tanggal_masuk = $_POST['tanggal_masuk'] ?? '';
-    $status = $_POST['status'] ?? '';
+    $no_telp = $_POST['no_telp'] ?? '';
+    $status_aktif = $_POST['status_aktif'] ?? 'aktif';
     
-    // Pastikan session karyawan sudah ada
-    if (!isset($_SESSION['karyawan'])) {
-        $_SESSION['karyawan'] = array();
+    // Validasi data wajib
+    if (empty($kode_karyawan) || empty($nama_lengkap) || empty($email) || empty($password) || 
+        empty($jabatan) || empty($divisi) || empty($role)) {
+        $_SESSION['error_message'] = "Semua field wajib harus diisi!";
+        header("Location: tambah_karyawan.php");
+        exit;
     }
     
-    // Tambahkan data karyawan baru ke session
-    $karyawan_baru = array(
-        'kode' => $kode_karyawan,
-        'nama' => $nama,
-        'divisi' => $divisi,
-        'role' => $role,
-        'telepon' => $telepon,
-        'email' => $email
-    );
+    // Cek apakah kode karyawan sudah ada
+    $check_sql = "SELECT id_karyawan FROM data_karyawan WHERE kode_karyawan = ?";
+    $check_stmt = $conn->prepare($check_sql);
+    $check_stmt->bind_param("s", $kode_karyawan);
+    $check_stmt->execute();
+    $check_result = $check_stmt->get_result();
     
-    $_SESSION['karyawan'][] = $karyawan_baru;
-    
-    // Simpan data lengkap di session terpisah jika diperlukan
-    if (!isset($_SESSION['karyawan_data'])) {
-        $_SESSION['karyawan_data'] = array();
+    if ($check_result->num_rows > 0) {
+        $_SESSION['error_message'] = "Kode karyawan sudah digunakan!";
+        header("Location: tambah_karyawan.php");
+        exit;
     }
     
-    $_SESSION['karyawan_data'][$kode_karyawan] = array(
-        'nama' => $nama,
-        'divisi' => $divisi,
-        'role' => $role,
-        'telepon' => $telepon,
-        'email' => $email,
-        'alamat' => $alamat,
-        'tanggal_masuk' => $tanggal_masuk,
-        'status' => $status,
-        'tanggal_lahir' => $tanggal_lahir,
-        'jenis_kelamin' => $jenis_kelamin
+    // Cek apakah email sudah ada
+    $check_email_sql = "SELECT id_karyawan FROM data_karyawan WHERE email = ?";
+    $check_email_stmt = $conn->prepare($check_email_sql);
+    $check_email_stmt->bind_param("s", $email);
+    $check_email_stmt->execute();
+    $check_email_result = $check_email_stmt->get_result();
+    
+    if ($check_email_result->num_rows > 0) {
+        $_SESSION['error_message'] = "Email sudah digunakan!";
+        header("Location: tambah_karyawan.php");
+        exit;
+    }
+    
+    // SIMPAN PASSWORD PLAIN TEXT (bisa dilihat admin)
+    // JANGAN gunakan password_hash()
+    $plain_password = $password;
+    
+    // Insert data ke database
+    $sql = "INSERT INTO data_karyawan 
+            (kode_karyawan, nama_lengkap, email, password, jabatan, divisi, role, no_telp, status_aktif) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("sssssssss", 
+        $kode_karyawan, 
+        $nama_lengkap, 
+        $email, 
+        $plain_password,  // Simpan sebagai plain text
+        $jabatan, 
+        $divisi, 
+        $role, 
+        $no_telp, 
+        $status_aktif
     );
     
-    // Set pesan sukses
-    $_SESSION['success_message'] = "Data karyawan berhasil ditambahkan!";
+    if ($stmt->execute()) {
+        // Set pesan sukses
+        $_SESSION['success_message'] = "Data karyawan berhasil ditambahkan! Kode: $kode_karyawan, Password: $plain_password";
+        
+        // Redirect ke halaman data karyawan
+        header("Location: data_karyawan.php");
+        exit;
+    } else {
+        // Jika terjadi error
+        $_SESSION['error_message'] = "Terjadi kesalahan saat menyimpan data: " . $conn->error;
+        header("Location: tambah_karyawan.php");
+        exit;
+    }
     
-    // Redirect ke halaman data karyawan
-    header("Location: data_karyawan.php");
-    exit;
+    $stmt->close();
+    $conn->close();
+    
 } else {
     // Jika bukan method POST, redirect ke halaman tambah
     header("Location: tambah_karyawan.php");

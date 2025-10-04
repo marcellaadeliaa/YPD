@@ -1,65 +1,100 @@
 <?php
 session_start();
+require_once 'config.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $id_lama = $_POST['id_lama'] ?? '';
+    // Ambil data dari form
+    $id_karyawan = $_POST['id_karyawan'] ?? '';
     $kode_karyawan = $_POST['kode_karyawan'] ?? '';
-    $nama = $_POST['nama'] ?? '';
-    $jenis_kelamin = $_POST['jenis_kelamin'] ?? '';
-    $tanggal_lahir = $_POST['tanggal_lahir'] ?? '';
-    $alamat = $_POST['alamat'] ?? '';
-    $telepon = $_POST['telepon'] ?? '';
+    $nama_lengkap = $_POST['nama_lengkap'] ?? '';
     $email = $_POST['email'] ?? '';
+    $password = $_POST['password'] ?? '';
+    $jabatan = $_POST['jabatan'] ?? '';
     $divisi = $_POST['divisi'] ?? '';
     $role = $_POST['role'] ?? '';
-    $tanggal_masuk = $_POST['tanggal_masuk'] ?? '';
-    $status = $_POST['status'] ?? '';
+    $no_telp = $_POST['no_telp'] ?? '';
+    $status_aktif = $_POST['status_aktif'] ?? 'aktif';
     
-    // Update data di session karyawan (untuk tabel)
-    foreach ($_SESSION['karyawan'] as &$karyawan) {
-        if ($karyawan['kode'] == $id_lama) {
-            $karyawan['kode'] = $kode_karyawan;
-            $karyawan['nama'] = $nama;
-            $karyawan['divisi'] = $divisi;
-            $karyawan['role'] = $role;
-            $karyawan['telepon'] = $telepon;
-            $karyawan['email'] = $email;
-            break;
-        }
+    // Validasi data wajib
+    if (empty($kode_karyawan) || empty($nama_lengkap) || empty($email) || empty($password) || 
+        empty($jabatan) || empty($divisi) || empty($role)) {
+        $_SESSION['error_message'] = "Semua field wajib harus diisi!";
+        header("Location: edit_karyawan.php?id=" . $id_karyawan);
+        exit;
     }
     
-    // Pastikan session karyawan_data ada
-    if (!isset($_SESSION['karyawan_data'])) {
-        $_SESSION['karyawan_data'] = array();
+    // Cek apakah kode karyawan sudah digunakan oleh orang lain (kecuali diri sendiri)
+    $check_sql = "SELECT id_karyawan FROM data_karyawan WHERE kode_karyawan = ? AND id_karyawan != ?";
+    $check_stmt = $conn->prepare($check_sql);
+    $check_stmt->bind_param("si", $kode_karyawan, $id_karyawan);
+    $check_stmt->execute();
+    $check_result = $check_stmt->get_result();
+    
+    if ($check_result->num_rows > 0) {
+        $_SESSION['error_message'] = "Kode karyawan sudah digunakan oleh karyawan lain!";
+        header("Location: edit_karyawan.php?id=" . $id_karyawan);
+        exit;
     }
     
-    // Update data lengkap di session karyawan_data (untuk detail)
-    if ($id_lama != $kode_karyawan) {
-        // Jika kode berubah, pindahkan data ke kode baru
-        if (isset($_SESSION['karyawan_data'][$id_lama])) {
-            $_SESSION['karyawan_data'][$kode_karyawan] = $_SESSION['karyawan_data'][$id_lama];
-            unset($_SESSION['karyawan_data'][$id_lama]);
-        }
+    // Cek apakah email sudah digunakan oleh orang lain (kecuali diri sendiri)
+    $check_email_sql = "SELECT id_karyawan FROM data_karyawan WHERE email = ? AND id_karyawan != ?";
+    $check_email_stmt = $conn->prepare($check_email_sql);
+    $check_email_stmt->bind_param("si", $email, $id_karyawan);
+    $check_email_stmt->execute();
+    $check_email_result = $check_email_stmt->get_result();
+    
+    if ($check_email_result->num_rows > 0) {
+        $_SESSION['error_message'] = "Email sudah digunakan oleh karyawan lain!";
+        header("Location: edit_karyawan.php?id=" . $id_karyawan);
+        exit;
     }
     
-    // Update data lengkap
-    $_SESSION['karyawan_data'][$kode_karyawan] = array(
-        'nama' => $nama,
-        'divisi' => $divisi,
-        'role' => $role,
-        'telepon' => $telepon,
-        'email' => $email,
-        'alamat' => $alamat,
-        'tanggal_masuk' => $tanggal_masuk,
-        'status' => $status,
-        'tanggal_lahir' => $tanggal_lahir,
-        'jenis_kelamin' => $jenis_kelamin
+    // Update data di database
+    $sql = "UPDATE data_karyawan SET 
+            kode_karyawan = ?, 
+            nama_lengkap = ?, 
+            email = ?, 
+            password = ?, 
+            jabatan = ?, 
+            divisi = ?, 
+            role = ?, 
+            no_telp = ?, 
+            status_aktif = ? 
+            WHERE id_karyawan = ?";
+    
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("sssssssssi", 
+        $kode_karyawan, 
+        $nama_lengkap, 
+        $email, 
+        $password, 
+        $jabatan, 
+        $divisi, 
+        $role, 
+        $no_telp, 
+        $status_aktif,
+        $id_karyawan
     );
     
-    $_SESSION['success_message'] = "Data karyawan berhasil diupdate!";
-    header("Location: data_karyawan.php");
-    exit;
+    if ($stmt->execute()) {
+        // Set pesan sukses
+        $_SESSION['success_message'] = "Data karyawan berhasil diupdate!";
+        
+        // Redirect ke halaman data karyawan
+        header("Location: data_karyawan.php");
+        exit;
+    } else {
+        // Jika terjadi error
+        $_SESSION['error_message'] = "Terjadi kesalahan saat mengupdate data: " . $conn->error;
+        header("Location: edit_karyawan.php?id=" . $id_karyawan);
+        exit;
+    }
+    
+    $stmt->close();
+    $conn->close();
+    
 } else {
+    // Jika bukan method POST, redirect ke halaman data karyawan
     header("Location: data_karyawan.php");
     exit;
 }

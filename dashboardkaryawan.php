@@ -1,21 +1,54 @@
 <?php
 session_start();
+require_once 'config.php';
 
-// --- Contoh data login / profil ---
-$nama               = "Cell";
-$sisa_cuti_tahunan  = 12;
-$sisa_cuti_lustrum  = 5;
+// Cek apakah user sudah login
+if (!isset($_SESSION['user_id']) && !isset($_SESSION['user'])) {
+    header("Location: login_karyawan.php");
+    exit;
+}
 
-$lastCuti         = $_SESSION['last_cuti'] ?? null;
-$tanggal_cuti     = $lastCuti['tanggal'] ?? "-";
-$jenis_cuti       = $lastCuti['jenis']   ?? "-";
-$status_cuti      = $lastCuti['status']  ?? null;   // null kalau belum ada
+// Tentukan user_id berdasarkan session yang ada
+if (isset($_SESSION['user_id'])) {
+    $user_id = $_SESSION['user_id'];
+} elseif (isset($_SESSION['user']['id_karyawan'])) {
+    $user_id = $_SESSION['user']['id_karyawan'];
+} else {
+    header("Location: login_karyawan.php");
+    exit;
+}
 
-$lastKhl          = $_SESSION['last_khl'] ?? null;
-$tanggal_khl      = $lastKhl['tanggal'] ?? "-";
-$jenis_khl        = $lastKhl['jenis']   ?? "-";
-$status_khl       = $lastKhl['status']  ?? null;
+// Ambil data karyawan dari database
+$sql = "SELECT * FROM data_karyawan WHERE id_karyawan = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+$karyawan = $result->fetch_assoc();
+
+// Jika data tidak ditemukan, hapus session dan redirect ke login
+if (!$karyawan) {
+    session_destroy();
+    header("Location: login_karyawan.php");
+    exit;
+}
+
+$stmt->close();
+
+// Ambil data dari database
+$nama = $karyawan['nama_lengkap'];
+$sisa_cuti_tahunan = $karyawan['sisa_cuti_tahunan'];
+$sisa_cuti_lustrum = $karyawan['sisa_cuti_lustrum'];
+
+// Set nilai default untuk cuti dan KHL
+$tanggal_cuti = "-";
+$jenis_cuti = "-";
+$status_cuti = null;
+$tanggal_khl = "-";
+$jenis_khl = "-";
+$status_khl = null;
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -140,6 +173,33 @@ h1 {text-align:center;font-size:26px;margin-bottom:30px;}
   font-weight:600;
   font-size:14px;
 }
+.status-rejected {
+  display:inline-block;
+  background:#dc3545;
+  color:#fff;
+  padding:6px 12px;
+  border-radius:6px;
+  font-weight:600;
+  font-size:14px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.info-item {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 4px solid #1E105E;
+}
+
+.info-item strong {
+  color: #1E105E;
+}
 
 /* ===== Responsive ===== */
 @media(max-width:768px){
@@ -149,6 +209,9 @@ h1 {text-align:center;font-size:26px;margin-bottom:30px;}
     position:relative;
     border:none;
     box-shadow:none;
+  }
+  .info-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>
@@ -189,42 +252,93 @@ h1 {text-align:center;font-size:26px;margin-bottom:30px;}
   <h1>Welcome, <?= htmlspecialchars($nama) ?>!</h1>
 
   <div class="card">
-    <h3>Data Pribadi</h3>
-    <p>Lengkapi Data Pribadi Anda.</p>
-    <a href="data_pribadi.php" class="btn">Lihat</a>
+    <h3>Informasi Pribadi</h3>
+    <div class="info-grid">
+      <div class="info-item">
+        <strong>Nama:</strong><br>
+        <?= htmlspecialchars($karyawan['nama_lengkap']) ?>
+      </div>
+      <div class="info-item">
+        <strong>Jabatan:</strong><br>
+        <?= htmlspecialchars($karyawan['jabatan']) ?>
+      </div>
+      <div class="info-item">
+        <strong>Divisi:</strong><br>
+        <?= htmlspecialchars($karyawan['divisi']) ?>
+      </div>
+      <div class="info-item">
+        <strong>Role:</strong><br>
+        <?= htmlspecialchars($karyawan['role']) ?>
+      </div>
+    </div>
+    <a href="data_pribadi.php" class="btn" style="margin-top: 15px;">Lihat Detail Lengkap</a>
   </div>
 
   <div class="card">
     <h3>Sisa Cuti</h3>
-    <p>Cuti Tahunan : <?= $sisa_cuti_tahunan ?> hari</p>
-    <p>Cuti Lustrum : <?= $sisa_cuti_lustrum ?> hari</p>
+    <div class="info-grid">
+      <div class="info-item">
+        <strong>Cuti Tahunan:</strong><br>
+        <?= $sisa_cuti_tahunan ?> hari
+      </div>
+      <div class="info-item">
+        <strong>Cuti Lustrum:</strong><br>
+        <?= $sisa_cuti_lustrum ?> hari
+      </div>
+    </div>
   </div>
 
   <div class="card">
-  <h3>Status Pengajuan Cuti</h3>
-  <p>Tanggal Cuti : <?= htmlspecialchars($tanggal_cuti) ?></p>
-  <p>Jenis Cuti   : <?= htmlspecialchars($jenis_cuti) ?></p>
-
+    <h3>Status Pengajuan Cuti Terakhir</h3>
+    <div class="info-grid">
+      <div class="info-item">
+        <strong>Tanggal Cuti:</strong><br>
+        <?= htmlspecialchars($tanggal_cuti) ?>
+      </div>
+      <div class="info-item">
+        <strong>Jenis Cuti:</strong><br>
+        <?= htmlspecialchars($jenis_cuti) ?>
+      </div>
+    </div>
+    
     <?php if ($status_cuti): ?>
-      <span class="<?= $status_cuti==='Menunggu Persetujuan' ? 'status-pending' : 'status-approve' ?>">
-        <?= htmlspecialchars($status_cuti) ?>
-      </span>
+      <div style="margin-top: 15px;">
+        <span class="
+          <?= $status_cuti == 'Disetujui' ? 'status-approve' : 
+             ($status_cuti == 'Ditolak' ? 'status-rejected' : 'status-pending') ?>
+        ">
+          <?= htmlspecialchars($status_cuti) ?>
+        </span>
+      </div>
     <?php else: ?>
-      <p>Belum ada pengajuan</p>
+      <p style="margin-top: 15px; color: #666;">Belum ada pengajuan cuti</p>
     <?php endif; ?>
   </div>
 
   <div class="card">
-    <h3>Status Pengajuan KHL</h3>
-    <p>Tanggal KHL : <?= htmlspecialchars($tanggal_khl) ?></p>
-    <p>Proyek      : <?= htmlspecialchars($jenis_khl) ?></p>
+    <h3>Status Pengajuan KHL Terakhir</h3>
+    <div class="info-grid">
+      <div class="info-item">
+        <strong>Tanggal KHL:</strong><br>
+        <?= htmlspecialchars($tanggal_khl) ?>
+      </div>
+      <div class="info-item">
+        <strong>Proyek:</strong><br>
+        <?= htmlspecialchars($jenis_khl) ?>
+      </div>
+    </div>
 
     <?php if ($status_khl): ?>
-      <span class="<?= $status_khl==='Menunggu Persetujuan' ? 'status-pending' : 'status-approve' ?>">
-        <?= htmlspecialchars($status_khl) ?>
-      </span>
+      <div style="margin-top: 15px;">
+        <span class="
+          <?= $status_khl == 'Disetujui' ? 'status-approve' : 
+             ($status_khl == 'Ditolak' ? 'status-rejected' : 'status-pending') ?>
+        ">
+          <?= htmlspecialchars($status_khl) ?>
+        </span>
+      </div>
     <?php else: ?>
-      <p>Belum ada pengajuan</p>
+      <p style="margin-top: 15px; color: #666;">Belum ada pengajuan KHL</p>
     <?php endif; ?>
   </div>
 

@@ -1,40 +1,63 @@
 <?php
 session_start();
+require_once 'config.php';
 
-// sementara untuk contoh tanpa login
-if (!isset($_SESSION['kode_karyawan'])) {
-    $_SESSION['kode_karyawan'] = 'YPD002';
-}
-
-// simpan data ke session saat submit
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save'])) {
-    $_SESSION['data_pribadi'] = [
-        'nama'    => $_POST['nama'] ?? '',
-        'divisi'  => $_POST['divisi'] ?? '',
-        'role'    => $_POST['role'] ?? '',
-        'telepon' => $_POST['telepon'] ?? '',
-        'email'   => $_POST['email'] ?? ''
-    ];
-    header("Location: ".$_SERVER['PHP_SELF']);
+// Cek apakah user sudah login
+if (!isset($_SESSION['user_id']) && !isset($_SESSION['user'])) {
+    header("Location: login_karyawan.php");
     exit;
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['reset'])) {
-        unset($_SESSION['data_pribadi']);
-        header("Location: ".$_SERVER['PHP_SELF']);
-        exit;
-    }
-    if (isset($_POST['to_dashboard'])) {
-        header("Location: dashboardkaryawan.php");
-        exit;
-    }
+// Tentukan user_id berdasarkan session yang ada
+if (isset($_SESSION['user_id'])) {
+    $user_id = $_SESSION['user_id'];
+} elseif (isset($_SESSION['user']['id_karyawan'])) {
+    $user_id = $_SESSION['user']['id_karyawan'];
+} else {
+    header("Location: login_karyawan.php");
+    exit;
 }
 
+// Ambil data karyawan dari database
+$sql = "SELECT * FROM data_karyawan WHERE id_karyawan = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+$karyawan = $result->fetch_assoc();
 
+// Jika data tidak ditemukan, redirect ke login
+if (!$karyawan) {
+    header("Location: login_karyawan.php");
+    exit;
+}
 
-$data  = $_SESSION['data_pribadi'] ?? null;
-$kodeKaryawan = $_SESSION['kode_karyawan'];
+$stmt->close();
+
+// Proses update no telepon
+$success_message = '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_telepon'])) {
+    $no_telp_baru = $_POST['no_telp'] ?? '';
+    
+    // Validasi no telepon
+    if (!empty($no_telp_baru)) {
+        $update_sql = "UPDATE data_karyawan SET no_telp = ? WHERE id_karyawan = ?";
+        $update_stmt = $conn->prepare($update_sql);
+        $update_stmt->bind_param("si", $no_telp_baru, $user_id);
+        
+        if ($update_stmt->execute()) {
+            $success_message = "Nomor telepon berhasil diupdate!";
+            // Update data di session dan variabel
+            $karyawan['no_telp'] = $no_telp_baru;
+            if (isset($_SESSION['user'])) {
+                $_SESSION['user']['no_telp'] = $no_telp_baru;
+            }
+        } else {
+            $success_message = "Gagal mengupdate nomor telepon!";
+        }
+        $update_stmt->close();
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -85,7 +108,7 @@ main{
 }
 .card{
   width:100%;
-  max-width:500px;
+  max-width:600px;
   background:#fff;
   border-radius:15px;
   padding:30px 40px;
@@ -99,36 +122,100 @@ h2{
   border-bottom:2px solid #eee;
   padding-bottom:10px;
 }
-label{display:block;font-weight:600;margin:18px 0 6px;color:#222;}
-input[type="text"],
-input[type="tel"],
-input[type="email"],
-select{
-  width:100%;
-  padding:10px;
-  border:1px solid #ccc;
-  border-radius:8px;
-  background:#f9f9f9;
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 25px;
 }
-button{
-  display:block;
-  margin-top:25px;
-  padding:12px;
-  background:#4a3f81;
-  color:#fff;
-  border:none;
-  border-radius:8px;
-  font-weight:700;
-  font-size:15px;
-  cursor:pointer;
+.info-item {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 4px solid #1E105E;
 }
-button:hover{background:#3a3162;}
-.list-data p{margin:8px 0;font-weight:500;}
+.info-label {
+  font-weight: 600;
+  color: #555;
+  display: block;
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+.info-value {
+  color: #333;
+  font-size: 16px;
+}
+.edit-form {
+  background: #f0f2f5;
+  padding: 20px;
+  border-radius: 10px;
+  margin-top: 20px;
+}
+.edit-form h3 {
+  margin-top: 0;
+  color: #1E105E;
+  font-size: 18px;
+}
+.form-group {
+  margin-bottom: 15px;
+}
+.form-group label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #555;
+}
+.form-group input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 16px;
+}
+.btn {
+  display: inline-block;
+  padding: 10px 20px;
+  background: #4a3f81;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+}
+.btn:hover {
+  background: #3a3162;
+}
+.btn-back {
+  background: #6c757d;
+  margin-left: 10px;
+}
+.btn-back:hover {
+  background: #545b62;
+}
+.success-message {
+  background: #d4edda;
+  color: #155724;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  border-left: 4px solid #28a745;
+}
+.readonly-field {
+  background-color: #e9ecef;
+  color: #6c757d;
+  cursor: not-allowed;
+}
 /* Responsive */
 @media(max-width:768px){
   header{flex-direction:column;align-items:flex-start;}
   nav ul{flex-direction:column;gap:10px;}
   nav li ul{position:relative;border:none;box-shadow:none;}
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
 </head>
@@ -141,7 +228,7 @@ button:hover{background:#3a3162;}
   </div>
   <nav>
     <ul>
-      <li><a href="dashboard.php">Beranda</a></li>
+      <li><a href="dashboardkaryawan.php">Beranda</a></li>
       <li><a href="#">Cuti ▾</a>
         <ul>
           <li><a href="formcutikaryawan.php">Ajukan Cuti</a></li>
@@ -150,14 +237,14 @@ button:hover{background:#3a3162;}
       </li>
       <li><a href="#">KHL ▾</a>
         <ul>
-          <li><a href="formcutikhl.php">Ajukan Cuti</a></li>
+          <li><a href="formkhlkaryawan.php">Ajukan KHL</a></li>
           <li><a href="riwayat_khl_pribadi.php">Riwayat KHL</a></li>
         </ul>
       </li>
       <li><a href="#">Profil ▾</a>
         <ul>
           <li><a href="data_pribadi.php">Data Pribadi</a></li>
-          <li><a href="logout.php">Logout</a></li>
+          <li><a href="logout2.php">Logout</a></li>
         </ul>
       </li>
     </ul>
@@ -166,52 +253,64 @@ button:hover{background:#3a3162;}
 
 <main>
   <div class="card">
-    <?php if(!$data): ?>
-      <h2>Lengkapi Data Pribadi</h2>
-      <form method="post">
-        <label>No. Induk Karyawan</label>
-        <input type="text" name="kode" value="<?= htmlspecialchars($kodeKaryawan) ?>" readonly>
-
-        <label>Nama Karyawan</label>
-        <input type="text" name="nama" required>
-
-        <label>Divisi/Bagian</label>
-        <select name="divisi" required>
-          <option value="">Pilih Divisi/Posisi</option>
-          <option value="Training">Training</option>
-          <option value="Wisma">Wisma</option>
-          <option value="Konsultasi">Konsultasi</option>
-          <option value="Keuangan">Keuangan</option>
-          <option value="SDM">SDM</option>
-          <option value="Sekretariat">Sekretariat</option>
-        </select>
-
-        <label>No. Telepon</label>
-        <input type="tel" name="telepon" required>
-
-        <label>Email</label>
-        <input type="email" name="email" required>
-
-        <button type="submit" name="save">Simpan</button>
-      </form>
-    <?php else: ?>
-      <h2>Data Pribadi Anda</h2>
-      <div class="list-data">
-        <p><strong>No. Induk Karyawan:</strong> <?= htmlspecialchars($kodeKaryawan) ?></p>
-        <p><strong>Nama:</strong> <?= htmlspecialchars($data['nama']) ?></p>
-        <p><strong>Divisi:</strong> <?= htmlspecialchars($data['divisi']) ?></p>
-        <p><strong>Telepon:</strong> <?= htmlspecialchars($data['telepon']) ?></p>
-        <p><strong>Email:</strong> <?= htmlspecialchars($data['email']) ?></p>
+    <h2>Data Pribadi</h2>
+    
+    <?php if ($success_message): ?>
+      <div class="success-message">
+        <?= htmlspecialchars($success_message) ?>
       </div>
-      <form method="post">
-        <button type="submit" name="reset">Edit Data</button>
-      </form>
-
-      <form action="dashboardkaryawan.php" method="get">
-        <button type="submit">Kembali ke Dashboard</button>
-      </form>
-
     <?php endif; ?>
+
+    <div class="info-grid">
+      <div class="info-item">
+        <span class="info-label">Kode Karyawan</span>
+        <span class="info-value"><?= htmlspecialchars($karyawan['kode_karyawan']) ?></span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Nama Lengkap</span>
+        <span class="info-value"><?= htmlspecialchars($karyawan['nama_lengkap']) ?></span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Email</span>
+        <span class="info-value"><?= htmlspecialchars($karyawan['email']) ?></span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Jabatan</span>
+        <span class="info-value"><?= htmlspecialchars($karyawan['jabatan']) ?></span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Divisi</span>
+        <span class="info-value"><?= htmlspecialchars($karyawan['divisi']) ?></span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Role</span>
+        <span class="info-value"><?= htmlspecialchars($karyawan['role']) ?></span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Status</span>
+        <span class="info-value" style="color: <?= $karyawan['status_aktif'] == 'aktif' ? '#28a745' : '#dc3545' ?>; font-weight: bold;">
+          <?= ucfirst($karyawan['status_aktif']) ?>
+        </span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Tanggal Bergabung</span>
+        <span class="info-value"><?= date('d-m-Y', strtotime($karyawan['created_at'])) ?></span>
+      </div>
+    </div>
+
+    <div class="edit-form">
+      <h3>Edit Nomor Telepon</h3>
+      <form method="POST">
+        <div class="form-group">
+          <label for="no_telp">Nomor Telepon</label>
+          <input type="tel" id="no_telp" name="no_telp" 
+                 value="<?= htmlspecialchars($karyawan['no_telp']) ?>" 
+                 placeholder="Masukkan nomor telepon baru" required>
+        </div>
+        <button type="submit" name="update_telepon" class="btn">Update Nomor Telepon</button>
+        <a href="dashboardkaryawan.php" class="btn btn-back">Kembali ke Dashboard</a>
+      </form>
+    </div>
   </div>
 </main>
 

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 03 Okt 2025 pada 19.27
+-- Waktu pembuatan: 04 Okt 2025 pada 07.55
 -- Versi server: 10.4.22-MariaDB
 -- Versi PHP: 7.3.33
 
@@ -50,14 +50,15 @@ CREATE TABLE `data_karyawan` (
 INSERT INTO `data_karyawan` (`id_karyawan`, `kode_karyawan`, `nama_lengkap`, `email`, `password`, `jabatan`, `divisi`, `role`, `no_telp`, `sisa_cuti_tahunan`, `sisa_cuti_lustrum`, `status_aktif`, `created_at`) VALUES
 (1, 'YPD001', 'Pico', 'pico.dir@ypd.com', 'hashed_password_direktur', 'Direktur Utama', 'Direksi', 'direktur', '081234567890', 12, 5, 'aktif', '2025-09-30 23:37:17'),
 (2, 'YPD002', 'Cell', 'cell.sdm@ypd.com', 'hashed_password_admin', 'Admin SDM', 'SDM', 'admin', '081234567891', 12, 5, 'aktif', '2025-09-30 23:37:17'),
-(3, 'YPD101', 'Adrian', 'adrian.karyawan@ypd.com', 'hashed_password_karyawan', 'Staf Training', 'Training', 'karyawan', '081234567892', 12, 5, 'aktif', '2025-09-30 23:37:17'),
+(3, 'YPD010', 'Adrian', 'adrian.karyawan@ypd.com', 'hashed_password_karyawan', 'Staf Training', 'Training', 'karyawan', '081234567892', 12, 5, 'aktif', '2025-09-30 23:37:17'),
 (4, 'YPD003', 'Ria', 'ria.direksi@ypd.com', 'hashed_password_ria', 'Penanggung Jawab Training', 'Training', 'penanggung jawab', '081234567893', 12, 5, 'aktif', '2025-09-30 23:45:32'),
 (5, 'YPD004', 'Dani', 'dani.pj@ypd.com', 'hashed_password_dani', 'Staf Keuangan', 'Keuangan', 'karyawan', '081234567894', 12, 5, 'aktif', '2025-09-30 23:45:32'),
 (6, 'YPD005', 'Budi', 'budibudi@gmail.com', 'hashed_password_budi', 'Penanggung Jawab Konsultasi', 'Konsultasi', 'penanggung jawab', '12345677654', 12, 5, 'aktif', '2025-10-02 08:30:16'),
 (7, 'YPD006', 'Cici', 'cicici@gmail.com', 'hashed_password_cici', 'Penanggung Jawab Wisma', 'Wisma', 'penanggung jawab', '918347914', 12, 5, 'aktif', '2025-10-02 14:01:16'),
 (8, 'YPD007', 'Dian', 'didi@gmail.com', 'hashed_password_dian', 'Penanggung Jawab SDM', 'SDM', 'penanggung jawab', '5981731412', 12, 5, 'aktif', '2025-10-02 15:10:28'),
 (9, 'YPD008', 'Jasmine', 'minminja@gmail.com', 'hashed_password_jasmine', 'Penanggung Jawab Sekretariat', 'Sekretariat', 'penanggung jawab', '123415654312', 12, 5, 'aktif', '2025-10-02 15:24:59'),
-(10, 'YPD009', 'Mega', 'gamega@gmail.com', 'hashed_password_mega', 'Penanggung Jawab Keuangan', 'Keuangan', 'penanggung jawab', '12347358642879', 12, 5, 'aktif', '2025-10-02 15:46:27');
+(10, 'YPD009', 'Mega', 'gamega@gmail.com', 'hashed_password_mega', 'Penanggung Jawab Keuangan', 'Keuangan', 'penanggung jawab', '12347358642879', 12, 5, 'aktif', '2025-10-02 15:46:27'),
+(11, 'YPD011', 'Lala Marcella', 'lala.marcella@ypd.com', 'hashed_password_lala', 'Staf Keuangan', 'Keuangan', 'karyawan', '08186845699', 12, 5, 'aktif', '2025-10-04 05:27:28');
 
 -- --------------------------------------------------------
 
@@ -105,7 +106,8 @@ INSERT INTO `data_pelamar` (`id`, `user_id`, `nama_lengkap`, `posisi_dilamar`, `
 (5, 14, 'Jeffra', 'Training', 'Laki-laki', 'Tegal', '2000-12-12', '1234512347', 'Jl. Tulip Jakarta', 'Jl. Pawiyatan Luhur Semarang', '08186845698', 'jeffra1234@gmail.com', 'Khonghucu', '081256478987', 'Diploma', 'uploads/1759510277-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759510277-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759510277-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759510277-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759510277-Pernyataan_Penyelesaian_Proyek.docx', NULL, 'Diterima', 'Proses seleksi sedang berlangsung', 'Belum ada pengumuman saat ini.', '2025-10-03 16:51:17'),
 (6, 15, 'Hezkiel', 'Sekretariat', 'Laki-laki', 'Jakarta', '2004-12-12', '1234512348', 'Jl. Mawar Jakarta', 'Jl. Pawiyatan Luhur Semarang', '08186889777', 'hezkiel1234@gmail.com', 'Kristen', '081258962852', 'Diploma', 'uploads/1759511213-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759511213-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759511213-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759511213-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759511213-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759511213-Pernyataan_Penyelesaian_Proyek.docx', 'Diterima', 'Proses seleksi sedang berlangsung', 'Belum ada pengumuman saat ini.', '2025-10-03 17:06:53'),
 (7, 16, 'Adelia', 'Sekretariat', 'Perempuan', 'Tegal', '2006-03-10', '1234512345', 'Jl. Residence Tegal', 'Jl. Pawiyatan Luhur II Semarang', '08186889755', 'marcellaadelia11@gmail.com', 'Katholik', '081258962812', 'Diploma', 'uploads/1759511511-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759511511-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759511511-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759511511-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759511511-Pernyataan_Penyelesaian_Proyek.docx', NULL, 'Diterima', 'Proses seleksi sedang berlangsung', 'Belum ada pengumuman saat ini.', '2025-10-03 17:11:51'),
-(8, 17, 'Cici', 'Keuangan', 'Perempuan', 'Tegal', '2000-12-15', '1234512348', 'Jl. Mawar Jakarta', 'Jl. Pawiyatan Luhur Semarang', '081868456987', 'cici1234@gmail.com', 'Katholik', '08125896285', 'Diploma', 'uploads/1759512060-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759512060-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759512060-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759512060-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759512060-Pernyataan_Penyelesaian_Proyek.docx', NULL, 'Diterima', 'Proses seleksi sedang berlangsung', 'Belum ada pengumuman saat ini.', '2025-10-03 17:21:00');
+(8, 17, 'Cici', 'Keuangan', 'Perempuan', 'Tegal', '2000-12-15', '1234512348', 'Jl. Mawar Jakarta', 'Jl. Pawiyatan Luhur Semarang', '081868456987', 'cici1234@gmail.com', 'Katholik', '08125896285', 'Diploma', 'uploads/1759512060-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759512060-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759512060-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759512060-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759512060-Pernyataan_Penyelesaian_Proyek.docx', NULL, 'Diterima', 'Proses seleksi sedang berlangsung', 'Belum ada pengumuman saat ini.', '2025-10-03 17:21:00'),
+(9, 18, 'Lindi', 'Training', 'Perempuan', 'Surabaya', '2001-11-11', '1122334455', 'Jl. Anggrek Jakarta', 'Jl. Pawiyatan Luhur II Semarang', '081868456987', 'lindi1234@gmail.com', 'Kristen', '081258962812', 'Diploma', 'uploads/1759512673-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759512673-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759512673-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759512673-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759512673-Pernyataan_Penyelesaian_Proyek.docx', NULL, 'Tidak Lolos', 'Proses seleksi sedang berlangsung', 'Belum ada pengumuman saat ini.', '2025-10-03 17:31:13');
 
 -- --------------------------------------------------------
 
@@ -328,7 +330,9 @@ INSERT INTO `pengumuman_pelamar` (`id`, `pelamar_id`, `tahap`, `pesan`, `tanggal
 (59, 7, 'Menunggu Proses', 'Selamat! Lamaran Anda telah diterima dan masuk ke tahap seleksi administratif.', '2025-10-04', '2025-10-03 17:26:42'),
 (60, 7, 'Seleksi Administratif', 'Selamat! Anda lolos seleksi administratif. Tahap selanjutnya adalah wawancara.', '2025-10-04', '2025-10-03 17:26:53'),
 (61, 7, 'Seleksi Wawancara', 'Selamat! Anda lolos wawancara. Tahap selanjutnya adalah Psikotes.', '2025-10-04', '2025-10-03 17:26:58'),
-(62, 7, 'Seleksi Psikotes', 'Selamat! Anda telah lolos seluruh rangkaian seleksi dan dinyatakan DITERIMA.', '2025-10-04', '2025-10-03 17:27:00');
+(62, 7, 'Seleksi Psikotes', 'Selamat! Anda telah lolos seluruh rangkaian seleksi dan dinyatakan DITERIMA.', '2025-10-04', '2025-10-03 17:27:00'),
+(63, 9, 'Menunggu Proses', 'Selamat! Lamaran Anda telah diterima dan masuk ke tahap seleksi administratif.', '2025-10-04', '2025-10-03 17:31:22'),
+(64, 9, 'Seleksi Administratif', 'Maaf, Anda tidak lolos pada tahap seleksi ini. Terima kasih telah berpartisipasi.', '2025-10-04', '2025-10-03 17:31:25');
 
 -- --------------------------------------------------------
 
@@ -394,7 +398,8 @@ INSERT INTO `riwayat_pelamar` (`id`, `pelamar_id`, `status_administratif`, `stat
 (11, 5, NULL, NULL, NULL, NULL, 'Diterima', '2025-10-03 16:51:34'),
 (15, 6, 'Lolos', 'Lolos', 'Lolos', 'Lolos', 'Diterima', '2025-10-03 17:09:07'),
 (20, 8, 'Lolos', 'Lolos', NULL, 'Lolos', 'Diterima', '2025-10-03 17:26:27'),
-(24, 7, 'Lolos', 'Lolos', 'Lolos', NULL, 'Diterima', '2025-10-03 17:27:00');
+(24, 7, 'Lolos', 'Lolos', 'Lolos', NULL, 'Diterima', '2025-10-03 17:27:00'),
+(28, 9, 'Tidak Lolos', NULL, NULL, NULL, 'Tidak Lolos', '2025-10-03 17:31:25');
 
 -- --------------------------------------------------------
 
@@ -440,7 +445,8 @@ INSERT INTO `users` (`id`, `nama_lengkap`, `email`, `password`, `created_at`) VA
 (14, '', 'jeffra1234@gmail.com', '$2y$10$nA48waEyhPtR2YsygUxYaekbJuI72P/HrPfJn/ByEVsN9LGrIAmsy', '2025-10-03 16:50:10'),
 (15, '', 'hezkiel1234@gmail.com', '$2y$10$8qyKvcY3ZfiKrup2Qnx.Nejhe6YFz6bNmX7aIexTMNVHbzQpOrCQW', '2025-10-03 17:05:54'),
 (16, '', 'marcellaadelia11@gmail.com', '$2y$10$CwSLVViSrsZwKc6zavOGaeaQPC9cMgvL6GEzOROncPkhnetpR8p9i', '2025-10-03 17:10:37'),
-(17, '', 'cici1234@gmail.com', '$2y$10$adbfkoeT/vz7UZZaXCzxE.ecsRepWQlFnKq4fTbkgVa1.1UGaaut.', '2025-10-03 17:20:03');
+(17, '', 'cici1234@gmail.com', '$2y$10$adbfkoeT/vz7UZZaXCzxE.ecsRepWQlFnKq4fTbkgVa1.1UGaaut.', '2025-10-03 17:20:03'),
+(18, '', 'lindi1234@gmail.com', '$2y$10$gkgB0d4YjczX24T5dChAQuaD53ftn7gR05MEkcoSlQf4EQK6EnxGu', '2025-10-03 17:30:15');
 
 --
 -- Indexes for dumped tables
@@ -549,13 +555,13 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT untuk tabel `data_karyawan`
 --
 ALTER TABLE `data_karyawan`
-  MODIFY `id_karyawan` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id_karyawan` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT untuk tabel `data_pelamar`
 --
 ALTER TABLE `data_pelamar`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT untuk tabel `lamaran`
@@ -597,7 +603,7 @@ ALTER TABLE `pengumuman`
 -- AUTO_INCREMENT untuk tabel `pengumuman_pelamar`
 --
 ALTER TABLE `pengumuman_pelamar`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=63;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=65;
 
 --
 -- AUTO_INCREMENT untuk tabel `pengumuman_umum`
@@ -615,7 +621,7 @@ ALTER TABLE `riwayat_cuti`
 -- AUTO_INCREMENT untuk tabel `riwayat_pelamar`
 --
 ALTER TABLE `riwayat_pelamar`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
 
 --
 -- AUTO_INCREMENT untuk tabel `sisa_cuti`
@@ -627,7 +633,7 @@ ALTER TABLE `sisa_cuti`
 -- AUTO_INCREMENT untuk tabel `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- Ketidakleluasaan untuk tabel pelimpahan (Dumped Tables)

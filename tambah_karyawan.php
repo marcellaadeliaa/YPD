@@ -1,3 +1,7 @@
+<?php
+session_start();
+require_once 'config.php';
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -30,7 +34,7 @@
         }
         
         .welcome-section h2 {
-            color: #1E105E;
+            color: #ffffffff;
             font-size: 24px;
             margin-bottom: 20px;
         }
@@ -51,30 +55,6 @@
             border-bottom: 1px solid #eee;
         }
         
-        .employee-photo {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid #1E105E;
-            cursor: pointer;
-        }
-        
-        .photo-upload {
-            text-align: center;
-        }
-        
-        .photo-upload input {
-            display: none;
-        }
-        
-        .photo-label {
-            display: block;
-            margin-top: 10px;
-            color: #666;
-            cursor: pointer;
-        }
-        
         .form-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -91,6 +71,11 @@
             margin-bottom: 8px;
             font-weight: 600;
             color: #555;
+        }
+        
+        .form-group.required label::after {
+            content: " *";
+            color: #e74c3c;
         }
         
         .form-group input,
@@ -125,6 +110,20 @@
             margin-bottom: 20px;
             padding-bottom: 10px;
             border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .section-note {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .section-note p {
+            margin: 0;
+            color: #555;
+            font-size: 14px;
         }
         
         .action-buttons {
@@ -168,6 +167,18 @@
             transform: translateY(-2px);
         }
         
+        .password-strength {
+            margin-top: 5px;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .password-requirements {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
         @media (max-width: 768px) {
             .form-header {
                 flex-direction: column;
@@ -187,47 +198,43 @@
 <body>
     <header>
         <div class="logo">
-    <img src="image/namayayasan.png" alt="Logo Yayasan">
-    <span>Yayasan Purba Danarta</span>
-  </div>
-    <nav>
-        <ul>
-        <li><a href="dashboardadmin.php">Beranda</a></li>
-        <li><a href="#">Cuti ▾</a>
+            <img src="image/namayayasan.png" alt="Logo Yayasan">
+            <span>Yayasan Purba Danarta</span>
+        </div>
+        <nav>
             <ul>
-            <li><a href="riwayat_cuti.php">Riwayat Cuti</a></li>
-            <li><a href="kalender_cuti.php">Kalender Cuti</a></li>
-            <li><a href="daftar_sisa_cuti.php">Sisa Cuti Karyawan</a></li>
-            </ul>
-        </li>
-        <li><a href="#">KHL ▾</a>
-            <ul>
-                <li><a href="riwayat_khl.php">Riwayat KHL</a></li>
-                <li><a href="kalender_khl.php">Kalender KHL</a></li>
-            </ul>
-        </li>
-        <li><a href="#">Lamaran Kerja ▾</a>
-            <ul>
-                <li><a href="administrasi_pelamar.php">Administrasi Pelamar</a></li>
-                <li><a href="riwayat_pelamar.php">Riwayat Pelamar</a></li>
-            </ul>
-        </li>
-        <li><a href="#">Karyawan ▾</a>
-            <ul>
-                <li><a href="data_karyawan.php">Data Karyawan</a></li>
-            </ul>
-        </li>
-          <ul>
+                <li><a href="dashboardadmin.php">Beranda</a></li>
+                <li><a href="#">Cuti ▾</a>
+                    <ul>
+                        <li><a href="riwayat_cuti.php">Riwayat Cuti</a></li>
+                        <li><a href="kalender_cuti.php">Kalender Cuti</a></li>
+                        <li><a href="daftar_sisa_cuti.php">Sisa Cuti Karyawan</a></li>
+                    </ul>
+                </li>
+                <li><a href="#">KHL ▾</a>
+                    <ul>
+                        <li><a href="riwayat_khl.php">Riwayat KHL</a></li>
+                        <li><a href="kalender_khl.php">Kalender KHL</a></li>
+                    </ul>
+                </li>
+                <li><a href="#">Lamaran Kerja ▾</a>
+                    <ul>
+                        <li><a href="administrasi_pelamar.php">Administrasi Pelamar</a></li>
+                        <li><a href="riwayat_pelamar.php">Riwayat Pelamar</a></li>
+                    </ul>
+                </li>
+                <li><a href="#">Karyawan ▾</a>
+                    <ul>
+                        <li><a href="data_karyawan.php">Data Karyawan</a></li>
+                    </ul>
+                </li>
                 <li><a href="logout2.php">Logout</a></li>
             </ul>
-        </li>
-        </ul>
-    </nav>
+        </nav>
     </header>
     
     <main>
         <div class="welcome-section">
-            <h1>Welcome, Cell!</h1>
             <h2>Tambah Karyawan Baru</h2>
         </div>
         
@@ -236,86 +243,86 @@
                 <div class="form-header">
                     <div>
                         <h3>Data Karyawan Baru</h3>
-                        <p>Isi semua informasi yang diperlukan</p>
+                        <p>Buat akun untuk karyawan baru</p>
                     </div>
                 </div>
                 
-                <div class="form-section">
-                    <h3>Informasi Karyawan</h3>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="kode_karyawan">No. Kode Karyawan *</label>
-                            <input type="text" id="kode_karyawan" name="kode_karyawan" placeholder="Contoh: 11223388" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="nama">Nama Lengkap *</label>
-                            <input type="text" id="nama" name="nama" placeholder="Masukkan nama lengkap" required>
-                        </div>
-                    </div>
+                <div class="section-note">
+                    <p><strong>Informasi:</strong> Field bertanda * wajib diisi. Field lainnya dapat diisi nanti oleh karyawan.</p>
                 </div>
                 
                 <div class="form-section">
-                    <h3>Informasi Pribadi</h3>
+                    <h3>Informasi Akun (Wajib)</h3>
                     <div class="form-grid">
-                        <div class="form-group">
-                            <label for="jenis_kelamin">Jenis Kelamin *</label>
-                            <select id="jenis_kelamin" name="jenis_kelamin" required>
-                                <option value="">Pilih Jenis Kelamin</option>
-                                <option value="Laki-laki">Laki-laki</option>
-                                <option value="Perempuan">Perempuan</option>
-                            </select>
+                        <div class="form-group required">
+                            <label for="kode_karyawan">Kode Karyawan</label>
+                            <input type="text" id="kode_karyawan" name="kode_karyawan" placeholder="Contoh: YPD010" required>
                         </div>
-                        <div class="form-group">
-                            <label for="tanggal_lahir">Tanggal Lahir *</label>
-                            <input type="date" id="tanggal_lahir" name="tanggal_lahir" required>
+                        <div class="form-group required">
+                            <label for="nama_lengkap">Nama Lengkap</label>
+                            <input type="text" id="nama_lengkap" name="nama_lengkap" placeholder="Masukkan nama lengkap" required>
                         </div>
-                        <div class="form-group full-width">
-                            <label for="alamat">Alamat *</label>
-                            <textarea id="alamat" name="alamat" rows="3" placeholder="Masukkan alamat lengkap" required></textarea>
+                        <div class="form-group required">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email" placeholder="Contoh: nama@ypd.com" required>
+                        </div>
+                        <div class="form-group required">
+                            <label for="password">Password</label>
+                            <div style="position: relative;">
+                                <input type="text" id="password" name="password" placeholder="Masukkan password" required style="padding-right: 40px;">
+                                <button type="button" id="togglePassword" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer;">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
                 
                 <div class="form-section">
-                    <h3>Informasi Kontak</h3>
+                    <h3>Informasi Pekerjaan (Wajib)</h3>
                     <div class="form-grid">
-                        <div class="form-group">
-                            <label for="telepon">No. Telepon *</label>
-                            <input type="tel" id="telepon" name="telepon" placeholder="Contoh: 82123456789" required>
+                        <div class="form-group required">
+                            <label for="jabatan">Jabatan</label>
+                            <input type="text" id="jabatan" name="jabatan" placeholder="Contoh: Staf Training" required>
                         </div>
-                        <div class="form-group">
-                            <label for="email">Email *</label>
-                            <input type="email" id="email" name="email" placeholder="Contoh: nama@company.com" required>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="form-section">
-                    <h3>Informasi Pekerjaan</h3>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="divisi">Divisi *</label>
+                        <div class="form-group required">
+                            <label for="divisi">Divisi</label>
                             <select id="divisi" name="divisi" required>
                                 <option value="">Pilih Divisi</option>
                                 <option value="Training">Training</option>
                                 <option value="Wisma">Wisma</option>
                                 <option value="Konsultasi">Konsultasi</option>
+                                <option value="SDM">SDM</option>
+                                <option value="Keuangan">Keuangan</option>
+                                <option value="Sekretariat">Sekretariat</option>
+                                <option value="Direksi">Direksi</option>
                             </select>
                         </div>
-                        <div class="form-group">
-                            <label for="role">Posisi *</label>
-                            <input type="text" id="role" name="role" placeholder="Contoh: Staff, Supervisor, dll." required>
+                        <div class="form-group required">
+                            <label for="role">Role</label>
+                            <select id="role" name="role" required>
+                                <option value="">Pilih Role</option>
+                                <option value="karyawan">Karyawan</option>
+                                <option value="admin">Admin</option>
+                                <option value="penanggung jawab">Penanggung Jawab</option>
+                                <option value="direktur">Direktur</option>
+                            </select>
                         </div>
-                        <div class="form-group">
-                            <label for="tanggal_masuk">Tanggal Masuk *</label>
-                            <input type="date" id="tanggal_masuk" name="tanggal_masuk" required>
+                        <div class="form-group required">
+                            <label for="no_telp">No. Telepon</label>
+                            <input type="tel" id="no_telp" name="no_telp" placeholder="Contoh: 081234567890">
                         </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h3>Informasi Tambahan (Opsional)</h3>
+                    <div class="form-grid">
                         <div class="form-group">
-                            <label for="status">Status *</label>
-                            <select id="status" name="status" required>
-                                <option value="">Pilih Status</option>
-                                <option value="Aktif">Aktif</option>
-                                <option value="Tidak Aktif">Tidak Aktif</option>
+                            <label for="status_aktif">Status Aktif</label>
+                            <select id="status_aktif" name="status_aktif">
+                                <option value="aktif" selected>Aktif</option>
+                                <option value="non_aktif">Non Aktif</option>
                             </select>
                         </div>
                     </div>
@@ -323,7 +330,7 @@
                 
                 <div class="action-buttons">
                     <button type="submit" class="btn btn-save">
-                        <i class="fas fa-save"></i> Simpan Data
+                        <i class="fas fa-save"></i> Buat Akun Karyawan
                     </button>
                     <a href="data_karyawan.php" class="btn btn-cancel">
                         <i class="fas fa-times"></i> Batal
@@ -334,21 +341,54 @@
     </main>
 
     <script>
-        // Preview foto
-        document.getElementById('photoInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('photoPreview').src = e.target.result;
-                }
-                reader.readAsDataURL(file);
+        // Generate kode karyawan otomatis berdasarkan input nama
+        document.getElementById('nama_lengkap').addEventListener('blur', function() {
+            const kodeInput = document.getElementById('kode_karyawan');
+            const namaInput = document.getElementById('nama_lengkap');
+            
+            // Jika kode karyawan masih kosong, generate otomatis
+            if (kodeInput.value === '' && namaInput.value !== '') {
+                const nama = namaInput.value.toUpperCase();
+                const inisial = nama.split(' ').map(word => word[0]).join('').substring(0, 3);
+                kodeInput.value = 'YPD' + Math.floor(100 + Math.random() * 900);
             }
         });
-        
-    
-        // Set tanggal maksimal untuk tanggal masuk (hari ini)
-        document.getElementById('tanggal_masuk').max = new Date().toISOString().split('T')[0];
+
+        // Generate email otomatis berdasarkan nama
+        document.getElementById('nama_lengkap').addEventListener('blur', function() {
+            const emailInput = document.getElementById('email');
+            const namaInput = document.getElementById('nama_lengkap');
+            
+            // Jika email masih kosong, generate otomatis
+            if (emailInput.value === '' && namaInput.value !== '') {
+                const nama = namaInput.value.toLowerCase().replace(/\s+/g, '.');
+                emailInput.value = nama + '@ypd.com';
+            }
+        });
+
+        // Generate password default
+        document.addEventListener('DOMContentLoaded', function() {
+            const passwordInput = document.getElementById('password');
+            // Generate password default 8 karakter
+            const defaultPassword = Math.random().toString(36).slice(-8);
+            passwordInput.value = defaultPassword;
+        });
+
+        // Toggle show/hide password
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const icon = this.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
     </script>
 </body>
 </html>

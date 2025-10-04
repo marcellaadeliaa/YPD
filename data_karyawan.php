@@ -1,54 +1,21 @@
 <?php
 session_start();
+require_once 'config.php';
 
-// Inisialisasi data karyawan di session jika belum ada
-if (!isset($_SESSION['karyawan'])) {
-    $_SESSION['karyawan'] = array(
-        array(
-            'kode' => '11223386',
-            'nama' => 'Adhitama',
-            'divisi' => 'Training',
-            'role' => 'Penanggung Jawab',
-            'telepon' => '84589625258',
-            'email' => 'adhitama@gmail.com'
-        ),
-        array(
-            'kode' => '11223344',
-            'nama' => 'Xue',
-            'divisi' => 'Wisma',
-            'role' => 'Staff',
-            'telepon' => '82123456789',
-            'email' => 'xue@company.com'
-        ),
-        array(
-            'kode' => '11223355',
-            'nama' => 'Adel',
-            'divisi' => 'Training',
-            'role' => 'Staff & Admin',
-            'telepon' => '82234567890',
-            'email' => 'adel@company.com'
-        ),
-        array(
-            'kode' => '11223366',
-            'nama' => 'Budi Santoso',
-            'divisi' => 'Wisma',
-            'role' => 'Staff',
-            'telepon' => '82345678901',
-            'email' => 'budi.santoso@company.com'
-        ),
-        array(
-            'kode' => '11223377',
-            'nama' => 'Siti Rahayu',
-            'divisi' => 'Konsultasi',
-            'role' => 'Penanggung Jawab',
-            'telepon' => '82456789012',
-            'email' => 'siti.rahayu@company.com'
-        )
-    );
+// Ambil data karyawan dari database menggunakan MySQLi
+$sql = "SELECT id_karyawan, kode_karyawan, nama_lengkap, email, password, jabatan, divisi, role, no_telp, status_aktif, created_at 
+        FROM data_karyawan 
+        ORDER BY kode_karyawan";
+$result = $conn->query($sql);
+
+$karyawan = [];
+if ($result->num_rows > 0) {
+    while($row = $result->fetch_assoc()) {
+        $karyawan[] = $row;
+    }
 }
-
-$karyawan = $_SESSION['karyawan'];
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -57,6 +24,7 @@ $karyawan = $_SESSION['karyawan'];
     <title>Data Karyawan</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* CSS Anda tetap sama */
         body { margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg,#1E105E 0%,#8897AE 100%); min-height:100vh; color:#333; }
         header { background:rgba(255,255,255,1); padding:20px 40px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #34377c; }
         .logo { display:flex; align-items:center; gap:16px; font-weight:500; font-size:20px; color:#2e1f4f; }
@@ -194,7 +162,7 @@ $karyawan = $_SESSION['karyawan'];
         }
         
         .welcome-section h2 {
-            color: #1E105E;
+            color: #ffffffff;
             font-size: 24px;
             margin-bottom: 20px;
         }
@@ -215,6 +183,16 @@ $karyawan = $_SESSION['karyawan'];
             border-left: 4px solid #28a745;
         }
         
+        .status-aktif {
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .status-non-aktif {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        
         @media (max-width: 768px) {
             .search-container {
                 flex-wrap: wrap;
@@ -230,47 +208,43 @@ $karyawan = $_SESSION['karyawan'];
 <body>
     <header>
         <div class="logo">
-    <img src="image/namayayasan.png" alt="Logo Yayasan">
-    <span>Yayasan Purba Danarta</span>
-  </div>
-    <nav>
-        <ul>
-        <li><a href="dashboardadmin.php">Beranda</a></li>
-        <li><a href="#">Cuti ▾</a>
+            <img src="image/namayayasan.png" alt="Logo Yayasan">
+            <span>Yayasan Purba Danarta</span>
+        </div>
+        <nav>
             <ul>
-            <li><a href="riwayat_cuti.php">Riwayat Cuti</a></li>
-            <li><a href="kalender_cuti.php">Kalender Cuti</a></li>
-            <li><a href="daftar_sisa_cuti.php">Sisa Cuti Karyawan</a></li>
-            </ul>
-        </li>
-        <li><a href="#">KHL ▾</a>
-            <ul>
-                <li><a href="riwayat_khl.php">Riwayat KHL</a></li>
-                <li><a href="kalender_khl.php">Kalender KHL</a></li>
-            </ul>
-        </li>
-        <li><a href="#">Lamaran Kerja ▾</a>
-            <ul>
-                <li><a href="administrasi_pelamar.php">Administrasi Pelamar</a></li>
-                <li><a href="riwayat_pelamar.php">Riwayat Pelamar</a></li>
-            </ul>
-        </li>
-        <li><a href="#">Karyawan ▾</a>
-            <ul>
-                <li><a href="data_karyawan.php">Data Karyawan</a></li>
-            </ul>
-        </li>
-          <ul>
+                <li><a href="dashboardadmin.php">Beranda</a></li>
+                <li><a href="#">Cuti ▾</a>
+                    <ul>
+                        <li><a href="riwayat_cuti.php">Riwayat Cuti</a></li>
+                        <li><a href="kalender_cuti.php">Kalender Cuti</a></li>
+                        <li><a href="daftar_sisa_cuti.php">Sisa Cuti Karyawan</a></li>
+                    </ul>
+                </li>
+                <li><a href="#">KHL ▾</a>
+                    <ul>
+                        <li><a href="riwayat_khl.php">Riwayat KHL</a></li>
+                        <li><a href="kalender_khl.php">Kalender KHL</a></li>
+                    </ul>
+                </li>
+                <li><a href="#">Lamaran Kerja ▾</a>
+                    <ul>
+                        <li><a href="administrasi_pelamar.php">Administrasi Pelamar</a></li>
+                        <li><a href="riwayat_pelamar.php">Riwayat Pelamar</a></li>
+                    </ul>
+                </li>
+                <li><a href="#">Karyawan ▾</a>
+                    <ul>
+                        <li><a href="data_karyawan.php">Data Karyawan</a></li>
+                    </ul>
+                </li>
                 <li><a href="logout2.php">Logout</a></li>
             </ul>
-        </li>
-        </ul>
-    </nav>
+        </nav>
     </header>
     
     <main>
         <div class="welcome-section">
-            <h1>Welcome, Cell!</h1>
             <h2>Data Karyawan</h2>
         </div>
         
@@ -296,33 +270,43 @@ $karyawan = $_SESSION['karyawan'];
             <table class="data-table" id="employeeTable">
                 <thead>
                     <tr>
-                        <th>No. Kode Karyawan</th>
-                        <th>Nama Karyawan</th>
+                        <th>Kode Karyawan</th>
+                        <th>Nama Lengkap</th>
+                        <th>Jabatan</th>
                         <th>Divisi</th>
                         <th>Role</th>
                         <th>No. Telepon</th>
                         <th>Email</th>
+                        <th>Password</th>
+                        <th>Status</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody">
                     <?php if (empty($karyawan)): ?>
                         <tr>
-                            <td colspan="7" class="no-results">Belum ada data karyawan</td>
+                            <td colspan="10" class="no-results">Belum ada data karyawan</td>
                         </tr>
                     <?php else: ?>
                         <?php foreach($karyawan as $data): ?>
                         <tr>
-                            <td><?php echo $data['kode']; ?></td>
-                            <td class='text-left'><?php echo $data['nama']; ?></td>
-                            <td><?php echo $data['divisi']; ?></td>
-                            <td><?php echo $data['role']; ?></td>
-                            <td><?php echo $data['telepon']; ?></td>
-                            <td><?php echo $data['email']; ?></td>
+                            <td><?php echo htmlspecialchars($data['kode_karyawan']); ?></td>
+                            <td class='text-left'><?php echo htmlspecialchars($data['nama_lengkap']); ?></td>
+                            <td><?php echo htmlspecialchars($data['jabatan']); ?></td>
+                            <td><?php echo htmlspecialchars($data['divisi']); ?></td>
+                            <td><?php echo htmlspecialchars($data['role']); ?></td>
+                            <td><?php echo htmlspecialchars($data['no_telp']); ?></td>
+                            <td><?php echo htmlspecialchars($data['email']); ?></td>
+                            <td><?php echo htmlspecialchars($data['password']); ?></td>
+                            <td>
+                                <span class="<?php echo $data['status_aktif'] == 'aktif' ? 'status-aktif' : 'status-non-aktif'; ?>">
+                                    <?php echo ucfirst($data['status_aktif']); ?>
+                                </span>
+                            </td>
                             <td class='action-cell'>
-                                <button class='action-btn btn-lihat' data-id='<?php echo $data['kode']; ?>'>Lihat</button>
-                                <button class='action-btn btn-edit' data-id='<?php echo $data['kode']; ?>'>Edit</button>
-                                <button class='action-btn btn-hapus-small' data-id='<?php echo $data['kode']; ?>' data-nama='<?php echo $data['nama']; ?>'>Hapus</button>
+                                <button class='action-btn btn-lihat' data-id='<?php echo $data['id_karyawan']; ?>'>Lihat</button>
+                                <button class='action-btn btn-edit' data-id='<?php echo $data['id_karyawan']; ?>'>Edit</button>
+                                <button class='action-btn btn-hapus-small' data-id='<?php echo $data['id_karyawan']; ?>' data-nama='<?php echo htmlspecialchars($data['nama_lengkap']); ?>'>Hapus</button>
                             </td>
                         </tr>
                         <?php endforeach; ?>
@@ -361,7 +345,7 @@ $karyawan = $_SESSION['karyawan'];
                 if (!document.getElementById('noResults')) {
                     const noResults = document.createElement('tr');
                     noResults.id = 'noResults';
-                    noResults.innerHTML = `<td colspan="7" class="no-results">Tidak ada hasil untuk "${searchTerm}"</td>`;
+                    noResults.innerHTML = `<td colspan="10" class="no-results">Tidak ada hasil untuk "${searchTerm}"</td>`;
                     document.getElementById('tableBody').appendChild(noResults);
                 }
             } else {
@@ -378,7 +362,6 @@ $karyawan = $_SESSION['karyawan'];
                 const action = this.textContent;
                 const employeeId = this.getAttribute('data-id');
                 const employeeName = this.getAttribute('data-nama');
-                const row = this.closest('tr');
                 
                 if (action === 'Hapus') {
                     if (confirm(`Apakah Anda yakin ingin menghapus data karyawan ${employeeName}?`)) {

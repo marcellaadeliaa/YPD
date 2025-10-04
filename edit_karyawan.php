@@ -1,37 +1,26 @@
 <?php
 session_start();
+require_once 'config.php';
 
 // Data karyawan berdasarkan ID
 $karyawan_id = $_GET['id'] ?? '';
 
-// Cari data karyawan dari session
-$karyawan_detail = null;
-foreach ($_SESSION['karyawan'] as $karyawan) {
-    if ($karyawan['kode'] == $karyawan_id) {
-        $karyawan_detail = $karyawan;
-        break;
-    }
+// Ambil data dari database
+$sql = "SELECT * FROM data_karyawan WHERE id_karyawan = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $karyawan_id);
+$stmt->execute();
+$result = $stmt->get_result();
+$karyawan = $result->fetch_assoc();
+
+// Jika tidak ditemukan, redirect
+if (!$karyawan) {
+    $_SESSION['error_message'] = "Data karyawan tidak ditemukan!";
+    header("Location: data_karyawan.php");
+    exit;
 }
 
-// Jika tidak ditemukan di data dasar, cari di data lengkap
-if (!$karyawan_detail && isset($_SESSION['karyawan_data'][$karyawan_id])) {
-    $karyawan_detail = $_SESSION['karyawan_data'][$karyawan_id];
-    $karyawan_detail['kode'] = $karyawan_id;
-}
-
-// Default data jika ID tidak ditemukan
-$karyawan = $karyawan_detail ?: array(
-    'nama' => '',
-    'divisi' => '',
-    'role' => '',
-    'telepon' => '',
-    'email' => '',
-    'alamat' => '',
-    'tanggal_masuk' => '',
-    'status' => '',
-    'tanggal_lahir' => '',
-    'jenis_kelamin' => ''
-);
+$stmt->close();
 ?>
 
 <!DOCTYPE html>
@@ -42,6 +31,7 @@ $karyawan = $karyawan_detail ?: array(
     <title>Edit Karyawan</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* CSS sama seperti sebelumnya */
         body { margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg,#1E105E 0%,#8897AE 100%); min-height:100vh; color:#333; }
         header { background:rgba(255,255,255,1); padding:20px 40px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #34377c; }
         .logo { display:flex; align-items:center; gap:16px; font-weight:500; font-size:20px; color:#2e1f4f; }
@@ -87,30 +77,6 @@ $karyawan = $karyawan_detail ?: array(
             border-bottom: 1px solid #eee;
         }
         
-        .employee-photo {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid #1E105E;
-            cursor: pointer;
-        }
-        
-        .photo-upload {
-            text-align: center;
-        }
-        
-        .photo-upload input {
-            display: none;
-        }
-        
-        .photo-label {
-            display: block;
-            margin-top: 10px;
-            color: #666;
-            cursor: pointer;
-        }
-        
         .form-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -127,6 +93,11 @@ $karyawan = $karyawan_detail ?: array(
             margin-bottom: 8px;
             font-weight: 600;
             color: #555;
+        }
+        
+        .form-group.required label::after {
+            content: " *";
+            color: #e74c3c;
         }
         
         .form-group input,
@@ -231,14 +202,15 @@ $karyawan = $karyawan_detail ?: array(
                 <li><a href="dashboardadmin.php">Beranda</a></li>
                 <li><a href="#">Cuti ▾</a>
                     <ul>
-                        <li><a href="administrasi_cuti.php">Administrasi Cuti</a></li>
-                        <li><a href="riwayat_cuti.php">Riwayat Cuti Pegawai</a></li>
+                        <li><a href="riwayat_cuti.php">Riwayat Cuti</a></li>
+                        <li><a href="kalender_cuti.php">Kalender Cuti</a></li>
+                        <li><a href="daftar_sisa_cuti.php">Sisa Cuti Karyawan</a></li>
                     </ul>
                 </li>
                 <li><a href="#">KHL ▾</a>
                     <ul>
-                        <li><a href="administrasi_khl.php">Administrasi KHL</a></li>
-                        <li><a href="riwayat_khl.php">Riwayat KHL Pegawai</a></li>
+                        <li><a href="riwayat_khl.php">Riwayat KHL</a></li>
+                        <li><a href="kalender_khl.php">Kalender KHL</a></li>
                     </ul>
                 </li>
                 <li><a href="#">Lamaran Kerja ▾</a>
@@ -247,8 +219,12 @@ $karyawan = $karyawan_detail ?: array(
                         <li><a href="riwayat_pelamar.php">Riwayat Pelamar</a></li>
                     </ul>
                 </li>
-                <li><a href="#">Karyawan ▾</a></li>
-                <li><a href="#">Profil ▾</a></li>
+                <li><a href="#">Karyawan ▾</a>
+                    <ul>
+                        <li><a href="data_karyawan.php">Data Karyawan</a></li>
+                    </ul>
+                </li>
+                <li><a href="logout2.php">Logout</a></li>
             </ul>
         </nav>
     </header>
@@ -260,150 +236,34 @@ $karyawan = $karyawan_detail ?: array(
         </div>
         
         <div class="card">
-            <?php
-            // Data karyawan berdasarkan ID
-            $karyawan_id = $_GET['id'] ?? '';
-            
-            // Data dummy karyawan lengkap
-            $karyawan_data = array(
-                '11223386' => array(
-                    'nama' => 'Adhitama',
-                    'divisi' => 'Training',
-                    'role' => 'Penanggung Jawab',
-                    'telepon' => '84589625258',
-                    'email' => 'adhitama@gmail.com',
-                    'alamat' => 'Jl. Merdeka No. 123, Jakarta',
-                    'tanggal_masuk' => '2020-03-15',
-                    'status' => 'Aktif',
-                    'tanggal_lahir' => '1990-05-20',
-                    'jenis_kelamin' => 'Laki-laki'
-                ),
-                '11223344' => array(
-                    'nama' => 'Xue',
-                    'divisi' => 'Wisma',
-                    'role' => 'Staff',
-                    'telepon' => '82123456789',
-                    'email' => 'xue@company.com',
-                    'alamat' => 'Jl. Sudirman No. 45, Jakarta',
-                    'tanggal_masuk' => '2021-01-10',
-                    'status' => 'Aktif',
-                    'tanggal_lahir' => '1992-08-15',
-                    'jenis_kelamin' => 'Perempuan'
-                ),
-                '11223355' => array(
-                    'nama' => 'Adel',
-                    'divisi' => 'Training',
-                    'role' => 'Staff & Admin',
-                    'telepon' => '82234567890',
-                    'email' => 'adel@company.com',
-                    'alamat' => 'Jl. Gatot Subroto No. 78, Jakarta',
-                    'tanggal_masuk' => '2021-06-20',
-                    'status' => 'Aktif',
-                    'tanggal_lahir' => '1993-03-10',
-                    'jenis_kelamin' => 'Perempuan'
-                ),
-                '11223366' => array(
-                    'nama' => 'Budi Santoso',
-                    'divisi' => 'Wisma',
-                    'role' => 'Staff',
-                    'telepon' => '82345678901',
-                    'email' => 'budi.santoso@company.com',
-                    'alamat' => 'Jl. Thamrin No. 56, Jakarta',
-                    'tanggal_masuk' => '2019-11-05',
-                    'status' => 'Aktif',
-                    'tanggal_lahir' => '1988-12-25',
-                    'jenis_kelamin' => 'Laki-laki'
-                ),
-                '11223377' => array(
-                    'nama' => 'Siti Rahayu',
-                    'divisi' => 'Konsultasi',
-                    'role' => 'Penanggung Jawab',
-                    'telepon' => '82456789012',
-                    'email' => 'siti.rahayu@company.com',
-                    'alamat' => 'Jl. Kuningan No. 34, Jakarta',
-                    'tanggal_masuk' => '2018-08-12',
-                    'status' => 'Aktif',
-                    'tanggal_lahir' => '1985-07-18',
-                    'jenis_kelamin' => 'Perempuan'
-                )
-            );
-            
-            // Default data jika ID tidak ditemukan
-            $karyawan = $karyawan_data[$karyawan_id] ?? array(
-                'nama' => '',
-                'divisi' => '',
-                'role' => '',
-                'telepon' => '',
-                'email' => '',
-                'alamat' => '',
-                'tanggal_masuk' => '',
-                'status' => '',
-                'tanggal_lahir' => '',
-                'jenis_kelamin' => ''
-            );
-            ?>
-            
             <form id="editForm" method="POST" action="update_karyawan.php">
-                <input type="hidden" name="id_lama" value="<?php echo $karyawan_id; ?>">
+                <input type="hidden" name="id_karyawan" value="<?php echo $karyawan['id_karyawan']; ?>">
                 
                 <div class="form-header">
-                    <div class="photo-upload">
-                        <img src="https://via.placeholder.com/150" alt="Foto Karyawan" class="employee-photo" id="photoPreview">
-                        <input type="file" id="photoInput" accept="image/*">
-                        <label for="photoInput" class="photo-label">Ubah Foto</label>
-                    </div>
                     <div>
-                        <h3>Edit Data: <?php echo $karyawan['nama']; ?></h3>
-                        <p><strong>ID Karyawan Saat Ini:</strong> <?php echo $karyawan_id; ?></p>
+                        <h3>Edit Data: <?php echo htmlspecialchars($karyawan['nama_lengkap']); ?></h3>
+                        <p><strong>Kode Karyawan Saat Ini:</strong> <?php echo htmlspecialchars($karyawan['kode_karyawan']); ?></p>
                     </div>
                 </div>
                 
                 <div class="form-section">
-                    <h3>Informasi Karyawan</h3>
+                    <h3>Informasi Akun</h3>
                     <div class="form-grid">
-                        <div class="form-group">
-                            <label for="kode_karyawan">No. Kode Karyawan</label>
-                            <input type="text" id="kode_karyawan" name="kode_karyawan" value="<?php echo $karyawan_id; ?>" required>
+                        <div class="form-group required">
+                            <label for="kode_karyawan">Kode Karyawan</label>
+                            <input type="text" id="kode_karyawan" name="kode_karyawan" value="<?php echo htmlspecialchars($karyawan['kode_karyawan']); ?>" required>
                         </div>
-                        <div class="form-group">
-                            <label for="nama">Nama Lengkap</label>
-                            <input type="text" id="nama" name="nama" value="<?php echo $karyawan['nama']; ?>" required>
+                        <div class="form-group required">
+                            <label for="nama_lengkap">Nama Lengkap</label>
+                            <input type="text" id="nama_lengkap" name="nama_lengkap" value="<?php echo htmlspecialchars($karyawan['nama_lengkap']); ?>" required>
                         </div>
-                    </div>
-                </div>
-                
-                <div class="form-section">
-                    <h3>Informasi Pribadi</h3>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="jenis_kelamin">Jenis Kelamin</label>
-                            <select id="jenis_kelamin" name="jenis_kelamin" required>
-                                <option value="">Pilih Jenis Kelamin</option>
-                                <option value="Laki-laki" <?php echo $karyawan['jenis_kelamin'] == 'Laki-laki' ? 'selected' : ''; ?>>Laki-laki</option>
-                                <option value="Perempuan" <?php echo $karyawan['jenis_kelamin'] == 'Perempuan' ? 'selected' : ''; ?>>Perempuan</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="tanggal_lahir">Tanggal Lahir</label>
-                            <input type="date" id="tanggal_lahir" name="tanggal_lahir" value="<?php echo $karyawan['tanggal_lahir']; ?>" required>
-                        </div>
-                        <div class="form-group full-width">
-                            <label for="alamat">Alamat</label>
-                            <textarea id="alamat" name="alamat" rows="3" required><?php echo $karyawan['alamat']; ?></textarea>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="form-section">
-                    <h3>Informasi Kontak</h3>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="telepon">No. Telepon</label>
-                            <input type="tel" id="telepon" name="telepon" value="<?php echo $karyawan['telepon']; ?>" required>
-                        </div>
-                        <div class="form-group">
+                        <div class="form-group required">
                             <label for="email">Email</label>
-                            <input type="email" id="email" name="email" value="<?php echo $karyawan['email']; ?>" required>
+                            <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($karyawan['email']); ?>" required>
+                        </div>
+                        <div class="form-group required">
+                            <label for="password">Password</label>
+                            <input type="text" id="password" name="password" value="<?php echo htmlspecialchars($karyawan['password']); ?>" required>
                         </div>
                     </div>
                 </div>
@@ -411,29 +271,48 @@ $karyawan = $karyawan_detail ?: array(
                 <div class="form-section">
                     <h3>Informasi Pekerjaan</h3>
                     <div class="form-grid">
-                        <div class="form-group">
+                        <div class="form-group required">
+                            <label for="jabatan">Jabatan</label>
+                            <input type="text" id="jabatan" name="jabatan" value="<?php echo htmlspecialchars($karyawan['jabatan']); ?>" required>
+                        </div>
+                        <div class="form-group required">
                             <label for="divisi">Divisi</label>
                             <select id="divisi" name="divisi" required>
                                 <option value="">Pilih Divisi</option>
                                 <option value="Training" <?php echo $karyawan['divisi'] == 'Training' ? 'selected' : ''; ?>>Training</option>
                                 <option value="Wisma" <?php echo $karyawan['divisi'] == 'Wisma' ? 'selected' : ''; ?>>Wisma</option>
                                 <option value="Konsultasi" <?php echo $karyawan['divisi'] == 'Konsultasi' ? 'selected' : ''; ?>>Konsultasi</option>
+                                <option value="SDM" <?php echo $karyawan['divisi'] == 'SDM' ? 'selected' : ''; ?>>SDM</option>
+                                <option value="Keuangan" <?php echo $karyawan['divisi'] == 'Keuangan' ? 'selected' : ''; ?>>Keuangan</option>
+                                <option value="Sekretariat" <?php echo $karyawan['divisi'] == 'Sekretariat' ? 'selected' : ''; ?>>Sekretariat</option>
+                                <option value="Direksi" <?php echo $karyawan['divisi'] == 'Direksi' ? 'selected' : ''; ?>>Direksi</option>
+                            </select>
+                        </div>
+                        <div class="form-group required">
+                            <label for="role">Role</label>
+                            <select id="role" name="role" required>
+                                <option value="">Pilih Role</option>
+                                <option value="karyawan" <?php echo $karyawan['role'] == 'karyawan' ? 'selected' : ''; ?>>Karyawan</option>
+                                <option value="admin" <?php echo $karyawan['role'] == 'admin' ? 'selected' : ''; ?>>Admin</option>
+                                <option value="penanggung jawab" <?php echo $karyawan['role'] == 'penanggung jawab' ? 'selected' : ''; ?>>Penanggung Jawab</option>
+                                <option value="direktur" <?php echo $karyawan['role'] == 'direktur' ? 'selected' : ''; ?>>Direktur</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="role">Role</label>
-                            <input type="text" id="role" name="role" value="<?php echo $karyawan['role']; ?>" required>
+                            <label for="no_telp">No. Telepon</label>
+                            <input type="tel" id="no_telp" name="no_telp" value="<?php echo htmlspecialchars($karyawan['no_telp']); ?>">
                         </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h3>Status</h3>
+                    <div class="form-grid">
                         <div class="form-group">
-                            <label for="tanggal_masuk">Tanggal Masuk</label>
-                            <input type="date" id="tanggal_masuk" name="tanggal_masuk" value="<?php echo $karyawan['tanggal_masuk']; ?>" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="status">Status</label>
-                            <select id="status" name="status" required>
-                                <option value="">Pilih Status</option>
-                                <option value="Aktif" <?php echo $karyawan['status'] == 'Aktif' ? 'selected' : ''; ?>>Aktif</option>
-                                <option value="Tidak Aktif" <?php echo $karyawan['status'] == 'Tidak Aktif' ? 'selected' : ''; ?>>Tidak Aktif</option>
+                            <label for="status_aktif">Status Aktif</label>
+                            <select id="status_aktif" name="status_aktif">
+                                <option value="aktif" <?php echo $karyawan['status_aktif'] == 'aktif' ? 'selected' : ''; ?>>Aktif</option>
+                                <option value="non_aktif" <?php echo $karyawan['status_aktif'] == 'non_aktif' ? 'selected' : ''; ?>>Non Aktif</option>
                             </select>
                         </div>
                     </div>
@@ -443,7 +322,7 @@ $karyawan = $karyawan_detail ?: array(
                     <button type="submit" class="btn btn-save">
                         <i class="fas fa-save"></i> Simpan Perubahan
                     </button>
-                    <a href="detail_karyawan.php?id=<?php echo $karyawan_id; ?>" class="btn btn-cancel">
+                    <a href="detail_karyawan.php?id=<?php echo $karyawan['id_karyawan']; ?>" class="btn btn-cancel">
                         <i class="fas fa-times"></i> Batal
                     </a>
                     <a href="data_karyawan.php" class="btn btn-back">
@@ -455,30 +334,6 @@ $karyawan = $karyawan_detail ?: array(
     </main>
 
     <script>
-        // Preview foto
-        document.getElementById('photoInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('photoPreview').src = e.target.result;
-                }
-                reader.readAsDataURL(file);
-            }
-        });
-        
-        // Form submission
-        document.getElementById('editForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Simulasi penyimpanan data
-            if (confirm('Apakah Anda yakin ingin menyimpan perubahan?')) {
-                alert('Data berhasil disimpan!');
-                // Redirect ke halaman detail dengan ID baru
-                const newId = document.getElementById('kode_karyawan').value;
-                window.location.href = 'detail_karyawan.php?id=' + newId;
-            }
-        });
     </script>
 </body>
 </html>
