@@ -39,6 +39,7 @@ $conn->close();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Riwayat KHL Pribadi - Penanggung Jawab</title>
     <style>
+        .heading-section h1 { font-size: 2.5rem; margin: 0; color: #fff;}
         :root { 
             --primary-color: #1E105E; 
             --secondary-color: #8897AE; 
@@ -324,13 +325,13 @@ $conn->close();
 </header>
 
 <main>
-    <div class="card">
-        <div class="page-header">
-            <h1 class="page-title">Riwayat KHL Pribadi</h1>
-            <a href="pengajuankhl_penanggungjawab.php" class="btn">+ Ajukan KHL Baru</a>
-        </div>
+    
+    <div class="heading-section">
+        <h1>Riwayat KHL Saya</h1>
+        <p>Lihat semua riwayat pengajuan KHL yang pernah Anda buat.</p>
+    </div>
 
-        <!-- Info Pengguna -->
+    <div class="card">
         <div class="user-info">
             <p><strong>Kode Karyawan:</strong> <?= htmlspecialchars($kode_karyawan) ?></p>
             <p><strong>Nama:</strong> <?= htmlspecialchars($nama_pj) ?></p>
@@ -338,13 +339,16 @@ $conn->close();
             <p><strong>Jabatan:</strong> <?= htmlspecialchars($jabatan) ?></p>
         </div>
 
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
+            <a href="pengajuankhl_penanggungjawab.php" class="btn">+ Ajukan KHL Baru</a>
+        </div>
+
         <div class="table-container">
             <?php if (empty($riwayat_khl)): ?>
                 <div class="empty-state">
                     <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23666'%3E%3Cpath d='M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z'/%3E%3C/svg%3E" alt="No Data">
                     <h3>Belum Ada Riwayat KHL</h3>
-                    <p>Anda belum pernah mengajukan KHL. Ajukan KHL pertama Anda sekarang!</p>
-                    <a href="pengajuankhl_penanggungjawab.php" class="btn">Ajukan KHL Baru</a>
+                    <p>Anda belum pernah mengajukan KHL.</p>
                 </div>
             <?php else: ?>
                 <table>
@@ -423,7 +427,6 @@ $conn->close();
             <?php endif; ?>
         </div>
 
-        <!-- Statistik Ringkas -->
         <?php if (!empty($riwayat_khl)): ?>
             <?php
             $total_pengajuan = count($riwayat_khl);

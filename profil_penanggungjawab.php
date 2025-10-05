@@ -59,7 +59,7 @@ $conn->close();
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Data Pribadi Penanggung Jawab</title>
+<title>Profil Saya - Penanggung Jawab</title>
 <style>
     :root { 
         --primary-color: #1E105E; 
@@ -81,8 +81,6 @@ $conn->close();
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         background: linear-gradient(180deg, var(--primary-color) 0%, #a29bb8 100%);
         min-height: 100vh;
-        display: flex;
-        flex-direction: column;
         color: var(--text-color-dark);
     }
     header {
@@ -92,7 +90,6 @@ $conn->close();
         justify-content: space-between;
         align-items: center;
         box-shadow: 0 4px 15px var(--shadow-light);
-        flex-wrap: wrap;
     }
     .logo { display: flex; align-items: center; gap: 16px; font-weight: 500; font-size: 20px; color: var(--text-color-dark); }
     .logo img { width: 50px; height: 50px; object-fit: contain; border-radius: 50%; }
@@ -106,25 +103,50 @@ $conn->close();
     }
     nav li:hover > ul { display: block; }
     nav li ul li a { color: var(--text-color-dark); font-weight: 400; white-space: nowrap; padding: 5px 20px; }
+    
+    /* === PERUBAHAN CSS DI SINI === */
     main {
-        flex: 1; display: flex; justify-content: center; align-items: flex-start; padding: 40px 20px;
+        max-width: 1200px; /* Diubah agar konsisten */
+        margin: 40px auto;
+        padding: 0 20px;
     }
+    .heading-section {
+        margin-bottom: 30px;
+    }
+    .heading-section h1 {
+        font-size: 2.5rem;
+        margin: 0;
+        color: #fff;
+    }
+    .heading-section p {
+        font-size: 1.1rem;
+        margin-top: 5px;
+        opacity: 0.9;
+        color: #fff;
+    }
+    /* === AKHIR PERUBAHAN CSS === */
+    
     .card {
-        width: 100%; max-width: 600px; background: var(--card-bg); border-radius: 15px;
-        padding: 30px 40px; box-shadow: 0 0 15px rgba(0,0,0,0.2);
-    }
-    h2 {
-        text-align: center; font-size: 24px; margin-bottom: 25px; color: var(--text-color-dark);
-        border-bottom: 2px solid #eee; padding-bottom: 10px;
+        width: 100%;
+        max-width: 800px; /* Sedikit diperlebar agar tidak terlalu sempit */
+        margin: 0 auto; /* Tambahkan ini agar kartu di tengah */
+        background: var(--card-bg);
+        border-radius: 15px;
+        padding: 30px 40px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        box-sizing: border-box;
     }
     .info-grid {
-        display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 25px;
     }
     .info-item { background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid var(--primary-color); }
     .info-label { font-weight: 600; color: #555; display: block; margin-bottom: 5px; font-size: 14px; }
     .info-value { color: #333; font-size: 16px; }
     .edit-form { background: #f0f2f5; padding: 20px; border-radius: 10px; margin-top: 20px; }
-    .edit-form h3 { margin-top: 0; color: var(--primary-color); font-size: 18px; }
+    .edit-form h3 { margin-top: 0; color: var(--primary-color); font-size: 18px; text-align: center; }
     .form-group { margin-bottom: 15px; }
     .form-group label { display: block; font-weight: 600; margin-bottom: 8px; color: #555; }
     .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; box-sizing: border-box; }
@@ -138,10 +160,8 @@ $conn->close();
     .message { padding: 12px; border-radius: 6px; margin-bottom: 20px; border-left-width: 4px; border-left-style: solid; }
     .success-message { background: var(--success-bg); color: var(--success-text); border-color: var(--success-border); }
     .error-message { background: var(--error-bg); color: var(--error-text); border-color: var(--error-border); }
+
     @media(max-width:768px) {
-        header { flex-direction: column; align-items: flex-start; }
-        nav ul { flex-direction: column; gap: 10px; width: 100%; margin-top: 15px; }
-        nav li ul { position: static; border: none; box-shadow: none; padding-left: 20px; }
         .info-grid { grid-template-columns: 1fr; }
     }
 </style>
@@ -183,9 +203,12 @@ $conn->close();
 </header>
 
 <main>
+    <div class="heading-section">
+        <h1>Profil Saya</h1>
+        <p>Lihat dan perbarui data pribadi Anda di halaman ini.</p>
+    </div>
+    
     <div class="card">
-        <h2>Data Pribadi</h2>
-        
         <?php if ($success_message): ?>
             <div class="message success-message"><?= htmlspecialchars($success_message) ?></div>
         <?php endif; ?>

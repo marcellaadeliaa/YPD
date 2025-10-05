@@ -28,7 +28,44 @@ $disetujui = 0;
 $ditolak = 0;
 $pending = 0;
 
-while ($row = $result->fetch_assoc()) {
+// Fetch all results into an array to be filtered
+$all_rows = $result->fetch_all(MYSQLI_ASSOC);
+
+// Lakukan filter di PHP
+$filtered_rows = [];
+foreach ($all_rows as $row) {
+    $show_row = true;
+    
+    // Filter status
+    if (isset($_GET['status_filter']) && $_GET['status_filter'] != '' && $row['status_khl'] != $_GET['status_filter']) {
+        $show_row = false;
+    }
+    
+    // Filter tanggal mulai
+    if (isset($_GET['start_date']) && $_GET['start_date'] != '' && date('Y-m-d', strtotime($row['created_at'])) < $_GET['start_date']) {
+        $show_row = false;
+    }
+    
+    // Filter tanggal akhir
+    if (isset($_GET['end_date']) && $_GET['end_date'] != '' && date('Y-m-d', strtotime($row['created_at'])) > $_GET['end_date']) {
+        $show_row = false;
+    }
+
+    // BARU: Filter berdasarkan nama (case-insensitive)
+    if (isset($_GET['search_nama']) && !empty(trim($_GET['search_nama']))) {
+        if (stripos($row['nama_lengkap'], trim($_GET['search_nama'])) === false) {
+            $show_row = false;
+        }
+    }
+
+    if ($show_row) {
+        $filtered_rows[] = $row;
+    }
+}
+
+
+// Hitung statistik dari data yang tidak difilter
+foreach ($all_rows as $row) {
     $total_khl++;
     switch ($row['status_khl']) {
         case 'disetujui': $disetujui++; break;
@@ -37,8 +74,28 @@ while ($row = $result->fetch_assoc()) {
     }
 }
 
-// Reset pointer result
-$result->data_seek(0);
+// --- LOGIKA PAGINASI BARU ---
+$limit = 5; // Jumlah data per halaman
+$total_records = count($filtered_rows);
+$total_pages = ceil($total_records / $limit);
+
+// Tentukan halaman saat ini, defaultnya adalah halaman 1
+$page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+
+// Pastikan nomor halaman valid
+if ($page < 1) {
+    $page = 1;
+}
+if ($page > $total_pages && $total_pages > 0) {
+    $page = $total_pages;
+}
+
+// Hitung offset (data mulai dari mana)
+$offset = ($page - 1) * $limit;
+
+// Ambil data untuk halaman saat ini menggunakan array_slice
+$rows_for_current_page = array_slice($filtered_rows, $offset, $limit);
+
 ?>
 
 <!DOCTYPE html>
@@ -48,6 +105,71 @@ $result->data_seek(0);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Riwayat KHL Divisi - Penanggung Jawab</title>
     <style>
+        /* --- GAYA PAGINASI BARU YANG LEBIH RAPI --- */
+.pagination-wrapper {
+    background-color: #f8f9fa; /* Warna latar belakang lembut */
+    padding: 20px 15px;
+    margin-top: 30px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    flex-wrap: wrap; /* Agar responsif di layar kecil */
+    gap: 10px; /* Jarak antar tombol */
+}
+
+.pagination-wrapper a, 
+.pagination-wrapper span {
+    display: inline-flex; /* Menggunakan flex untuk alignment */
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+    padding: 0 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.2s ease-in-out;
+    user-select: none; /* Mencegah teks terseleksi saat diklik cepat */
+}
+
+.pagination-wrapper a {
+    color: var(--primary-color);
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+}
+
+.pagination-wrapper a:hover {
+    background-color: var(--primary-color);
+    color: #fff;
+    border-color: var(--primary-color);
+    transform: translateY(-2px); /* Efek sedikit terangkat */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.pagination-wrapper span.active {
+    background-color: var(--primary-color);
+    color: #fff;
+    border: 1px solid var(--primary-color);
+    cursor: default;
+    box-shadow: 0 4px 10px rgba(30, 16, 94, 0.3);
+}
+
+.pagination-wrapper span.disabled {
+    color: #adb5bd;
+    background-color: #e9ecef;
+    border: 1px solid #dee2e6;
+    cursor: not-allowed;
+}
+
+.pagination-wrapper span.ellipsis {
+    background-color: transparent;
+    border: none;
+    color: #6c757d;
+    font-weight: bold;
+}
         :root { 
             --primary-color: #1E105E; 
             --secondary-color: #8897AE; 
@@ -363,6 +485,46 @@ $result->data_seek(0);
             color: #155724;
             border: 1px solid #c3e6cb;
         }
+
+        /* --- CSS BARU UNTUK PAGINASI --- */
+        .pagination-container {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pagination-container a, .pagination-container span {
+            display: inline-block;
+            padding: 8px 14px;
+            border-radius: 6px;
+            text-decoration: none;
+            color: var(--primary-color);
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            font-weight: 500;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .pagination-container a:hover {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .pagination-container span.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+            cursor: default;
+        }
+
+        .pagination-container span.disabled {
+            background-color: #e9ecef;
+            color: #6c757d;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
     </style>
 </head>
 <body>
@@ -412,7 +574,6 @@ $result->data_seek(0);
             <strong>Nama:</strong> <?php echo htmlspecialchars($nama_pj); ?>
         </div>
 
-        <!-- Tampilkan pesan status dari persetujuan -->
         <?php if (isset($_GET['status'])): ?>
             <div class="status-message status-success">
                 <?php 
@@ -425,7 +586,6 @@ $result->data_seek(0);
             </div>
         <?php endif; ?>
 
-        <!-- Statistik -->
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-label">Total KHL</div>
@@ -445,9 +605,10 @@ $result->data_seek(0);
             </div>
         </div>
 
-        <!-- Filter Section -->
         <div class="filter-section">
             <form method="GET" class="filter-form">
+                <input type="text" name="search_nama" placeholder="Cari Nama Karyawan..." value="<?php echo isset($_GET['search_nama']) ? htmlspecialchars($_GET['search_nama']) : ''; ?>">
+                
                 <select name="status_filter">
                     <option value="">Semua Status</option>
                     <option value="pending" <?php echo (isset($_GET['status_filter']) && $_GET['status_filter'] == 'pending') ? 'selected' : ''; ?>>Menunggu</option>
@@ -455,15 +616,15 @@ $result->data_seek(0);
                     <option value="ditolak" <?php echo (isset($_GET['status_filter']) && $_GET['status_filter'] == 'ditolak') ? 'selected' : ''; ?>>Ditolak</option>
                 </select>
                 
-                <input type="date" name="start_date" value="<?php echo isset($_GET['start_date']) ? $_GET['start_date'] : ''; ?>" placeholder="Dari Tanggal">
-                <input type="date" name="end_date" value="<?php echo isset($_GET['end_date']) ? $_GET['end_date'] : ''; ?>" placeholder="Sampai Tanggal">
+                <input type="date" name="start_date" value="<?php echo isset($_GET['start_date']) ? $_GET['start_date'] : ''; ?>">
+                <input type="date" name="end_date" value="<?php echo isset($_GET['end_date']) ? $_GET['end_date'] : ''; ?>">
                 
                 <button type="submit">Filter</button>
                 <a href="riwayatkhl_penanggungjawab.php" style="color: var(--primary-color); text-decoration: none; margin-left: 10px;">Reset</a>
             </form>
         </div>
         
-        <?php if ($result->num_rows > 0): ?>
+        <?php if (!empty($rows_for_current_page)): ?>
             <table>
                 <thead>
                     <tr>
@@ -483,24 +644,9 @@ $result->data_seek(0);
                 </thead>
                 <tbody>
                     <?php 
-                    $no = 1;
-                    while ($row = $result->fetch_assoc()): 
-                        // Filter data berdasarkan input filter
-                        $show_row = true;
-                        
-                        if (isset($_GET['status_filter']) && $_GET['status_filter'] != '' && $row['status_khl'] != $_GET['status_filter']) {
-                            $show_row = false;
-                        }
-                        
-                        if (isset($_GET['start_date']) && $_GET['start_date'] != '' && $row['created_at'] < $_GET['start_date']) {
-                            $show_row = false;
-                        }
-                        
-                        if (isset($_GET['end_date']) && $_GET['end_date'] != '' && $row['created_at'] > $_GET['end_date']) {
-                            $show_row = false;
-                        }
-                        
-                        if ($show_row):
+                    // Nomor urut disesuaikan dengan halaman
+                    $no = $offset + 1;
+                    foreach ($rows_for_current_page as $row): 
                     ?>
                         <tr>
                             <td><?php echo $no++; ?></td>
@@ -542,21 +688,79 @@ $result->data_seek(0);
                             <td><?php echo date('d/m/Y H:i', strtotime($row['created_at'])); ?></td>
                         </tr>
                     <?php 
-                        endif;
-                    endwhile; 
-                    
-                    // Jika tidak ada data setelah filter
-                    if ($no == 1): 
+                    endforeach; 
                     ?>
-                        <tr>
-                            <td colspan="12" class="no-data">Tidak ada data yang sesuai dengan filter</td>
-                        </tr>
-                    <?php endif; ?>
                 </tbody>
             </table>
+
+            <?php if ($total_pages > 1): ?>
+<div class="pagination-wrapper">
+    <?php
+    // BAGIAN 1: PERSIAPAN URL
+    // ------------------------------------
+    // Ambil semua parameter GET yang ada (untuk filter) dan hapus parameter 'page'
+    $query_params = $_GET;
+    unset($query_params['page']);
+    // Bangun kembali query string agar filter tidak hilang saat berpindah halaman
+    $base_url = http_build_query($query_params);
+    $ampersand = !empty($base_url) ? '&' : '';
+
+    // BAGIAN 2: TOMBOL "SEBELUMNYA"
+    // ------------------------------------
+    // Tampilkan tombol 'Sebelumnya' jika halaman saat ini bukan halaman pertama
+    if ($page > 1) {
+        echo '<a href="?' . $base_url . $ampersand . 'page=' . ($page - 1) . '">‹ Sebelumnya</a>';
+    } else {
+        echo '<span class="disabled">‹ Sebelumnya</span>';
+    }
+
+    // BAGIAN 3: LOGIKA NOMOR HALAMAN
+    // ------------------------------------
+    // Aturan: Tampilkan beberapa halaman di sekitar halaman aktif, dan gunakan '...' untuk mempersingkat
+    $range = 1; // Jumlah halaman yang ditampilkan di kiri dan kanan halaman aktif
+
+    // Tampilkan halaman pertama dan '...' jika perlu
+    if ($page > ($range + 1)) {
+        echo '<a href="?' . $base_url . $ampersand . 'page=1">1</a>';
+        if ($page > ($range + 2)) {
+            echo '<span class="ellipsis">...</span>';
+        }
+    }
+
+    // Loop utama untuk nomor halaman
+    // Mencetak nomor halaman dari (halaman_aktif - range) hingga (halaman_aktif + range)
+    for ($i = max(1, $page - $range); $i <= min($total_pages, $page + $range); $i++) {
+        if ($i == $page) {
+            // Tandai halaman yang sedang aktif
+            echo '<span class="active">' . $i . '</span>';
+        } else {
+            echo '<a href="?' . $base_url . $ampersand . 'page=' . $i . '">' . $i . '</a>';
+        }
+    }
+
+    // Tampilkan halaman terakhir dan '...' jika perlu
+    if ($page < ($total_pages - $range)) {
+        if ($page < ($total_pages - $range - 1)) {
+            echo '<span class="ellipsis">...</span>';
+        }
+        echo '<a href="?' . $base_url . $ampersand . 'page=' . $total_pages . '">' . $total_pages . '</a>';
+    }
+
+    // BAGIAN 4: TOMBOL "SELANJUTNYA"
+    // ------------------------------------
+    // Tampilkan tombol 'Selanjutnya' jika halaman saat ini bukan halaman terakhir
+    if ($page < $total_pages) {
+        echo '<a href="?' . $base_url . $ampersand . 'page=' . ($page + 1) . '">Selanjutnya ›</a>';
+    } else {
+        echo '<span class="disabled">Selanjutnya ›</span>';
+    }
+    ?>
+</div>
+<?php endif; ?>
+
         <?php else: ?>
             <div class="no-data">
-                <p>Belum ada riwayat KHL untuk divisi <?php echo htmlspecialchars($divisi_penanggung_jawab); ?></p>
+                <p>Tidak ada data riwayat KHL yang sesuai dengan filter yang diterapkan.</p>
             </div>
         <?php endif; ?>
         

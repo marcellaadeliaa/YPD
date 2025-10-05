@@ -18,10 +18,12 @@ $stmt_cuti->bind_param("s", $divisi_pj);
 $stmt_cuti->execute();
 $cuti_menunggu = $stmt_cuti->get_result()->fetch_assoc()['total'] ?? 0;
 $stmt_cuti->close();
-
+    
 // Hitung KHL Menunggu
-$stmt_khl = $conn->prepare("SELECT COUNT(id) as total FROM pengajuan_khl WHERE divisi = ? AND status = 'Menunggu'");
-$stmt_khl->bind_param("s", $divisi_pj);
+$stmt_khl = $conn->prepare("SELECT COUNT(id_khl) as total FROM data_pengajuan_khl WHERE divisi = ? AND status_khl = ? AND role = ?");
+$status = 'pending';
+$role = 'karyawan';
+$stmt_khl->bind_param("sss", $divisi_pj, $status, $role);
 $stmt_khl->execute();
 $khl_menunggu = $stmt_khl->get_result()->fetch_assoc()['total'] ?? 0;
 $stmt_khl->close();
