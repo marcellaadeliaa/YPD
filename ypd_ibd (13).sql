@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.1
+-- version 5.1.1
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 05 Okt 2025 pada 08.55
--- Versi server: 10.4.32-MariaDB
--- Versi PHP: 8.2.12
+-- Waktu pembuatan: 05 Okt 2025 pada 15.02
+-- Versi server: 10.4.22-MariaDB
+-- Versi PHP: 7.3.33
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -41,7 +41,7 @@ CREATE TABLE `data_karyawan` (
   `sisa_cuti_lustrum` int(3) DEFAULT 5,
   `status_aktif` enum('aktif','non_aktif') NOT NULL DEFAULT 'aktif',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Dumping data untuk tabel `data_karyawan`
@@ -49,7 +49,7 @@ CREATE TABLE `data_karyawan` (
 
 INSERT INTO `data_karyawan` (`id_karyawan`, `kode_karyawan`, `nama_lengkap`, `email`, `password`, `jabatan`, `divisi`, `role`, `no_telp`, `sisa_cuti_tahunan`, `sisa_cuti_lustrum`, `status_aktif`, `created_at`) VALUES
 (1, 'YPD001', 'Pico', 'pico.dir@ypd.com', 'hashed_password_direktur', 'Direktur Utama', 'Direksi', 'direktur', '081234567890', 12, 5, 'aktif', '2025-09-30 23:37:17'),
-(2, 'YPD002', 'Cell', 'cell.sdm@ypd.com', 'hashed_password_admin', 'Admin SDM', 'SDM', 'admin', '081234567891', 12, 5, 'aktif', '2025-09-30 23:37:17'),
+(2, 'YPD002', 'Cell', 'cell.sdm@ypd.com', 'hashed_password_admin', 'Administrator', '', 'admin', '081234567891', 12, 5, 'aktif', '2025-09-30 23:37:17'),
 (3, 'YPD010', 'Adrian', 'adrian.karyawan@ypd.com', 'hashed_password_karyawan', 'Staf Training', 'Training', 'karyawan', '081234567892', 12, 5, 'aktif', '2025-09-30 23:37:17'),
 (4, 'YPD003', 'Ria', 'ria.direksi@ypd.com', 'hashed_password_ria', 'Penanggung Jawab Training', 'Training', 'penanggung jawab', '081234567893', 12, 5, 'aktif', '2025-09-30 23:45:32'),
 (5, 'YPD004', 'Dani', 'dani.pj@ypd.com', 'hashed_password_dani', 'Staf Keuangan', 'Keuangan', 'karyawan', '081234567894', 12, 5, 'aktif', '2025-09-30 23:45:32'),
@@ -102,7 +102,7 @@ CREATE TABLE `data_pelamar` (
   `status_seleksi` varchar(100) DEFAULT 'Proses seleksi sedang berlangsung',
   `pengumuman` text DEFAULT 'Belum ada pengumuman saat ini.',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Dumping data untuk tabel `data_pelamar`
@@ -123,8 +123,9 @@ INSERT INTO `data_pelamar` (`id`, `user_id`, `nama_lengkap`, `posisi_dilamar`, `
 (12, 21, 'Aurora', 'Konsultasi', 'Perempuan', 'Tangerang', '2000-04-12', '1234512350', 'Jl. Anggrek Tangerang', 'Jl. Pawiyatan Luhur II Semarang', '081868456988', 'aurora123@gmail.com', 'Hindu', '081256478984', 'Sarjana', 'uploads/1759559620-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759559620-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759559620-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759559620-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759559620-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759559620-Pernyataan_Penyelesaian_Proyek.docx', 'Diterima', 'Proses seleksi sedang berlangsung', 'Belum ada pengumuman saat ini.', '2025-10-04 06:33:40'),
 (13, 22, 'Selena', 'Wisma', 'Perempuan', 'Yogyakarta', '2004-04-04', '1234512344', 'Jl. Musang Jakarta', 'Jl. Pawiyatan Luhur II Semarang', '081868456978', 'selena123@gmail.com', 'Kristen', '081258962812', 'Diploma', 'uploads/1759559839-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759559839-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759559839-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759559839-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759559839-Pernyataan_Penyelesaian_Proyek.docx', NULL, 'Diterima', 'Proses seleksi sedang berlangsung', 'Belum ada pengumuman saat ini.', '2025-10-04 06:37:19'),
 (14, 23, 'Kelra', 'Wisma', 'Laki-laki', 'Medan', '2001-02-11', '1234512347', 'Jl. Mawar Medan', 'Jl. Pawiyatan Luhur Semarang', '081868456985', 'kelra123@gmail.com', 'Khonghucu', '081256478988', 'Sarjana', 'uploads/1759560025-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560025-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560025-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560025-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560025-Pernyataan_Penyelesaian_Proyek.docx', NULL, 'Diterima', 'Proses seleksi sedang berlangsung', 'Belum ada pengumuman saat ini.', '2025-10-04 06:40:25'),
-(15, 24, 'Lyra', 'SDM', 'Perempuan', 'Denpasar', '2005-05-05', '1122334457', 'Jl. Residence Denpasar', 'Jl. Pawiyatan Luhur Semarang', '081868456987', 'lyra1234@gmail.com', 'Hindu', '081256478988', 'Sarjana', 'uploads/1759560177-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560177-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560177-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560177-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560177-Pernyataan_Penyelesaian_Proyek.docx', NULL, 'Diterima', 'Proses seleksi sedang berlangsung', 'Belum ada pengumuman saat ini.', '2025-10-04 06:42:57'),
-(16, 25, 'Yovan', 'SDM', 'Laki-laki', 'Malang', '2001-02-21', '1234512346', 'Jl. Mawar Malang', 'Jl. Pawiyatan Luhur Semarang', '081868456985', 'yovan1234@gmail.com', 'Katholik', '081258962812', 'Sarjana', 'uploads/1759560300-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560300-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560300-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560300-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560300-Pernyataan_Penyelesaian_Proyek.docx', NULL, 'Diterima', 'Proses seleksi sedang berlangsung', 'Belum ada pengumuman saat ini.', '2025-10-04 06:45:00');
+(15, 24, 'Lyra', 'SDM', 'Perempuan', 'Denpasar', '2005-05-05', '1122334457', 'Jl. Residence Denpasar', 'Jl. Pawiyatan Luhur II Semarang', '081868456987', 'lyra1234@gmail.com', 'Hindu', '081256478988', 'Sarjana', 'uploads/1759560177-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560177-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560177-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560177-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560177-Pernyataan_Penyelesaian_Proyek.docx', NULL, 'Diterima', 'Proses seleksi sedang berlangsung', 'Belum ada pengumuman saat ini.', '2025-10-04 06:42:57'),
+(16, 25, 'Yovan', 'SDM', 'Laki-laki', 'Malang', '2001-02-21', '1234512346', 'Jl. Mawar Malang', 'Jl. Pawiyatan Luhur Semarang', '081868456985', 'yovan1234@gmail.com', 'Katholik', '081258962812', 'Sarjana', 'uploads/1759560300-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560300-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560300-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560300-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560300-Pernyataan_Penyelesaian_Proyek.docx', NULL, 'Diterima', 'Proses seleksi sedang berlangsung', 'Belum ada pengumuman saat ini.', '2025-10-04 06:45:00'),
+(17, 26, 'Feli ', 'Konsultasi', 'Perempuan', 'Tangerang', '2000-01-30', '1234512349', 'Tangerang', 'Jl. Pawiyatan Luhur Semarang', '08186889755', 'feli1234@gmail.com', 'Buddha', '081256478988', 'Sarjana', 'uploads/1759668945-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759668945-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759668945-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759668945-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759668945-Pernyataan_Penyelesaian_Proyek.docx', NULL, 'Diterima', 'Proses seleksi sedang berlangsung', 'Belum ada pengumuman saat ini.', '2025-10-05 12:55:45');
 
 -- --------------------------------------------------------
 
@@ -148,7 +149,7 @@ CREATE TABLE `data_pengajuan_khl` (
   `status_khl` enum('pending','disetujui','ditolak') DEFAULT 'pending',
   `alasan_penolakan` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Dumping data untuk tabel `data_pengajuan_khl`
@@ -157,10 +158,11 @@ CREATE TABLE `data_pengajuan_khl` (
 INSERT INTO `data_pengajuan_khl` (`id_khl`, `kode_karyawan`, `divisi`, `jabatan`, `role`, `proyek`, `tanggal_khl`, `jam_mulai_kerja`, `jam_akhir_kerja`, `tanggal_cuti_khl`, `jam_mulai_cuti_khl`, `jam_akhir_cuti_khl`, `status_khl`, `alasan_penolakan`, `created_at`) VALUES
 (1, 'YPD021', 'SDM', 'Staf SDM', 'karyawan', 'Projek Training SDM baru', '2025-10-06', '08:00:00', '18:00:00', '2025-10-28', '08:00:00', '17:00:00', 'disetujui', NULL, '2025-10-05 05:25:22'),
 (2, 'YPD007', 'SDM', 'Penanggung Jawab SDM', 'penanggung jawab', 'Projek Training SDM baru', '2025-10-06', '07:00:00', '19:00:00', '2025-10-30', '10:00:00', '18:00:00', 'disetujui', NULL, '2025-10-05 05:32:47'),
-(3, 'YPD021', 'SDM', 'Staf SDM', 'karyawan', 'Projek Training Karyawan Baru', '2025-10-08', '08:00:00', '17:00:00', '2025-10-22', '08:00:00', '17:00:00', 'ditolak', 'tidak bokeh!!', '2025-10-05 05:56:20'),
+(3, 'YPD021', 'SDM', 'Staf SDM', 'karyawan', 'Projek Training Karyawan Baru', '2025-10-08', '08:00:00', '17:00:00', '2025-10-22', '08:00:00', '17:00:00', 'ditolak', 'tidak boleh!!', '2025-10-05 05:56:20'),
 (4, 'YPD007', 'SDM', 'Penanggung Jawab SDM', 'penanggung jawab', 'Projek Training SDM baru', '2025-10-06', '10:00:00', '17:00:00', '2025-10-23', '09:00:00', '18:00:00', 'pending', NULL, '2025-10-05 06:10:51'),
-(5, 'YPD007', 'SDM', 'Penanggung Jawab SDM', 'penanggung jawab', 'Projek Training SDM baru oawkok', '2025-10-15', '10:00:00', '16:00:00', '2025-10-30', '08:00:00', '17:00:00', 'pending', NULL, '2025-10-05 06:27:52'),
-(6, 'YPD007', 'SDM', 'Penanggung Jawab SDM', 'penanggung jawab', 'projekan2', '2025-10-06', '09:00:00', '18:00:00', '2025-11-08', '08:00:00', '17:00:00', 'pending', NULL, '2025-10-05 06:48:08');
+(5, 'YPD007', 'SDM', 'Penanggung Jawab SDM', 'penanggung jawab', 'Projek Training SDM baru oawkok', '2025-10-15', '10:00:00', '16:00:00', '2025-10-30', '08:00:00', '17:00:00', 'disetujui', '', '2025-10-05 06:27:52'),
+(6, 'YPD007', 'SDM', 'Penanggung Jawab SDM', 'penanggung jawab', 'projekan2', '2025-10-06', '09:00:00', '18:00:00', '2025-11-08', '08:00:00', '17:00:00', 'ditolak', 'Tidak Boleh', '2025-10-05 06:48:08'),
+(7, 'YPD001', 'Direksi', 'Direktur Utama', 'direktur', 'bandungan', '2025-11-06', '15:35:00', '16:35:00', '2025-11-06', '17:35:00', '18:35:00', 'disetujui', NULL, '2025-10-05 08:35:46');
 
 -- --------------------------------------------------------
 
@@ -173,7 +175,7 @@ CREATE TABLE `lamaran` (
   `user_id` int(11) NOT NULL,
   `status` varchar(50) DEFAULT 'Menunggu Proses',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
@@ -188,7 +190,7 @@ CREATE TABLE `password_resets` (
   `expires_at` datetime NOT NULL,
   `used` tinyint(1) DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Dumping data untuk tabel `password_resets`
@@ -215,7 +217,7 @@ CREATE TABLE `pengajuan_cuti` (
   `status` enum('Menunggu Persetujuan','Diterima','Ditolak') NOT NULL DEFAULT 'Menunggu Persetujuan',
   `waktu_persetujuan` datetime DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Dumping data untuk tabel `pengajuan_cuti`
@@ -245,7 +247,7 @@ CREATE TABLE `pengajuan_cuti_pj` (
   `alasan` text NOT NULL,
   `status` varchar(50) NOT NULL DEFAULT 'Disetujui',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
@@ -267,7 +269,7 @@ CREATE TABLE `pengajuan_khl` (
   `nama_proyek` text DEFAULT NULL,
   `status` enum('Menunggu Persetujuan','Diterima','Ditolak') NOT NULL DEFAULT 'Menunggu Persetujuan',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Dumping data untuk tabel `pengajuan_khl`
@@ -292,7 +294,7 @@ CREATE TABLE `pengumuman` (
   `isi` text NOT NULL,
   `tanggal` timestamp NOT NULL DEFAULT current_timestamp(),
   `status` enum('active','inactive') DEFAULT 'active'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Dumping data untuk tabel `pengumuman`
@@ -315,7 +317,7 @@ CREATE TABLE `pengumuman_pelamar` (
   `pesan` text DEFAULT NULL,
   `tanggal` date DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Dumping data untuk tabel `pengumuman_pelamar`
@@ -415,7 +417,12 @@ INSERT INTO `pengumuman_pelamar` (`id`, `pelamar_id`, `tahap`, `pesan`, `tanggal
 (91, 16, 'Menunggu Proses', 'Selamat! Lamaran Anda telah diterima dan masuk ke tahap seleksi administratif.', '2025-10-04', '2025-10-04 06:45:10'),
 (92, 16, 'Seleksi Administratif', 'Selamat! Anda lolos seleksi administratif. Tahap selanjutnya adalah wawancara.', '2025-10-04', '2025-10-04 06:45:12'),
 (93, 16, 'Seleksi Wawancara', 'Selamat! Anda lolos wawancara. Tahap selanjutnya adalah Psikotes.', '2025-10-04', '2025-10-04 06:45:14'),
-(94, 16, 'Seleksi Psikotes', 'Selamat! Anda telah lolos seluruh rangkaian seleksi dan dinyatakan DITERIMA.', '2025-10-04', '2025-10-04 06:45:16');
+(94, 16, 'Seleksi Psikotes', 'Selamat! Anda telah lolos seluruh rangkaian seleksi dan dinyatakan DITERIMA.', '2025-10-04', '2025-10-04 06:45:16'),
+(95, 17, 'Menunggu Proses', 'Selamat! Lamaran Anda telah diterima dan masuk ke tahap seleksi administratif.', '2025-10-05', '2025-10-05 12:55:51'),
+(96, 17, 'Seleksi Administratif', 'Selamat! Anda lolos seleksi administratif. Tahap selanjutnya adalah wawancara.', '2025-10-05', '2025-10-05 12:55:53'),
+(97, 17, 'Seleksi Wawancara', 'Selamat! Anda lolos wawancara. Tahap selanjutnya adalah Psikotes dan Tes Kesehatan.', '2025-10-05', '2025-10-05 12:55:57'),
+(98, 17, 'Seleksi Psikotes & Kesehatan', 'Selamat! Anda lolos Psikotes. Tahap selanjutnya adalah Tes Kesehatan.', '2025-10-05', '2025-10-05 12:56:00'),
+(99, 17, 'Seleksi Kesehatan', 'Selamat! Anda telah lolos seluruh rangkaian seleksi dan dinyatakan DITERIMA.', '2025-10-05', '2025-10-05 12:56:02');
 
 -- --------------------------------------------------------
 
@@ -430,7 +437,7 @@ CREATE TABLE `pengumuman_umum` (
   `tanggal` date NOT NULL,
   `status` enum('active','inactive') DEFAULT 'active',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
@@ -450,7 +457,7 @@ CREATE TABLE `riwayat_cuti` (
   `status` varchar(50) NOT NULL,
   `created_at` datetime NOT NULL,
   `waktu_persetujuan` datetime DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
@@ -467,7 +474,7 @@ CREATE TABLE `riwayat_pelamar` (
   `status_kesehatan` varchar(50) DEFAULT NULL,
   `status_final` varchar(50) DEFAULT NULL,
   `last_update` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Dumping data untuk tabel `riwayat_pelamar`
@@ -489,7 +496,8 @@ INSERT INTO `riwayat_pelamar` (`id`, `pelamar_id`, `status_administratif`, `stat
 (44, 13, 'Lolos', 'Lolos', 'Lolos', NULL, 'Diterima', '2025-10-04 06:37:48'),
 (48, 14, 'Lolos', 'Lolos', 'Lolos', NULL, 'Diterima', '2025-10-04 06:40:53'),
 (52, 15, 'Lolos', 'Lolos', 'Lolos', NULL, 'Diterima', '2025-10-04 06:43:12'),
-(56, 16, 'Lolos', 'Lolos', 'Lolos', NULL, 'Diterima', '2025-10-04 06:45:16');
+(56, 16, 'Lolos', 'Lolos', 'Lolos', NULL, 'Diterima', '2025-10-04 06:45:16'),
+(60, 17, 'Lolos', 'Lolos', 'Lolos', 'Lolos', 'Diterima', '2025-10-05 12:56:02');
 
 -- --------------------------------------------------------
 
@@ -501,7 +509,7 @@ CREATE TABLE `sisa_cuti` (
   `id` int(11) NOT NULL,
   `user_id` int(11) NOT NULL,
   `sisa_cuti` int(11) NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
@@ -515,7 +523,7 @@ CREATE TABLE `users` (
   `email` varchar(100) NOT NULL,
   `password` varchar(255) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --
 -- Dumping data untuk tabel `users`
@@ -543,7 +551,8 @@ INSERT INTO `users` (`id`, `nama_lengkap`, `email`, `password`, `created_at`) VA
 (22, '', 'selena123@gmail.com', '$2y$10$E4C18xROudLmOBAIcJu80.xSJ0lHtO7.bxGPSNcnuMmptrTM/UzZG', '2025-10-04 06:35:57'),
 (23, '', 'kelra123@gmail.com', '$2y$10$1S4zteGUZunZI6u76KBfy.WiJlwvkjo27rGENid4lNZczI4sp9ZH.', '2025-10-04 06:39:17'),
 (24, '', 'lyra1234@gmail.com', '$2y$10$ZkBYzUzxv8iyHwiVeZ.AFueAtZ2G77t2NawMb32fGIaeblRdc/lQ6', '2025-10-04 06:41:43'),
-(25, '', 'yovan1234@gmail.com', '$2y$10$jz6l4OAxjH9p5WhfNikrfedgRwbJpN0zcOyhCGL3Zd7BwLG8SeuW2', '2025-10-04 06:43:43');
+(25, '', 'yovan1234@gmail.com', '$2y$10$jz6l4OAxjH9p5WhfNikrfedgRwbJpN0zcOyhCGL3Zd7BwLG8SeuW2', '2025-10-04 06:43:43'),
+(26, '', 'feli1234@gmail.com', '$2y$10$ZJQMII7TnZNUG1wJ0yR6VOlFiCNKpmp6.ej3GKkJVm3pjoGd3JGla', '2025-10-05 12:53:53');
 
 --
 -- Indexes for dumped tables
@@ -665,13 +674,13 @@ ALTER TABLE `data_karyawan`
 -- AUTO_INCREMENT untuk tabel `data_pelamar`
 --
 ALTER TABLE `data_pelamar`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- AUTO_INCREMENT untuk tabel `data_pengajuan_khl`
 --
 ALTER TABLE `data_pengajuan_khl`
-  MODIFY `id_khl` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id_khl` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT untuk tabel `lamaran`
@@ -713,7 +722,7 @@ ALTER TABLE `pengumuman`
 -- AUTO_INCREMENT untuk tabel `pengumuman_pelamar`
 --
 ALTER TABLE `pengumuman_pelamar`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=95;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=100;
 
 --
 -- AUTO_INCREMENT untuk tabel `pengumuman_umum`
@@ -731,7 +740,7 @@ ALTER TABLE `riwayat_cuti`
 -- AUTO_INCREMENT untuk tabel `riwayat_pelamar`
 --
 ALTER TABLE `riwayat_pelamar`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=60;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=65;
 
 --
 -- AUTO_INCREMENT untuk tabel `sisa_cuti`
@@ -743,7 +752,7 @@ ALTER TABLE `sisa_cuti`
 -- AUTO_INCREMENT untuk tabel `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
 -- Ketidakleluasaan untuk tabel pelimpahan (Dumped Tables)

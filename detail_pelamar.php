@@ -32,7 +32,7 @@ $pelamar = $result->fetch_assoc();
     body { margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg,#1E105E 0%,#8897AE 100%); min-height:100vh; color:#333; }
     header { background:rgba(255,255,255,1); padding:20px 40px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #34377c; }
     .logo { display:flex; align-items:center; gap:16px; font-weight:500; font-size:20px; color:#2e1f4f; }
-    .logo img { width: 50px; height: 50px; object-fit: contain; border-radius: 50%; }
+    .logo img { width: 140px; height: 50px; object-fit: contain; }
     main { max-width:960px; margin:40px auto; padding:0 20px; }
     .card { background:#fff; border-radius:20px; padding:30px 40px; box-shadow:0 2px 10px rgba(0,0,0,0.15); }
     .page-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; margin-bottom: 25px; }

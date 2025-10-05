@@ -1,79 +1,58 @@
 <?php
 session_start();
+require 'config.php';
 
-// --- DUMMY DATA KHL ---
-$data_khl = [
-    [
-        'id' => 1,
-        'kode_khl' => '11221384',
-        'nama_karyawan' => 'Adrianna',
-        'jenis_khl' => 'Training',
-        'projek' => 'Pelatihan Karyawan',
-        'tanggal_kerja' => '2025-09-10',
-        'jam_mulai_kerja' => '07:00:00',
-        'jam_selesai_kerja' => '16:00:00',
-        'status' => 'Diterima'
-    ],
-    [
-        'id' => 2,
-        'kode_khl' => '11221385',
-        'nama_karyawan' => 'Budi Santoso',
-        'jenis_khl' => 'Proyek Khusus',
-        'projek' => 'Implementasi Sistem Baru',
-        'tanggal_kerja' => '2025-09-12',
-        'jam_mulai_kerja' => '08:00:00',
-        'jam_selesai_kerja' => '17:00:00',
-        'status' => 'Diterima'
-    ],
-    [
-        'id' => 3,
-        'kode_khl' => '11221386',
-        'nama_karyawan' => 'Siti Rahayu',
-        'jenis_khl' => 'Lembur',
-        'projek' => 'Laporan Bulanan',
-        'tanggal_kerja' => '2025-09-15',
-        'jam_mulai_kerja' => '17:00:00',
-        'jam_selesai_kerja' => '21:00:00',
-        'status' => 'Diterima'
-    ],
-    [
-        'id' => 4,
-        'kode_khl' => '11221387',
-        'nama_karyawan' => 'Ahmad Fauzi',
-        'jenis_khl' => 'Training',
-        'projek' => 'Workshop Leadership',
-        'tanggal_kerja' => '2025-09-18',
-        'jam_mulai_kerja' => '08:30:00',
-        'jam_selesai_kerja' => '16:30:00',
-        'status' => 'Diterima'
-    ],
-    [
-        'id' => 5,
-        'kode_khl' => '11221388',
-        'nama_karyawan' => 'Rina Melati',
-        'jenis_khl' => 'Proyek Khusus',
-        'projek' => 'Event Company Gathering',
-        'tanggal_kerja' => '2025-09-20',
-        'jam_mulai_kerja' => '06:00:00',
-        'jam_selesai_kerja' => '18:00:00',
-        'status' => 'Diterima'
-    ],
-    [
-        'id' => 6,
-        'kode_khl' => '11221389',
-        'nama_karyawan' => 'Xue',
-        'jenis_khl' => 'Lembur',
-        'projek' => 'Laporan Kuartalan',
-        'tanggal_kerja' => '2025-09-25',
-        'jam_mulai_kerja' => '19:00:00',
-        'jam_selesai_kerja' => '22:00:00',
-        'status' => 'Diterima'
-    ],
-];
+// AMBIL DATA ADMIN UNTUK WELCOME MESSAGE
+$nama_user = 'Admin';
+if (isset($_SESSION['user_id'])) {
+    $user_id = $_SESSION['user_id'];
+    $query_admin = $conn->prepare("SELECT nama_lengkap FROM data_karyawan WHERE id_karyawan = ? AND role = 'admin'");
+    if ($query_admin) {
+        $query_admin->bind_param("i", $user_id);
+        $query_admin->execute();
+        $result_admin = $query_admin->get_result();
+        if ($result_admin && $result_admin->num_rows > 0) {
+            $admin_data = $result_admin->fetch_assoc();
+            $nama_user = $admin_data['nama_lengkap'];
+        }
+        $query_admin->close();
+    }
+}
 
-// Get current month and year
+// AMBIL DATA KHL DARI DATABASE (hanya yang status disetujui)
+$query_khl = "SELECT 
+                dk.nama_lengkap,
+                dpk.* 
+              FROM data_pengajuan_khl dpk 
+              JOIN data_karyawan dk ON dpk.kode_karyawan = dk.kode_karyawan 
+              WHERE dpk.status_khl = 'disetujui'
+              ORDER BY dpk.tanggal_khl ASC";
+
+$result_khl = $conn->query($query_khl);
+$data_khl = [];
+
+if ($result_khl && $result_khl->num_rows > 0) {
+    while($row = $result_khl->fetch_assoc()) {
+        $data_khl[] = [
+            'id' => $row['id_khl'],
+            'kode_khl' => $row['id_khl'],
+            'nama_karyawan' => $row['nama_lengkap'],
+            'jenis_khl' => $row['divisi'],
+            'projek' => $row['proyek'],
+            'tanggal_kerja' => $row['tanggal_khl'],
+            'jam_mulai_kerja' => $row['jam_mulai_kerja'],
+            'jam_selesai_kerja' => $row['jam_akhir_kerja'],
+            'status' => 'Diterima'
+        ];
+    }
+}
+
+// Get current month and year from URL parameters or use current date
 $month = isset($_GET['month']) ? (int)$_GET['month'] : date('n');
 $year = isset($_GET['year']) ? (int)$_GET['year'] : date('Y');
+
+// Filter by year range
+$selected_year = isset($_GET['filter_year']) ? (int)$_GET['filter_year'] : $year;
 
 // Navigation
 $prev_month = $month - 1;
@@ -102,11 +81,15 @@ $first_day_of_week = $first_day_of_week == 0 ? 6 : $first_day_of_week - 1;
 // Group KHL by date for easy lookup
 $khl_by_date = [];
 foreach ($data_khl as $khl) {
-    $date = $khl['tanggal_kerja'];
-    if (!isset($khl_by_date[$date])) {
-        $khl_by_date[$date] = [];
+    $khl_year = date('Y', strtotime($khl['tanggal_kerja']));
+    // Only include KHL for selected year
+    if ($khl_year == $selected_year) {
+        $date = $khl['tanggal_kerja'];
+        if (!isset($khl_by_date[$date])) {
+            $khl_by_date[$date] = [];
+        }
+        $khl_by_date[$date][] = $khl;
     }
-    $khl_by_date[$date][] = $khl;
 }
 
 $month_names = [
@@ -115,18 +98,33 @@ $month_names = [
     9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
 ];
 
+// Get available years from KHL data for filter dropdown
+$available_years = [];
+foreach ($data_khl as $khl) {
+    $khl_year = date('Y', strtotime($khl['tanggal_kerja']));
+    if (!in_array($khl_year, $available_years)) {
+        $available_years[] = $khl_year;
+    }
+}
+// Sort years descending and add current year if no data exists
+rsort($available_years);
+if (empty($available_years)) {
+    $available_years[] = date('Y');
+}
+
+$conn->close();
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kalender KHL - Admin SDM</title>
+<title>Kalender KHL</title>
 <style>
     body { margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg,#1E105E 0%,#8897AE 100%); min-height:100vh; color:#333; }
     header { background:rgba(255,255,255,1); padding:20px 40px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #34377c; }
     .logo { display:flex; align-items:center; gap:16px; font-weight:500; font-size:20px; color:#2e1f4f; }
-    .logo img { width: 120px; height: 60px; object-fit: contain; }
+    .logo img { width: 140px; height: 60px; object-fit: contain; }
     nav ul { list-style:none; margin:0; padding:0; display:flex; gap:30px; }
     nav li { position:relative; }
     nav a { text-decoration:none; color:#333; font-weight:600; padding:8px 4px; display:block; }
@@ -139,19 +137,35 @@ $month_names = [
     h1 { text-align:left; font-size:28px; margin-bottom:10px; }
     p.admin-title { font-size: 16px; margin-top: 0; margin-bottom: 30px; font-weight: 400; opacity: 0.9; }
     .card { background:#fff; border-radius:20px; padding:30px 40px; box-shadow:0 2px 10px rgba(0,0,0,0.15); }
-    .page-title { font-size: 24px; font-weight: 600; text-align: center; margin-bottom: 30px; color: #1E105E; }
+    .page-title { font-size: 30px; font-weight: 600; text-align: center; margin-bottom: 30px; color: #1E105E; }
+    
+    /* Filter Section */
+    .filter-section { background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #e0e0e0; }
+    .filter-row { display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; }
+    .filter-group { display: flex; flex-direction: column; gap: 5px; }
+    .filter-group label { font-weight: 600; font-size: 14px; color: #333; }
+    .filter-group select, .filter-group input { padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; background: white; }
+    .filter-group select { min-width: 120px; }
+    
+    .action-bar { display: flex; gap: 10px; margin-top: 15px; }
+    .btn { padding: 10px 20px; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; color: #fff; cursor: pointer; transition: background-color 0.3s; text-decoration: none; text-align: center; display: inline-block; }
+    .btn-cari { background-color: #4a3f81; }
+    .btn-cari:hover { background-color: #3a3162; }
+    .btn-reset { background-color: #6c757d; }
+    .btn-reset:hover { background-color: #545b62; }
     
     /* Calendar Styles */
     .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px; }
     .calendar-nav { display: flex; gap: 10px; align-items: center; }
     .calendar-title { font-size: 24px; font-weight: 600; color: #1E105E; }
-    .nav-btn { padding: 8px 16px; background: #4a3f81; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+    .nav-btn { padding: 8px 16px; background: #4a3f81; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; text-decoration: none; display: inline-block; }
     .nav-btn:hover { background: #3a3162; }
     
     .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background: #ddd; border: 1px solid #ddd; border-radius: 10px; overflow: hidden; }
     .calendar-day-header { background: #4a3f81; color: white; padding: 15px; text-align: center; font-weight: 600; }
-    .calendar-day { background: white; min-height: 120px; padding: 8px; border: 1px solid #eee; position: relative; }
+    .calendar-day { background: white; min-height: 120px; padding: 8px; border: 1px solid #eee; position: relative; cursor: pointer; }
     .calendar-day.other-month { background: #f8f9fa; color: #999; }
+    .calendar-day.other-month { cursor: default; }
     .day-number { font-weight: 600; margin-bottom: 5px; }
     
     .khl-indicator { 
@@ -195,9 +209,13 @@ $month_names = [
     .karyawan-item { padding: 10px; border-bottom: 1px solid #eee; }
     .karyawan-item:last-child { border-bottom: none; }
     
+    .filter-info { background: #e7f3ff; padding: 10px 15px; border-radius: 6px; margin-bottom: 20px; font-size: 14px; border-left: 4px solid #4a3f81; }
+    
     @media (max-width: 768px) {
         .calendar-day { min-height: 80px; padding: 4px; font-size: 12px; }
         .khl-list { max-height: 60px; }
+        .filter-row { flex-direction: column; }
+        .filter-group { width: 100%; }
     }
 </style>
 </head>
@@ -205,56 +223,92 @@ $month_names = [
 
 <header>
     <div class="logo">
-    <img src="image/namayayasan.png" alt="Logo Yayasan">
-    <span>Yayasan Purba Danarta</span>
-  </div>
+        <img src="image/namayayasan.png" alt="Logo Yayasan">
+        <span>Yayasan Purba Danarta</span>
+    </div>
     <nav>
         <ul>
-        <li><a href="dashboardadmin.php">Beranda</a></li>
-        <li><a href="#">Cuti ▾</a>
-            <ul>
-            <li><a href="riwayat_cuti.php">Riwayat Cuti</a></li>
-            <li><a href="kalender_cuti.php">Kalender Cuti</a></li>
-            <li><a href="daftar_sisa_cuti.php">Sisa Cuti Karyawan</a></li>
-            </ul>
-        </li>
-        <li><a href="#">KHL ▾</a>
-            <ul>
-                <li><a href="riwayat_khl.php">Riwayat KHL</a></li>
-                <li><a href="kalender_khl.php">Kalender KHL</a></li>
-            </ul>
-        </li>
-        <li><a href="#">Lamaran Kerja ▾</a>
-            <ul>
-                <li><a href="administrasi_pelamar.php">Administrasi Pelamar</a></li>
-                <li><a href="riwayat_pelamar.php">Riwayat Pelamar</a></li>
-            </ul>
-        </li>
-        <li><a href="#">Karyawan ▾</a>
-            <ul>
-                <li><a href="data_karyawan.php">Data Karyawan</a></li>
-            </ul>
-        </li>
-          <ul>
-                <li><a href="logout2.php">Logout</a></li>
-            </ul>
-        </li>
+            <li><a href="dashboardadmin.php">Beranda</a></li>
+            <li><a href="#">Cuti ▾</a>
+                <ul>
+                    <li><a href="riwayat_cuti.php">Riwayat Cuti</a></li>
+                    <li><a href="kalender_cuti.php">Kalender Cuti</a></li>
+                    <li><a href="daftar_sisa_cuti.php">Sisa Cuti Karyawan</a></li>
+                </ul>
+            </li>
+            <li><a href="#">KHL ▾</a>
+                <ul>
+                    <li><a href="riwayat_khl.php">Riwayat KHL</a></li>
+                    <li><a href="kalender_khl.php">Kalender KHL</a></li>
+                </ul>
+            </li>
+            <li><a href="#">Lamaran Kerja ▾</a>
+                <ul>
+                    <li><a href="administrasi_pelamar.php">Administrasi Pelamar</a></li>
+                    <li><a href="riwayat_pelamar.php">Riwayat Pelamar</a></li>
+                </ul>
+            </li>
+            <li><a href="#">Karyawan ▾</a>
+                <ul>
+                    <li><a href="data_karyawan.php">Data Karyawan</a></li>
+                </ul>
+            </li>
+            <li><a href="logout2.php">Logout</a></li>
         </ul>
     </nav>
 </header>
 
 <main>
-    <h1>Welcome, Cell!</h1>
-    <p class="admin-title">Administrator</p>
-
     <div class="card">
         <h2 class="page-title">Kalender KHL Pegawai</h2>
         
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <form method="GET" action="">
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label for="filter_year">Tahun</label>
+                        <select id="filter_year" name="filter_year">
+                            <?php foreach ($available_years as $avail_year): ?>
+                                <option value="<?= $avail_year ?>" <?= $selected_year == $avail_year ? 'selected' : '' ?>>
+                                    <?= $avail_year ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="month">Bulan</label>
+                        <select id="month" name="month">
+                            <?php foreach ($month_names as $key => $name): ?>
+                                <option value="<?= $key ?>" <?= $month == $key ? 'selected' : '' ?>>
+                                    <?= $name ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="action-bar">
+                    <button type="submit" class="btn btn-cari">Terapkan Filter</button>
+                    <a href="kalender_khl.php" class="btn btn-reset">Reset Filter</a>
+                </div>
+            </form>
+        </div>
+
+        <?php if ($selected_year != date('Y') || $month != date('n')): ?>
+            <div class="filter-info">
+                <strong>Filter Aktif:</strong> 
+                Menampilkan data KHL untuk <?= $month_names[$month] ?> <?= $selected_year ?>
+                | <a href="kalender_khl.php" style="color: #4a3f81; text-decoration: none;">Tampilkan Bulan Ini</a>
+            </div>
+        <?php endif; ?>
+
         <div class="calendar-header">
             <div class="calendar-nav">
-                <a href="?month=<?= $prev_month ?>&year=<?= $prev_year ?>" class="nav-btn">&larr; Prev</a>
+                <a href="?month=<?= $prev_month ?>&year=<?= $prev_year ?>&filter_year=<?= $selected_year ?>" class="nav-btn">&larr; Prev</a>
                 <span class="calendar-title"><?= $month_names[$month] ?> <?= $year ?></span>
-                <a href="?month=<?= $next_month ?>&year=<?= $next_year ?>" class="nav-btn">Next &rarr;</a>
+                <a href="?month=<?= $next_month ?>&year=<?= $next_year ?>&filter_year=<?= $selected_year ?>" class="nav-btn">Next &rarr;</a>
             </div>
             <a href="kalender_khl.php" class="nav-btn">Bulan Ini</a>
         </div>
@@ -282,7 +336,8 @@ $month_names = [
                 $has_khl = isset($khl_by_date[$current_date]);
                 $khl_count = $has_khl ? count($khl_by_date[$current_date]) : 0;
                 ?>
-                <div class="calendar-day <?= $is_today ? 'today' : '' ?>" onclick="showKhlDetails('<?= $current_date ?>')">
+                <div class="calendar-day <?= $is_today ? 'today' : '' ?> <?= !$has_khl ? 'no-khl' : '' ?>" 
+                     <?= $has_khl ? 'onclick="showKhlDetails(\'' . $current_date . '\')"' : '' ?>>
                     <div class="day-number"><?= $day ?></div>
                     <?php if ($has_khl): ?>
                         <span class="khl-indicator"><?= $khl_count ?> KHL</span>
@@ -310,6 +365,20 @@ $month_names = [
                 <div style="background: #e7f3ff; border: 2px solid #4a3f81; width: 20px; height: 20px;"></div>
                 <span>Hari Ini</span>
             </div>
+        </div>
+        
+        <!-- Summary -->
+        <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px; text-align: center;">
+            <strong>Summary <?= $month_names[$month] ?> <?= $selected_year ?>:</strong>
+            <?php
+            $total_khl_month = 0;
+            $unique_days = array_keys($khl_by_date);
+            foreach ($khl_by_date as $date_khl) {
+                $total_khl_month += count($date_khl);
+            }
+            ?>
+            <span style="margin-left: 15px;">Total KHL: <?= $total_khl_month ?> pengajuan</span>
+            <span style="margin-left: 15px;">Hari dengan KHL: <?= count($unique_days) ?> hari</span>
         </div>
     </div>
 </main>

@@ -58,7 +58,7 @@ if (empty($divisi) || empty($jabatan)) {
     border-bottom:2px solid #34377c;
   }
   .logo {display:flex;align-items:center;gap:16px;font-weight:500;font-size:20px;color:#2e1f4f;}
-  .logo img {width:120px;height:50px;object-fit:contain;}
+  .logo img {width:140px;height:50px;object-fit:contain;}
 
   nav ul {list-style:none;margin:0;padding:0;display:flex;gap:30px;}
   nav li {position:relative;}

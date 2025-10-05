@@ -1,70 +1,108 @@
 <?php
 session_start();
+require 'config.php';
 
 // Inisialisasi variabel filter
 $start_date = $_GET['start_date'] ?? '';
 $end_date = $_GET['end_date'] ?? '';
 $search_query = $_GET['search'] ?? '';
 
-// --- DUMMY DATA (DATA CONTOH) ---
-// Data Anda tetap di sini, saya singkat agar tidak terlalu panjang
-$riwayat_khl = [
-    [
-        'id' => 1, 'kode_khl' => '11221384', 'nama_karyawan' => 'Adrianna', 'jenis_khl' => 'Training', 'projek' => 'Pelatihan Karyawan', 'tanggal_kerja' => '2025-09-10', 'jam_mulai_kerja' => '07:00:00', 'jam_selesai_kerja' => '16:00:00', 'tanggal_libur' => '2025-09-11', 'jam_mulai_libur' => '', 'jam_selesai_libur' => '', 'status' => 'Ditolak'
-    ],
-    [
-        'id' => 2, 'kode_khl' => '11221385', 'nama_karyawan' => 'Budi Santoso', 'jenis_khl' => 'Proyek Khusus', 'projek' => 'Implementasi Sistem Baru', 'tanggal_kerja' => '2025-09-12', 'jam_mulai_kerja' => '08:00:00', 'jam_selesai_kerja' => '17:00:00', 'tanggal_libur' => '2025-09-13', 'jam_mulai_libur' => '09:00:00', 'jam_selesai_libur' => '14:00:00', 'status' => 'Diterima'
-    ],
-    [
-        'id' => 3, 'kode_khl' => '11221386', 'nama_karyawan' => 'Siti Rahayu', 'jenis_khl' => 'Lembur', 'projek' => 'Laporan Bulanan', 'tanggal_kerja' => '2025-09-15', 'jam_mulai_kerja' => '17:00:00', 'jam_selesai_kerja' => '21:00:00', 'tanggal_libur' => '2025-09-16', 'jam_mulai_libur' => '', 'jam_selesai_libur' => '', 'status' => 'Diterima'
-    ],
-    [
-        'id' => 4, 'kode_khl' => '11221387', 'nama_karyawan' => 'Ahmad Fauzi', 'jenis_khl' => 'Training', 'projek' => 'Workshop Leadership', 'tanggal_kerja' => '2025-09-18', 'jam_mulai_kerja' => '08:30:00', 'jam_selesai_kerja' => '16:30:00', 'tanggal_libur' => '2025-09-19', 'jam_mulai_libur' => '10:00:00', 'jam_selesai_libur' => '15:00:00', 'status' => 'Menunggu'
-    ],
-    [
-        'id' => 5, 'kode_khl' => '11221388', 'nama_karyawan' => 'Rina Melati', 'jenis_khl' => 'Proyek Khusus', 'projek' => 'Event Company Gathering', 'tanggal_kerja' => '2025-09-20', 'jam_mulai_kerja' => '06:00:00', 'jam_selesai_kerja' => '18:00:00', 'tanggal_libur' => '2025-09-21', 'jam_mulai_libur' => '', 'jam_selesai_libur' => '', 'status' => 'Diterima'
-    ],
-];
+// AMBIL DATA DARI TABEL data_pengajuan_khl
+$query = "SELECT 
+            dk.nama_lengkap,
+            dpk.* 
+          FROM data_pengajuan_khl dpk 
+          JOIN data_karyawan dk ON dpk.kode_karyawan = dk.kode_karyawan 
+          WHERE 1=1";
 
-
-// Filter data berdasarkan input
-$filtered_data = $riwayat_khl;
+$params = [];
+$types = '';
 
 // Filter berdasarkan tanggal
-if (!empty($start_date) && !empty($end_date)) {
-    $start_timestamp = strtotime($start_date);
-    $end_timestamp = strtotime($end_date);
-    
-    $filtered_data = array_filter($filtered_data, function($khl) use ($start_timestamp, $end_timestamp) {
-        $khl_timestamp = strtotime($khl['tanggal_kerja']);
-        return $khl_timestamp >= $start_timestamp && $khl_timestamp <= $end_timestamp;
-    });
-} elseif (!empty($start_date)) {
-    $start_timestamp = strtotime($start_date);
-    $filtered_data = array_filter($filtered_data, function($khl) use ($start_timestamp) {
-        return strtotime($khl['tanggal_kerja']) >= $start_timestamp;
-    });
-} elseif (!empty($end_date)) {
-    $end_timestamp = strtotime($end_date);
-    $filtered_data = array_filter($filtered_data, function($khl) use ($end_timestamp) {
-        return strtotime($khl['tanggal_kerja']) <= $end_timestamp;
-    });
+if (!empty($start_date)) {
+    $query .= " AND dpk.tanggal_khl >= ?";
+    $params[] = $start_date;
+    $types .= 's';
+}
+
+if (!empty($end_date)) {
+    $query .= " AND dpk.tanggal_khl <= ?";
+    $params[] = $end_date;
+    $types .= 's';
 }
 
 // Filter berdasarkan pencarian
 if (!empty($search_query)) {
-    $search_lower = strtolower($search_query);
-    $filtered_data = array_filter($filtered_data, function($khl) use ($search_lower) {
-        return strpos(strtolower($khl['nama_karyawan']), $search_lower) !== false ||
-               strpos(strtolower($khl['kode_khl']), $search_lower) !== false ||
-               strpos(strtolower($khl['projek']), $search_lower) !== false ||
-               strpos(strtolower($khl['jenis_khl']), $search_lower) !== false;
-    });
+    $query .= " AND (dk.nama_lengkap LIKE ? OR dpk.kode_karyawan LIKE ? OR dpk.proyek LIKE ?)";
+    $search_param = "%$search_query%";
+    $params[] = $search_param;
+    $params[] = $search_param;
+    $params[] = $search_param;
+    $types .= 'sss';
 }
 
-// Reset array keys
-$filtered_data = array_values($filtered_data);
+$query .= " ORDER BY dpk.created_at DESC";
 
+// Prepare dan execute query
+$stmt = $conn->prepare($query);
+
+if ($stmt) {
+    if (!empty($params)) {
+        $stmt->bind_param($types, ...$params);
+    }
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $riwayat_khl = $result->fetch_all(MYSQLI_ASSOC);
+    $stmt->close();
+} else {
+    $riwayat_khl = [];
+    error_log("Error preparing query: " . $conn->error);
+}
+
+// Mapping status untuk konsistensi dengan tampilan sebelumnya
+$status_mapping = [
+    'disetujui' => 'Diterima',
+    'ditolak' => 'Ditolak',
+    'pending' => 'Menunggu'
+];
+
+// Format data untuk konsistensi dengan struktur sebelumnya
+$filtered_data = [];
+foreach ($riwayat_khl as $khl) {
+    $filtered_data[] = [
+        'id' => $khl['id_khl'],
+        'kode_khl' => $khl['id_khl'], // Menggunakan id_khl sebagai kode KHL
+        'nama_karyawan' => $khl['nama_lengkap'],
+        'jenis_khl' => $khl['divisi'], // Menggunakan divisi sebagai jenis KHL
+        'projek' => $khl['proyek'],
+        'tanggal_kerja' => $khl['tanggal_khl'],
+        'jam_mulai_kerja' => $khl['jam_mulai_kerja'],
+        'jam_selesai_kerja' => $khl['jam_akhir_kerja'],
+        'tanggal_libur' => $khl['tanggal_cuti_khl'],
+        'jam_mulai_libur' => $khl['jam_mulai_cuti_khl'],
+        'jam_selesai_libur' => $khl['jam_akhir_cuti_khl'],
+        'status' => $status_mapping[$khl['status_khl']] ?? $khl['status_khl']
+    ];
+}
+
+// AMBIL DATA ADMIN UNTUK WELCOME MESSAGE
+$nama_user = 'Admin';
+if (isset($_SESSION['user_id'])) {
+    $user_id = $_SESSION['user_id'];
+    $query_admin = $conn->prepare("SELECT nama_lengkap FROM data_karyawan WHERE id_karyawan = ? AND role = 'admin'");
+    if ($query_admin) {
+        $query_admin->bind_param("i", $user_id);
+        $query_admin->execute();
+        $result_admin = $query_admin->get_result();
+        if ($result_admin && $result_admin->num_rows > 0) {
+            $admin_data = $result_admin->fetch_assoc();
+            $nama_user = $admin_data['nama_lengkap'];
+        }
+        $query_admin->close();
+    }
+}
+
+$conn->close();
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -77,8 +115,7 @@ $filtered_data = array_values($filtered_data);
     body { margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg,#1E105E 0%,#8897AE 100%); min-height:100vh; color:#333; }
     header { background:rgba(255,255,255,1); padding:20px 40px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #34377c; flex-wrap: wrap; }
     .logo { display:flex; align-items:center; gap:16px; font-weight:500; font-size:20px; color:#2e1f4f; }
-    /* Menyamakan style logo dengan perbaikan sebelumnya agar konsisten */
-    .logo img { width: 130px; height: 50px; object-fit: contain; }
+    .logo img { width: 140px; height: 50px; object-fit: contain; }
     nav ul { list-style:none; margin:0; padding:0; display:flex; gap:30px; align-items: center; }
     nav li { position:relative; }
     nav a { text-decoration:none; color:#333; font-weight:600; padding:8px 4px; display:block; }
@@ -91,7 +128,7 @@ $filtered_data = array_values($filtered_data);
     h1 { text-align:left; font-size:28px; margin-bottom:10px; }
     p.admin-title { font-size: 16px; margin-top: 0; margin-bottom: 30px; font-weight: 400; opacity: 0.9; }
     .card { background:#fff; border-radius:20px; padding:30px 40px; box-shadow:0 2px 10px rgba(0,0,0,0.15); }
-    .page-title { font-size: 24px; font-weight: 600; text-align: center; margin-bottom: 30px; color: #1E105E; }
+    .page-title { font-size: 30px; font-weight: 600; text-align: center; margin-bottom: 30px; color: #1E105E; }
     
     /* Style untuk filter section */
     .filter-section { background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 25px; border: 1px solid #e0e0e0; }
@@ -178,9 +215,6 @@ $filtered_data = array_values($filtered_data);
 </header>
 
 <main>
-    <h1>Welcome, Cell!</h1>
-    <p class="admin-title">Administrator</p>
-
     <div class="card">
         <h2 class="page-title">Riwayat KHL Pegawai</h2>
         
@@ -302,3 +336,5 @@ $filtered_data = array_values($filtered_data);
         endDate.addEventListener('change', validateDates);
     });
 </script>
+</body>
+</html>

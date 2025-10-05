@@ -2,7 +2,14 @@
 session_start();
 require 'config.php';
 
-$query_pelamar = $conn->prepare("
+// --- PROSES PENCARIAN ---
+$search_keyword = '';
+if (isset($_GET['search']) && !empty(trim($_GET['search']))) {
+    $search_keyword = trim($_GET['search']);
+}
+
+// --- QUERY DENGAN PENCARIAN ---
+$sql = "
     SELECT 
         dp.id, 
         dp.nama_lengkap, 
@@ -18,9 +25,23 @@ $query_pelamar = $conn->prepare("
         riwayat_pelamar rp ON dp.id = rp.pelamar_id
     WHERE 
         dp.status IN ('Diterima', 'Tidak Lolos')
-    ORDER BY 
-        dp.id DESC
-");
+";
+
+// Tambahkan kondisi pencarian jika ada keyword
+if (!empty($search_keyword)) {
+    $sql .= " AND (dp.nama_lengkap LIKE ? OR dp.posisi_dilamar LIKE ?)";
+}
+
+$sql .= " ORDER BY dp.id DESC";
+
+$query_pelamar = $conn->prepare($sql);
+
+// Bind parameter jika ada pencarian
+if (!empty($search_keyword)) {
+    $search_term = "%$search_keyword%";
+    $query_pelamar->bind_param("ss", $search_term, $search_term);
+}
+
 $query_pelamar->execute();
 $riwayat_pelamar_result = $query_pelamar->get_result();
 
@@ -45,13 +66,13 @@ function displayStatus($status) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Riwayat Pelamar - Admin SDM</title>
+    <title>Riwayat Pelamar</title>
     <style>
         /* CSS Lengkap Anda akan ditaruh di sini */
         body { margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg,#1E105E 0%,#8897AE 100%); min-height:100vh; color:#333; }
         header { background:rgba(255,255,255,1); padding:20px 40px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #34377c; flex-wrap:wrap; }
         .logo { display:flex; align-items:center; gap:16px; font-weight:500; font-size:20px; color:#2e1f4f; }
-        .logo img { width: 130px; height: 50px; object-fit: contain; }
+        .logo img { width: 140px; height: 50px; object-fit: contain; }
         nav ul { list-style:none; margin:0; padding:0; display:flex; gap:30px; align-items: center; }
         nav li { position:relative; }
         nav a { text-decoration:none; color:#333; font-weight:600; padding:8px 4px; display:block; }
@@ -64,7 +85,7 @@ function displayStatus($status) {
         h1 { text-align:left; font-size:28px; margin-bottom:10px; }
         p.admin-title { font-size: 16px; margin-top: 0; margin-bottom: 30px; font-weight: 400; opacity: 0.9; }
         .card { background:#fff; border-radius:20px; padding:30px 40px; box-shadow:0 2px 10px rgba(0,0,0,0.15); }
-        .page-title { font-size: 24px; font-weight: 600; text-align: center; margin-bottom: 30px; color: #1E105E; }
+        .page-title { font-size: 30px; font-weight: 600; text-align: center; margin-bottom: 30px; color: #1E105E; }
         .action-bar { display: flex; gap: 10px; margin-bottom: 25px; align-items: center; }
         .action-bar input[type="search"] { flex-grow: 1; padding: 10px 15px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; }
         .action-bar button { padding: 10px 25px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; color: #fff; cursor: pointer; transition: opacity 0.3s; }
@@ -122,15 +143,16 @@ function displayStatus($status) {
 </header>
 
 <main>
-    <h1>Welcome, Cell!</h1>
-    <p class="admin-title">Administrator</p>
     <div class="card">
         <h2 class="page-title">Riwayat Pelamar</h2>
         
-        <div class="action-bar">
-            <input type="search" placeholder="Cari riwayat pelamar...">
-            <button class="btn-cari">Cari</button>
-        </div>
+        <form method="GET" action="" class="action-bar">
+            <input type="search" name="search" placeholder="Cari riwayat pelamar..." value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>">
+            <button type="submit" class="btn-cari">Cari</button>
+            <?php if(isset($_GET['search']) && !empty($_GET['search'])): ?>
+                <a href="riwayat_pelamar.php" style="padding: 10px 15px; background: #6c757d; color: white; text-decoration: none; border-radius: 8px; font-size: 16px;">Reset</a>
+            <?php endif; ?>
+        </form>
 
         <div style="overflow-x:auto;">
             <table class="data-table">

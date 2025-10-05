@@ -28,7 +28,7 @@ if ($result->num_rows > 0) {
         body { margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg,#1E105E 0%,#8897AE 100%); min-height:100vh; color:#333; }
         header { background:rgba(255,255,255,1); padding:20px 40px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #34377c; }
         .logo { display:flex; align-items:center; gap:16px; font-weight:500; font-size:20px; color:#2e1f4f; }
-        .logo img { width: 50px; height: 50px; object-fit: contain; }
+        .logo img { width: 140px; height: 50px; object-fit: contain; }
         nav ul { list-style:none; margin:0; padding:0; display:flex; gap:30px; }
         nav li { position:relative; }
         nav a { text-decoration:none; color:#333; font-weight:600; padding:8px 4px; display:block; }
@@ -41,7 +41,7 @@ if ($result->num_rows > 0) {
         h1 { text-align:left; font-size:28px; margin-bottom:10px; }
         p.admin-title { font-size: 16px; margin-top: 0; margin-bottom: 30px; font-weight: 400; opacity: 0.9; }
         .card { background:#fff; border-radius:20px; padding:30px 40px; box-shadow:0 2px 10px rgba(0,0,0,0.15); }
-        .page-title { font-size: 24px; font-weight: 600; text-align: center; margin-bottom: 30px; color: #1E105E; }
+        .page-title { font-size: 30px; font-weight: 600; text-align: center; margin-bottom: 30px; color: #1E105E; }
         .action-bar { display: flex; gap: 10px; margin-bottom: 25px; align-items: center; }
         .action-bar input[type="search"] { flex-grow: 1; padding: 10px 15px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; }
         .action-bar button { padding: 10px 25px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; color: #fff; cursor: pointer; transition: opacity 0.3s; }
@@ -151,22 +151,6 @@ if ($result->num_rows > 0) {
             transform: scale(1.05);
         }
         
-        .welcome-section {
-            margin-bottom: 20px;
-        }
-        
-        .welcome-section h1 {
-            color: #fff;
-            font-size: 28px;
-            margin-bottom: 5px;
-        }
-        
-        .welcome-section h2 {
-            color: #ffffffff;
-            font-size: 24px;
-            margin-bottom: 20px;
-        }
-        
         .no-results {
             text-align: center;
             padding: 20px;
@@ -244,11 +228,8 @@ if ($result->num_rows > 0) {
     </header>
     
     <main>
-        <div class="welcome-section">
-            <h2>Data Karyawan</h2>
-        </div>
-        
         <div class="card">
+            <h2 class="page-title">Data Karyawan</h2>
             <!-- Pesan Sukses -->
             <?php if (isset($_SESSION['success_message'])): ?>
                 <div class="success-message">
@@ -259,7 +240,7 @@ if ($result->num_rows > 0) {
             
             <div class="search-container">
                 <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="Cari karyawan...">
+                    <input type="text" id="searchInput" placeholder="Cari Karyawan / Kode / Jabatan...">
                     <i class="fas fa-search search-icon" id="searchButton"></i>
                 </div>
                 <a href="tambah_karyawan.php" class="btn btn-tambah">

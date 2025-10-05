@@ -31,7 +31,7 @@ session_start();
     backdrop-filter: blur(5px);
   }
   .logo {display:flex;align-items:center;gap:16px;font-weight:500;font-size:20px;color:#2e1f4f;}
-  .logo img {width:130px;height:50px;object-fit:contain;}
+  .logo img {width:140px;height:50px;object-fit:contain;}
 
   nav ul {list-style:none;margin:0;padding:0;display:flex;gap:30px;}
   nav li {position:relative;}

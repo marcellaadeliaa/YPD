@@ -2,6 +2,12 @@
 session_start();
 require 'config.php';
 
+// --- PROSES PENCARIAN ---
+$search_keyword = '';
+if (isset($_GET['search']) && !empty(trim($_GET['search']))) {
+    $search_keyword = trim($_GET['search']);
+}
+
 // --- LOGIKA UNTUK PENGUMUMAN UMUM (TETAP SAMA) ---
 if (isset($_POST['action_pengumuman'])) {
     // ... Logika ini tidak berubah ...
@@ -156,10 +162,22 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
     exit;
 }
 
-// --- FUNGSI UNTUK MENGAMBIL DATA PELAMAR ---
-function getApplicantsByStatus($conn, $status) {
-    $stmt = $conn->prepare("SELECT id, nama_lengkap, posisi_dilamar, no_telp, email, status FROM data_pelamar WHERE status = ?");
-    $stmt->bind_param("s", $status);
+// --- FUNGSI UNTUK MENGAMBIL DATA PELAMAR DENGAN PENCARIAN ---
+function getApplicantsByStatus($conn, $status, $search_keyword = '') {
+    if (!empty($search_keyword)) {
+        $sql = "SELECT id, nama_lengkap, posisi_dilamar, no_telp, email, status 
+                FROM data_pelamar 
+                WHERE status = ? AND (nama_lengkap LIKE ? OR posisi_dilamar LIKE ?)";
+        $stmt = $conn->prepare($sql);
+        $search_term = "%$search_keyword%";
+        $stmt->bind_param("sss", $status, $search_term, $search_term);
+    } else {
+        $sql = "SELECT id, nama_lengkap, posisi_dilamar, no_telp, email, status 
+                FROM data_pelamar 
+                WHERE status = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("s", $status);
+    }
     $stmt->execute();
     return $stmt->get_result();
 }
@@ -168,14 +186,15 @@ function getApplicantsByStatus($conn, $status) {
 $pengumuman_umum = $conn->query("SELECT * FROM pengumuman_umum WHERE status = 'active' ORDER BY tanggal DESC, id DESC");
 
 // Panggil semua status pelamar
-$pelamarMenunggu = getApplicantsByStatus($conn, 'Menunggu Proses');
-$pelamarAdministrasi = getApplicantsByStatus($conn, 'Seleksi Administratif');
-$pelamarWawancara = getApplicantsByStatus($conn, 'Seleksi Wawancara');
-$pelamarPsikotes = getApplicantsByStatus($conn, 'Seleksi Psikotes');
-$pelamarKesehatan = getApplicantsByStatus($conn, 'Seleksi Kesehatan');
-$pelamarPsikotesKesehatan = getApplicantsByStatus($conn, 'Seleksi Psikotes & Kesehatan');
-$pelamarDiterima = getApplicantsByStatus($conn, 'Diterima');
-$pelamarTidakLolos = getApplicantsByStatus($conn, 'Tidak Lolos');
+// Panggil semua status pelamar DENGAN PENCARIAN
+$pelamarMenunggu = getApplicantsByStatus($conn, 'Menunggu Proses', $search_keyword);
+$pelamarAdministrasi = getApplicantsByStatus($conn, 'Seleksi Administratif', $search_keyword);
+$pelamarWawancara = getApplicantsByStatus($conn, 'Seleksi Wawancara', $search_keyword);
+$pelamarPsikotes = getApplicantsByStatus($conn, 'Seleksi Psikotes', $search_keyword);
+$pelamarKesehatan = getApplicantsByStatus($conn, 'Seleksi Kesehatan', $search_keyword);
+$pelamarPsikotesKesehatan = getApplicantsByStatus($conn, 'Seleksi Psikotes & Kesehatan', $search_keyword);
+$pelamarDiterima = getApplicantsByStatus($conn, 'Diterima', $search_keyword);
+$pelamarTidakLolos = getApplicantsByStatus($conn, 'Tidak Lolos', $search_keyword);
 
 ?>
 <!DOCTYPE html>
@@ -183,12 +202,12 @@ $pelamarTidakLolos = getApplicantsByStatus($conn, 'Tidak Lolos');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Administrasi Pelamar - Admin SDM</title>
+    <title>Administrasi Pelamar</title>
     <style>
         body { margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg,#1E105E 0%,#8897AE 100%); min-height:100vh; color:#333; }
         header { background:rgba(255,255,255,1); padding:20px 40px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #34377c; }
         .logo { display:flex; align-items:center; gap:16px; font-weight:500; font-size:20px; color:#2e1f4f; }
-        .logo img { width: 50px; height: 50px; object-fit: contain; border-radius: 50%; }
+        .logo img { width: 140px; height: 50px; object-fit: contain; }
         nav ul { list-style:none; margin:0; padding:0; display:flex; gap:30px; }
         nav li { position:relative; }
         nav a { text-decoration:none; color:#333; font-weight:600; padding:8px 4px; display:block; }
@@ -201,7 +220,7 @@ $pelamarTidakLolos = getApplicantsByStatus($conn, 'Tidak Lolos');
         h1 { text-align:left; font-size:28px; margin-bottom:10px; }
         p.admin-title { font-size: 16px; margin-top: 0; margin-bottom: 30px; font-weight: 400; opacity: 0.9; }
         .card { background:#fff; border-radius:20px; padding:30px 40px; box-shadow:0 2px 10px rgba(0,0,0,0.15); }
-        .page-title { font-size: 24px; font-weight: 600; text-align: center; margin-bottom: 30px; color: #1E105E; }
+        .page-title { font-size: 30px; font-weight: 600; text-align: center; margin-bottom: 30px; color: #1E105E; }
         .action-bar { display: flex; gap: 10px; margin-bottom: 25px; align-items: center; }
         .action-bar input[type="search"] { flex-grow: 1; padding: 10px 15px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; }
         .action-bar button { padding: 10px 25px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; color: #fff; cursor: pointer; transition: opacity 0.3s; }
@@ -338,17 +357,28 @@ $pelamarTidakLolos = getApplicantsByStatus($conn, 'Tidak Lolos');
 </header>
 
 <main>
-    <h1>Welcome, Cell!</h1>
-    <p class="admin-title">Administrator</p>
-
     <div class="card">
         <h2 class="page-title">Data Pelamar</h2>
         
-        <div class="action-bar"> 
-            <input type="search" placeholder="Cari pelamar..."> 
-            <button class="btn-cari">Cari</button> 
-            <button class="btn-hapus">Hapus</button> 
+        <div class="action-bar">
+            <form method="GET" action="" style="display: flex; gap: 10px; flex-grow: 1; align-items: center;">
+                <input type="search" name="search" placeholder="Cari pelamar..." 
+                    value="<?= isset($_GET['search']) ? htmlspecialchars($_GET['search']) : '' ?>" 
+                    style="flex-grow: 1; padding: 10px 15px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px;">
+                <button type="submit" class="btn-cari">Cari</button>
+                <?php if(isset($_GET['search']) && !empty($_GET['search'])): ?>
+                    <a href="administrasi_pelamar.php" style="padding: 10px 15px; background: #6c757d; color: white; text-decoration: none; border-radius: 8px; font-size: 16px;">Reset</a>
+                <?php endif; ?>
+            </form>
+            <button class="btn-hapus">Hapus</button>
         </div>
+
+        <!-- Hapus komentar ini dan ganti dengan kode PHP di bawah -->
+        <?php if(!empty($search_keyword)): ?>
+            <div style="margin-bottom: 15px; padding: 10px; background: #e7f3ff; border-radius: 5px;">
+                Menampilkan hasil pencarian untuk: <strong>"<?= htmlspecialchars($search_keyword) ?>"</strong>
+            </div>
+        <?php endif; ?>
         
         <h3 class="section-title">⏳ Menunggu Proses</h3>
         <table class="data-table">

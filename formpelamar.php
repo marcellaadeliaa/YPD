@@ -78,7 +78,7 @@ $stmt->close();
       border-bottom: 2px solid #34377c;
     }
     .logo { display: flex; align-items: center; gap: 16px; font-weight: 500; font-size: 20px; color: #2e1f4f; }
-    .logo img { width: 130px; height: 50px; object-fit: contain; }
+    .logo img { width: 140px; height: 50px; object-fit: contain; }
 
     main {
       max-width: 960px;

@@ -85,7 +85,7 @@ $query->close();
     body { margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg,#1E105E 0%,#8897AE 100%); min-height:100vh; color:#fff; }
     header { background:rgba(255,255,255,1); padding:20px 40px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #34377c; backdrop-filter:blur(5px); flex-wrap:wrap; }
     .logo { display:flex; align-items:center; gap:16px; font-weight:500; font-size:20px; color:#2e1f4f; }
-    .logo img { width:130px; height:50px; object-fit:contain; }
+    .logo img { width:140px; height:50px; object-fit:contain; }
     main { max-width:1000px; margin:40px auto; padding:0 20px; }
     .page-header { text-align: center; margin-bottom: 30px; }
     .page-header h1 { font-size: 26px; margin-bottom: 10px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }

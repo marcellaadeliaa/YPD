@@ -2,6 +2,8 @@
 session_start();
 require 'config.php'; 
 
+$nama_user = 'Cell';
+
 // 1. Menghitung Total Pelamar Aktif
 $query_total_pelamar = "SELECT COUNT(id) AS total FROM data_pelamar WHERE status = 'Menunggu Proses'";
 $result_total = $conn->query($query_total_pelamar);
@@ -49,7 +51,7 @@ header {
   color:#2e1f4f;
 }
 .logo img {
-  width: 130px;
+  width: 140px;
   height: 50px;
   object-fit: contain;
 }
@@ -101,7 +103,7 @@ main {
 }
 h1 {
   text-align:left;
-  font-size:28px;
+  font-size:40px;
   margin-bottom:10px;
 }
 p.admin-title {
@@ -242,8 +244,10 @@ p.admin-title {
 </header>
 
 <main>
-    <h1>Welcome, Cell!</h1>
-    <p class="admin-title">Administrator</p>
+    <div class="welcome-section">
+      <h1>Welcome, <?= htmlspecialchars($nama_user) ?>!</h1>
+      <h2>Adminsitrator</h2>
+    </div>
 
     <div class="dashboard-grid">
         <div class="card">

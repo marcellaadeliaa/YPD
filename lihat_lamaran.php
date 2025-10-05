@@ -47,7 +47,7 @@ if ($status_lamaran == 'Diterima') {
     body { margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg,#1E105E 0%,#8897AE 100%); min-height:100vh; color:#fff; }
     header { background:rgba(255,255,255,1); padding:20px 40px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #34377c; }
     .logo { display:flex; align-items:center; gap:16px; font-weight:500; font-size:20px; color:#2e1f4f; }
-    .logo img { width:130px; height:50px; object-fit:contain; }
+    .logo img { width:140px; height:50px; object-fit:contain; }
     nav ul { list-style:none; margin:0; padding:0; display:flex; gap:30px; }
     nav li { position:relative; }
     nav a { text-decoration:none; color:#333; font-weight:600; padding:8px 4px; display:block; }

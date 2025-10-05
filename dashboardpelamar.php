@@ -140,7 +140,7 @@ if ($status == 'Diterima') {
       color:#2e1f4f;
     }
     .logo img {
-      width:130px;
+      width:140px;
       height:50px;
       object-fit:contain;
     }
