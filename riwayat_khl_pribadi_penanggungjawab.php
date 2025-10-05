@@ -1,22 +1,475 @@
 <?php
 session_start();
 require 'config.php';
-if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'penanggung jawab') { header("Location: login_karyawan.php"); exit(); }
+
+// Cek apakah user sudah login sebagai penanggung jawab
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'penanggung jawab') {
+    header("Location: login_karyawan.php");
+    exit();
+}
+
 $user = $_SESSION['user'];
-$id_pj = $user['id_karyawan'];
-// ... (Logika sama seperti riwayat cuti pribadi, tapi query ke tabel pengajuan_khl) ...
+$kode_karyawan = $user['kode_karyawan'];
+$nama_pj = $user['nama_lengkap'];
+$divisi_pj = $user['divisi'];
+$jabatan = "Penanggung Jawab Divisi " . $divisi_pj;
+
+// Query untuk mengambil riwayat KHL pribadi penanggung jawab
+$sql = "SELECT * FROM data_pengajuan_khl 
+        WHERE kode_karyawan = ? 
+        ORDER BY created_at DESC";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("s", $kode_karyawan);
+$stmt->execute();
+$result = $stmt->get_result();
+
+$riwayat_khl = [];
+while ($row = $result->fetch_assoc()) {
+    $riwayat_khl[] = $row;
+}
+
+$stmt->close();
+$conn->close();
 ?>
+
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-    <title>Riwayat KHL Pribadi</title>
-    </head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Riwayat KHL Pribadi - Penanggung Jawab</title>
+    <style>
+        :root { 
+            --primary-color: #1E105E; 
+            --secondary-color: #8897AE; 
+            --accent-color: #4a3f81; 
+            --card-bg: #FFFFFF; 
+            --text-color-light: #fff; 
+            --text-color-dark: #2e1f4f; 
+            --shadow-light: rgba(0,0,0,0.15);
+            --status-pending: #ffc107;
+            --status-disetujui: #28a745;
+            --status-ditolak: #dc3545;
+        }
+        
+        body { 
+            margin: 0; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(180deg, var(--primary-color) 0%, #a29bb8 100%); 
+            min-height: 100vh; 
+            color: var(--text-color-light); 
+        }
+        
+        header { 
+            background: var(--card-bg); 
+            padding: 20px 40px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            box-shadow: 0 4px 15px var(--shadow-light); 
+        }
+        
+        .logo { 
+            display: flex; 
+            align-items: center; 
+            gap: 16px; 
+            font-weight: 500; 
+            font-size: 20px; 
+            color: var(--text-color-dark); 
+        }
+        
+        .logo img { 
+            width: 50px; 
+            height: 50px; 
+            object-fit: contain; 
+            border-radius: 50%; 
+        }
+        
+        nav ul { 
+            list-style: none; 
+            margin: 0; 
+            padding: 0; 
+            display: flex; 
+            gap: 30px; 
+        }
+        
+        nav li { 
+            position: relative; 
+        }
+        
+        nav a { 
+            text-decoration: none; 
+            color: var(--text-color-dark); 
+            font-weight: 600; 
+            padding: 8px 4px; 
+            display: block; 
+        }
+        
+        nav li ul { 
+            display: none; 
+            position: absolute; 
+            top: 100%; 
+            left: 0; 
+            background: var(--card-bg); 
+            padding: 10px 0; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px var(--shadow-light); 
+            min-width: 200px; 
+            z-index: 999; 
+        }
+        
+        nav li:hover > ul { 
+            display: block; 
+        }
+        
+        nav li ul li a { 
+            color: var(--text-color-dark); 
+            font-weight: 400; 
+            white-space: nowrap; 
+            padding: 5px 20px; 
+        }
+        
+        main { 
+            max-width: 1200px; 
+            margin: 40px auto; 
+            padding: 0 20px; 
+        }
+        
+        .card { 
+            background: var(--card-bg); 
+            color: var(--text-color-dark); 
+            border-radius: 20px; 
+            padding: 30px; 
+            box-shadow: 0 5px 20px var(--shadow-light); 
+            margin-bottom: 30px; 
+        }
+        
+        .page-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 30px; 
+            padding-bottom: 15px; 
+            border-bottom: 2px solid #eee; 
+        }
+        
+        .page-title { 
+            font-size: 1.8rem; 
+            font-weight: 700; 
+            color: var(--primary-color); 
+            margin: 0; 
+        }
+        
+        .user-info { 
+            background: #f8f9fa; 
+            padding: 15px; 
+            border-radius: 10px; 
+            margin-bottom: 20px; 
+        }
+        
+        .user-info p { 
+            margin: 5px 0; 
+            font-size: 0.9rem; 
+            color: #666; 
+        }
+        
+        .user-info strong { 
+            color: var(--primary-color); 
+        }
+        
+        .table-container { 
+            overflow-x: auto; 
+        }
+        
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 20px; 
+        }
+        
+        th, td { 
+            padding: 12px 15px; 
+            text-align: left; 
+            border-bottom: 1px solid #ddd; 
+        }
+        
+        th { 
+            background-color: var(--primary-color); 
+            color: white; 
+            font-weight: 600; 
+        }
+        
+        tr:hover { 
+            background-color: #f5f5f5; 
+        }
+        
+        .status-badge { 
+            padding: 5px 10px; 
+            border-radius: 15px; 
+            font-size: 0.8rem; 
+            font-weight: 600; 
+            text-align: center; 
+            display: inline-block; 
+        }
+        
+        .status-pending { 
+            background-color: var(--status-pending); 
+            color: #000; 
+        }
+        
+        .status-disetujui { 
+            background-color: var(--status-disetujui); 
+            color: white; 
+        }
+        
+        .status-ditolak { 
+            background-color: var(--status-ditolak); 
+            color: white; 
+        }
+        
+        .empty-state { 
+            text-align: center; 
+            padding: 40px; 
+            color: #666; 
+        }
+        
+        .empty-state img { 
+            width: 100px; 
+            height: 100px; 
+            margin-bottom: 20px; 
+            opacity: 0.5; 
+        }
+        
+        .btn { 
+            display: inline-block; 
+            background: var(--accent-color); 
+            color: white; 
+            padding: 10px 20px; 
+            border-radius: 8px; 
+            text-decoration: none; 
+            font-weight: 600; 
+            margin-top: 10px; 
+        }
+        
+        .btn:hover { 
+            background: #3a3162; 
+        }
+        
+        .action-buttons { 
+            display: flex; 
+            gap: 5px; 
+        }
+        
+        .btn-small { 
+            padding: 5px 10px; 
+            font-size: 0.8rem; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            text-decoration: none; 
+        }
+        
+        .btn-edit { 
+            background: #17a2b8; 
+            color: white; 
+        }
+        
+        .btn-delete { 
+            background: #dc3545; 
+            color: white; 
+        }
+        
+        .jam-info { 
+            font-size: 0.8rem; 
+            color: #666; 
+        }
+    </style>
+</head>
 <body>
-<header></header>
+<header>
+    <div class="logo">
+        <img src="image/namayayasan.png" alt="Logo">
+        <span>Yayasan Purba Danarta</span>
+    </div>
+    <nav>
+        <ul>
+            <li><a href="dashboard_penanggungjawab.php">Beranda</a></li>
+            <li><a href="#">Cuti ▾</a>
+                <ul>
+                    <li><a href="persetujuancuti_penanggungjawab.php">Persetujuan Cuti</a></li>
+                    <li><a href="riwayatcuti_penanggungjawab.php">Riwayat Cuti Divisi</a></li>
+                    <li><a href="pengajuancuti_penanggungjawab.php">Ajukan Cuti Pribadi</a></li>
+                    <li><a href="kalender_cuti_penanggungjawab.php">Kalender Cuti Divisi</a></li>
+                    <li><a href="riwayat_cuti_pribadi_penanggungjawab.php">Riwayat Cuti Pribadi</a></li>
+                </ul>
+            </li>
+            <li><a href="#">KHL ▾</a>
+                <ul>
+                    <li><a href="persetujuankhl_penanggungjawab.php">Persetujuan KHL</a></li>
+                    <li><a href="riwayatkhl_penanggungjawab.php">Riwayat KHL Divisi</a></li>
+                    <li><a href="pengajuankhl_penanggungjawab.php">Ajukan KHL Pribadi</a></li>
+                    <li><a href="kalender_khl_penanggungjawab.php">Kalender KHL Divisi</a></li>
+                    <li><a href="riwayat_khl_pribadi_penanggungjawab.php">Riwayat KHL Pribadi</a></li>
+                </ul>
+            </li>
+            <li><a href="karyawan_divisi.php">Karyawan Divisi</a></li>
+            <li><a href="#">Profil ▾</a>
+                <ul>
+                    <li><a href="profil_penanggungjawab.php">Profil Saya</a></li>
+                    <li><a href="logout2.php">Logout</a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
+</header>
+
 <main>
     <div class="card">
-        <h2 class="page-title">Riwayat KHL Pribadi</h2>
+        <div class="page-header">
+            <h1 class="page-title">Riwayat KHL Pribadi</h1>
+            <a href="pengajuankhl_penanggungjawab.php" class="btn">+ Ajukan KHL Baru</a>
         </div>
+
+        <!-- Info Pengguna -->
+        <div class="user-info">
+            <p><strong>Kode Karyawan:</strong> <?= htmlspecialchars($kode_karyawan) ?></p>
+            <p><strong>Nama:</strong> <?= htmlspecialchars($nama_pj) ?></p>
+            <p><strong>Divisi:</strong> <?= htmlspecialchars($divisi_pj) ?></p>
+            <p><strong>Jabatan:</strong> <?= htmlspecialchars($jabatan) ?></p>
+        </div>
+
+        <div class="table-container">
+            <?php if (empty($riwayat_khl)): ?>
+                <div class="empty-state">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23666'%3E%3Cpath d='M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z'/%3E%3C/svg%3E" alt="No Data">
+                    <h3>Belum Ada Riwayat KHL</h3>
+                    <p>Anda belum pernah mengajukan KHL. Ajukan KHL pertama Anda sekarang!</p>
+                    <a href="pengajuankhl_penanggungjawab.php" class="btn">Ajukan KHL Baru</a>
+                </div>
+            <?php else: ?>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID KHL</th>
+                            <th>Proyek</th>
+                            <th>Tanggal KHL</th>
+                            <th>Jam Kerja</th>
+                            <th>Tanggal Cuti KHL</th>
+                            <th>Jam Cuti</th>
+                            <th>Status</th>
+                            <th>Tanggal Pengajuan</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($riwayat_khl as $khl): ?>
+                            <tr>
+                                <td>#<?= $khl['id_khl'] ?></td>
+                                <td>
+                                    <strong><?= htmlspecialchars($khl['proyek']) ?></strong>
+                                    <?php if (!empty($khl['alasan_penolakan'])): ?>
+                                        <br><small style="color: #dc3545;">Alasan penolakan: <?= htmlspecialchars($khl['alasan_penolakan']) ?></small>
+                                    <?php endif; ?>
+                                </td>
+                                <td><?= date('d/m/Y', strtotime($khl['tanggal_khl'])) ?></td>
+                                <td class="jam-info">
+                                    <?= date('H:i', strtotime($khl['jam_mulai_kerja'])) ?> - 
+                                    <?= date('H:i', strtotime($khl['jam_akhir_kerja'])) ?>
+                                </td>
+                                <td><?= date('d/m/Y', strtotime($khl['tanggal_cuti_khl'])) ?></td>
+                                <td class="jam-info">
+                                    <?= date('H:i', strtotime($khl['jam_mulai_cuti_khl'])) ?> - 
+                                    <?= date('H:i', strtotime($khl['jam_akhir_cuti_khl'])) ?>
+                                </td>
+                                <td>
+                                    <?php
+                                    $status_class = '';
+                                    $status_text = '';
+                                    switch ($khl['status_khl']) {
+                                        case 'pending':
+                                            $status_class = 'status-pending';
+                                            $status_text = 'Menunggu';
+                                            break;
+                                        case 'disetujui':
+                                            $status_class = 'status-disetujui';
+                                            $status_text = 'Disetujui';
+                                            break;
+                                        case 'ditolak':
+                                            $status_class = 'status-ditolak';
+                                            $status_text = 'Ditolak';
+                                            break;
+                                        default:
+                                            $status_class = 'status-pending';
+                                            $status_text = 'Menunggu';
+                                    }
+                                    ?>
+                                    <span class="status-badge <?= $status_class ?>"><?= $status_text ?></span>
+                                </td>
+                                <td><?= date('d/m/Y H:i', strtotime($khl['created_at'])) ?></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <?php if ($khl['status_khl'] == 'pending'): ?>
+                                            <a href="edit_khl.php?id=<?= $khl['id_khl'] ?>" class="btn-small btn-edit">Edit</a>
+                                            <a href="hapus_khl.php?id=<?= $khl['id_khl'] ?>" class="btn-small btn-delete" onclick="return confirm('Yakin ingin menghapus pengajuan KHL ini?')">Hapus</a>
+                                        <?php else: ?>
+                                            <span style="color: #999; font-size: 0.8rem;">-</span>
+                                        <?php endif; ?>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+        </div>
+
+        <!-- Statistik Ringkas -->
+        <?php if (!empty($riwayat_khl)): ?>
+            <?php
+            $total_pengajuan = count($riwayat_khl);
+            $disetujui = array_filter($riwayat_khl, function($khl) {
+                return $khl['status_khl'] == 'disetujui';
+            });
+            $ditolak = array_filter($riwayat_khl, function($khl) {
+                return $khl['status_khl'] == 'ditolak';
+            });
+            $pending = array_filter($riwayat_khl, function($khl) {
+                return $khl['status_khl'] == 'pending';
+            });
+            ?>
+            <div style="margin-top: 30px; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+                <h4 style="margin-top: 0; color: var(--primary-color);">Statistik Pengajuan KHL</h4>
+                <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary-color);"><?= $total_pengajuan ?></div>
+                        <div style="font-size: 0.8rem; color: #666;">Total Pengajuan</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: bold; color: var(--status-disetujui);"><?= count($disetujui) ?></div>
+                        <div style="font-size: 0.8rem; color: #666;">Disetujui</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: bold; color: var(--status-pending);"><?= count($pending) ?></div>
+                        <div style="font-size: 0.8rem; color: #666;">Menunggu</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: bold; color: var(--status-ditolak);"><?= count($ditolak) ?></div>
+                        <div style="font-size: 0.8rem; color: #666;">Ditolak</div>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
+    </div>
 </main>
+
+<script>
+// Konfirmasi sebelum menghapus
+function confirmDelete(khlId) {
+    if (confirm('Apakah Anda yakin ingin menghapus pengajuan KHL ini?')) {
+        window.location.href = 'hapus_khl.php?id=' + khlId;
+    }
+    return false;
+}
+</script>
 </body>
 </html>

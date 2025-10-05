@@ -232,6 +232,7 @@ if (empty($divisi) || empty($jabatan)) {
       <p><strong>Nama:</strong> <?php echo htmlspecialchars($nama_lengkap); ?></p>
       <p><strong>Divisi:</strong> <?php echo htmlspecialchars($divisi); ?></p>
       <p><strong>Jabatan:</strong> <?php echo htmlspecialchars($jabatan); ?></p>
+      <p><strong>Role:</strong> <?php echo htmlspecialchars(ucfirst(str_replace('_', ' ', $user['role']))); ?></p>
     </div>
     
     <form method="post" action="proseskhl_karyawan.php">

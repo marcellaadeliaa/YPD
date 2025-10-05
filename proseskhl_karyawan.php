@@ -32,12 +32,35 @@ if (empty($nik) || empty($proyek) || empty($tanggal_khl) || empty($jam_mulai_ker
     exit();
 }
 
+// Ambil data karyawan untuk mendapatkan divisi, jabatan, dan role
+$query_karyawan = "SELECT divisi, jabatan, role FROM data_karyawan WHERE kode_karyawan = ?";
+$stmt_karyawan = mysqli_prepare($conn, $query_karyawan);
+mysqli_stmt_bind_param($stmt_karyawan, "s", $nik);
+mysqli_stmt_execute($stmt_karyawan);
+$result_karyawan = mysqli_stmt_get_result($stmt_karyawan);
+$karyawan = mysqli_fetch_assoc($result_karyawan);
+
+if (!$karyawan) {
+    header("Location: formkhlkaryawan.php?status=error&message=Data karyawan tidak ditemukan");
+    exit();
+}
+
+$divisi = $karyawan['divisi'];
+$jabatan = $karyawan['jabatan'];
+$role = $karyawan['role'];
+
+mysqli_stmt_close($stmt_karyawan);
+
+// Cek dan buat tabel jika belum ada
 $check_table = mysqli_query($conn, "SHOW TABLES LIKE 'data_pengajuan_khl'");
 if (mysqli_num_rows($check_table) == 0) {
-    // Tabel tidak ada, buat tabel dengan struktur yang benar
+    // Tabel tidak ada, buat tabel dengan struktur yang lengkap
     $create_table = "CREATE TABLE `data_pengajuan_khl` (
         `id_khl` int(11) NOT NULL AUTO_INCREMENT,
         `kode_karyawan` varchar(20) NOT NULL,
+        `divisi` varchar(50) NOT NULL,
+        `jabatan` varchar(50) NOT NULL,
+        `role` enum('karyawan','direktur','admin','penanggung jawab') NOT NULL DEFAULT 'karyawan',
         `proyek` varchar(100) NOT NULL,
         `tanggal_khl` date NOT NULL,
         `jam_mulai_kerja` time NOT NULL,
@@ -55,32 +78,49 @@ if (mysqli_num_rows($check_table) == 0) {
         exit();
     }
 } else {
-    // Tabel sudah ada, cek struktur kolom
-    $check_columns = mysqli_query($conn, "SHOW COLUMNS FROM data_pengajuan_khl LIKE 'proyek'");
-    if (mysqli_num_rows($check_columns) == 0) {
-        // Kolom proyek tidak ada, tambahkan kolom
-        $add_column = "ALTER TABLE data_pengajuan_khl ADD COLUMN proyek VARCHAR(100) NOT NULL AFTER kode_karyawan";
-        if (!mysqli_query($conn, $add_column)) {
-            header("Location: formkhlkaryawan.php?status=error&message=Gagal menambahkan kolom proyek");
-            exit();
+    // Periksa dan tambahkan kolom yang belum ada
+    $columns_to_check = [
+        'divisi' => "ALTER TABLE data_pengajuan_khl ADD COLUMN divisi VARCHAR(50) NOT NULL AFTER kode_karyawan",
+        'jabatan' => "ALTER TABLE data_pengajuan_khl ADD COLUMN jabatan VARCHAR(50) NOT NULL AFTER divisi",
+        'role' => "ALTER TABLE data_pengajuan_khl ADD COLUMN role ENUM('karyawan','direktur','admin','penanggung jawab') NOT NULL DEFAULT 'karyawan' AFTER jabatan",
+        'proyek' => "ALTER TABLE data_pengajuan_khl ADD COLUMN proyek VARCHAR(100) NOT NULL AFTER role"
+    ];
+    
+    foreach ($columns_to_check as $column_name => $alter_query) {
+        $check_column = mysqli_query($conn, "SHOW COLUMNS FROM data_pengajuan_khl LIKE '$column_name'");
+        if (mysqli_num_rows($check_column) == 0) {
+            if (!mysqli_query($conn, $alter_query)) {
+                header("Location: formkhlkaryawan.php?status=error&message=Gagal menambahkan kolom $column_name");
+                exit();
+            }
         }
     }
 }
 
-// Insert data
+// Insert data dengan informasi lengkap
 $sql = "INSERT INTO data_pengajuan_khl 
-        (kode_karyawan, proyek, tanggal_khl, jam_mulai_kerja, jam_akhir_kerja, 
+        (kode_karyawan, divisi, jabatan, role, proyek, tanggal_khl, jam_mulai_kerja, jam_akhir_kerja, 
          tanggal_cuti_khl, jam_mulai_cuti_khl, jam_akhir_cuti_khl, status_khl) 
-        VALUES ('$nik', '$proyek', '$tanggal_khl', '$jam_mulai_kerja', '$jam_akhir_kerja',
-                '$tanggal_cuti_khl', '$jam_mulai_cuti_khl', '$jam_akhir_cuti_khl', 'pending')";
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')";
 
-if (mysqli_query($conn, $sql)) {
-    // Redirect ke dashboard dengan pesan sukses
-    header("Location: dashboardkaryawan.php?status=success&message=Pengajuan KHL berhasil dikirim!");
+$stmt = mysqli_prepare($conn, $sql);
+if ($stmt) {
+    mysqli_stmt_bind_param($stmt, "sssssssssss", 
+        $nik, $divisi, $jabatan, $role, $proyek, $tanggal_khl, $jam_mulai_kerja, $jam_akhir_kerja,
+        $tanggal_cuti_khl, $jam_mulai_cuti_khl, $jam_akhir_cuti_khl);
+    
+    if (mysqli_stmt_execute($stmt)) {
+        // Redirect ke dashboard dengan pesan sukses
+        header("Location: dashboardkaryawan.php?status=success&message=Pengajuan KHL berhasil dikirim!");
+    } else {
+        $error_msg = "Gagal menyimpan data: " . mysqli_error($conn);
+        header("Location: formkhlkaryawan.php?status=error&message=" . urlencode($error_msg));
+    }
+    mysqli_stmt_close($stmt);
 } else {
-    $error_msg = "Gagal menyimpan data: " . mysqli_error($conn);
+    $error_msg = "Gagal mempersiapkan statement: " . mysqli_error($conn);
     header("Location: formkhlkaryawan.php?status=error&message=" . urlencode($error_msg));
 }
 
 mysqli_close($conn);
-?>
+?>                       

@@ -13,7 +13,7 @@ $user = $_SESSION['user'];
 $nik = $user['kode_karyawan'];
 $nama_lengkap = $user['nama_lengkap'];
 
-// Query riwayat KHL
+// Query riwayat KHL dengan data lengkap
 $query = "SELECT * FROM data_pengajuan_khl WHERE kode_karyawan = ? ORDER BY created_at DESC";
 $stmt = mysqli_prepare($conn, $query);
 
@@ -25,6 +25,7 @@ if ($stmt) {
     $result = false;
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -270,40 +271,48 @@ if ($stmt) {
         </div>
         
         <?php if ($result && mysqli_num_rows($result) > 0): ?>
-            <table>
-                <thead>
-                    <tr>
-                        <th>No</th>
-                        <th>Proyek</th>
-                        <th>Tanggal KHL</th>
-                        <th>Jam Kerja</th>
-                        <th>Tanggal Cuti</th>
-                        <th>Jam Cuti</th>
-                        <th>Status</th>
-                        <th>Tanggal Pengajuan</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php $no = 1; while ($row = mysqli_fetch_assoc($result)): ?>
-                    <tr>
-                        <td><?php echo $no++; ?></td>
-                        <td><?php echo htmlspecialchars($row['proyek']); ?></td>
-                        <td><?php echo date('d/m/Y', strtotime($row['tanggal_khl'])); ?></td>
-                        <td><?php echo $row['jam_mulai_kerja'] . ' - ' . $row['jam_akhir_kerja']; ?></td>
-                        <td><?php echo date('d/m/Y', strtotime($row['tanggal_cuti_khl'])); ?></td>
-                        <td><?php echo $row['jam_mulai_cuti_khl'] . ' - ' . $row['jam_akhir_cuti_khl']; ?></td>
-                        <td>
-                            <?php 
-                            $status_class = 'status-' . $row['status_khl'];
-                            $status_text = ucfirst($row['status_khl']);
-                            echo '<span class="' . $status_class . '">' . $status_text . '</span>';
-                            ?>
-                        </td>
-                        <td><?php echo date('d/m/Y H:i', strtotime($row['created_at'])); ?></td>
-                    </tr>
-                    <?php endwhile; ?>
-                </tbody>
-            </table>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Proyek</th>
+                            <th>Divisi</th>
+                            <th>Jabatan</th>
+                            <th>Role</th>
+                            <th>Tanggal KHL</th>
+                            <th>Jam Kerja</th>
+                            <th>Tanggal Cuti</th>
+                            <th>Jam Cuti</th>
+                            <th>Status</th>
+                            <th>Tanggal Pengajuan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php $no = 1; while ($row = mysqli_fetch_assoc($result)): ?>
+                        <tr>
+                            <td><?php echo $no++; ?></td>
+                            <td><?php echo htmlspecialchars($row['proyek']); ?></td>
+                            <td><?php echo htmlspecialchars($row['divisi']); ?></td>
+                            <td><?php echo htmlspecialchars($row['jabatan']); ?></td>
+                            <td><?php echo htmlspecialchars(ucfirst(str_replace('_', ' ', $row['role']))); ?></td>
+                            <td><?php echo date('d/m/Y', strtotime($row['tanggal_khl'])); ?></td>
+                            <td><?php echo $row['jam_mulai_kerja'] . ' - ' . $row['jam_akhir_kerja']; ?></td>
+                            <td><?php echo date('d/m/Y', strtotime($row['tanggal_cuti_khl'])); ?></td>
+                            <td><?php echo $row['jam_mulai_cuti_khl'] . ' - ' . $row['jam_akhir_cuti_khl']; ?></td>
+                            <td>
+                                <?php 
+                                $status_class = 'status-' . $row['status_khl'];
+                                $status_text = ucfirst($row['status_khl']);
+                                echo '<span class="' . $status_class . '">' . $status_text . '</span>';
+                                ?>
+                            </td>
+                            <td><?php echo date('d/m/Y H:i', strtotime($row['created_at'])); ?></td>
+                        </tr>
+                        <?php endwhile; ?>
+                    </tbody>
+                </table>
+            </div>
         <?php else: ?>
             <div class="empty-state">
                 <div>📋</div>

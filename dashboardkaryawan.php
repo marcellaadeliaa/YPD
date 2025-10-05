@@ -41,6 +41,7 @@ mysqli_stmt_close($stmt);
 $nama = $karyawan['nama_lengkap'];
 $sisa_cuti_tahunan = $karyawan['sisa_cuti_tahunan'];
 $sisa_cuti_lustrum = $karyawan['sisa_cuti_lustrum'];
+$kode_karyawan = $karyawan['kode_karyawan']; // Ambil kode_karyawan
 
 // Set nilai default untuk cuti dan KHL
 $tanggal_cuti = "-";
@@ -50,16 +51,16 @@ $tanggal_khl = "-";
 $jenis_khl = "-";
 $status_khl = null;
 
-// Query untuk mendapatkan pengajuan cuti terakhir (jika tabelnya ada)
-$sql_cuti = "SELECT * FROM pengajuan_cuti WHERE id_karyawan = ? ORDER BY created_at DESC LIMIT 1";
+// Query untuk mendapatkan pengajuan cuti terakhir - PERBAIKAN DI SINI
+$sql_cuti = "SELECT * FROM pengajuan_cuti WHERE kode_karyawan = ? ORDER BY created_at DESC LIMIT 1";
 $stmt_cuti = mysqli_prepare($conn, $sql_cuti);
 
 if ($stmt_cuti) {
-    mysqli_stmt_bind_param($stmt_cuti, "i", $user_id);
+    mysqli_stmt_bind_param($stmt_cuti, "s", $kode_karyawan); // Gunakan kode_karyawan
     mysqli_stmt_execute($stmt_cuti);
     $result_cuti = mysqli_stmt_get_result($stmt_cuti);
     if ($cuti = $result_cuti->fetch_assoc()) {
-        $tanggal_cuti = date('d/m/Y', strtotime($cuti['tanggal_mulai'])) . " - " . date('d/m/Y', strtotime($cuti['tanggal_selesai']));
+        $tanggal_cuti = date('d/m/Y', strtotime($cuti['tanggal_mulai'])) . " - " . date('d/m/Y', strtotime($cuti['tanggal_akhir'])); // Perbaiki field name
         $jenis_cuti = $cuti['jenis_cuti'];
         $status_cuti = $cuti['status'];
     }
@@ -71,7 +72,6 @@ $sql_khl = "SELECT * FROM data_pengajuan_khl WHERE kode_karyawan = ? ORDER BY cr
 $stmt_khl = mysqli_prepare($conn, $sql_khl);
 
 if ($stmt_khl) {
-    $kode_karyawan = $karyawan['kode_karyawan'];
     mysqli_stmt_bind_param($stmt_khl, "s", $kode_karyawan);
     mysqli_stmt_execute($stmt_khl);
     $result_khl = mysqli_stmt_get_result($stmt_khl);
@@ -346,7 +346,7 @@ h1 {text-align:center;font-size:26px;margin-bottom:30px;}
     <?php if ($status_cuti): ?>
       <div style="margin-top: 15px;">
         <span class="
-          <?= $status_cuti == 'Disetujui' ? 'status-approve' : 
+          <?= $status_cuti == 'Diterima' ? 'status-approve' : 
              ($status_cuti == 'Ditolak' ? 'status-rejected' : 'status-pending') ?>
         ">
           <?= htmlspecialchars($status_cuti) ?>
@@ -373,10 +373,10 @@ h1 {text-align:center;font-size:26px;margin-bottom:30px;}
     <?php if ($status_khl): ?>
       <div style="margin-top: 15px;">
         <span class="
-          <?= $status_khl == 'Disetujui' ? 'status-approve' : 
-             ($status_khl == 'Ditolak' ? 'status-rejected' : 'status-pending') ?>
+          <?= $status_khl == 'disetujui' ? 'status-approve' : 
+             ($status_khl == 'ditolak' ? 'status-rejected' : 'status-pending') ?>
         ">
-          <?= htmlspecialchars($status_khl) ?>
+          <?= htmlspecialchars(ucfirst($status_khl)) ?>
         </span>
       </div>
     <?php else: ?>
