@@ -5,9 +5,9 @@ require 'config.php';
 // Simulasi user direksi (untuk keperluan development)
 // Dalam produksi, bagian ini harus diganti dengan sistem login yang sesungguhnya
 $_SESSION['user'] = [
-    'role' => 'direksi',
-    'nama_lengkap' => 'Direksi Perusahaan',
-    'kode_karyawan' => 'DIR001'
+    'role' => 'direktur',
+    'nama_lengkap' => 'Pico',
+    'kode_karyawan' => 'YPD001'
 ];
 
 $user = $_SESSION['user'];
