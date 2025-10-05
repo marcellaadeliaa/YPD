@@ -175,7 +175,6 @@ $conn->close();
             <li><a href="#">Profil ▾</a>
                 <ul>
                     <li><a href="profil_penanggungjawab.php">Profil Saya</a></li>
-                    <li><a href="data_pribadi_penanggungjawab.php">Data Pribadi</a></li>
                     <li><a href="logout2.php">Logout</a></li>
                 </ul>
             </li>
