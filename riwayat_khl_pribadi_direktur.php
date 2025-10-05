@@ -2,75 +2,59 @@
 session_start();
 require 'config.php';
 
-// Simulasi user direksi (untuk keperluan development)
+// Simulasi user direktur (untuk keperluan development)
 // Dalam produksi, bagian ini harus diganti dengan sistem login yang sesungguhnya
 $_SESSION['user'] = [
-    'role' => 'direksi',
-    'nama_lengkap' => 'Direksi Perusahaan',
+    'role' => 'direktur',
+    'nama_lengkap' => 'Direktur Perusahaan',
     'kode_karyawan' => 'DIR001'
 ];
 
 $user = $_SESSION['user'];
-$nama_direksi = $user['nama_lengkap'];
+$nama_direktur = $user['nama_lengkap'];
+$kode_direktur = $user['kode_karyawan'];
 
 // Inisialisasi variabel filter
 $status_filter = isset($_GET['status_filter']) ? $_GET['status_filter'] : '';
-$divisi_filter = isset($_GET['divisi_filter']) ? $_GET['divisi_filter'] : '';
-$role_filter = isset($_GET['role_filter']) ? $_GET['role_filter'] : '';
 $start_date = isset($_GET['start_date']) ? $_GET['start_date'] : '';
 $end_date = isset($_GET['end_date']) ? $_GET['end_date'] : '';
 $search = isset($_GET['search']) ? $_GET['search'] : '';
 
-// Build query dengan filter
-$query = "SELECT dpk.*, dk.nama_lengkap, dk.divisi, dk.role 
-          FROM data_pengajuan_khl dpk 
-          JOIN data_karyawan dk ON dpk.kode_karyawan = dk.kode_karyawan 
-          WHERE 1=1";
+// Build query dengan filter untuk data pribadi direktur
+$query = "SELECT * FROM data_pengajuan_khl 
+          WHERE role = 'direktur' AND kode_karyawan = ?";
 
-$params = [];
-$types = '';
+$params = [$kode_direktur];
+$types = 's';
 
 // Tambahkan kondisi filter berdasarkan input
 if (!empty($status_filter)) {
-    $query .= " AND dpk.status_khl = ?";
+    $query .= " AND status_khl = ?";
     $params[] = $status_filter;
     $types .= 's';
 }
 
-if (!empty($divisi_filter)) {
-    $query .= " AND dk.divisi = ?";
-    $params[] = $divisi_filter;
-    $types .= 's';
-}
-
-if (!empty($role_filter)) {
-    $query .= " AND dk.role = ?";
-    $params[] = $role_filter;
-    $types .= 's';
-}
-
 if (!empty($start_date)) {
-    $query .= " AND DATE(dpk.created_at) >= ?";
+    $query .= " AND DATE(tanggal_khl) >= ?";
     $params[] = $start_date;
     $types .= 's';
 }
 
 if (!empty($end_date)) {
-    $query .= " AND DATE(dpk.created_at) <= ?";
+    $query .= " AND DATE(tanggal_khl) <= ?";
     $params[] = $end_date;
     $types .= 's';
 }
 
 if (!empty($search)) {
-    $query .= " AND (dk.nama_lengkap LIKE ? OR dk.kode_karyawan LIKE ? OR dpk.proyek LIKE ?)";
+    $query .= " AND (proyek LIKE ? OR kode_karyawan LIKE ?)";
     $search_term = "%$search%";
     $params[] = $search_term;
     $params[] = $search_term;
-    $params[] = $search_term;
-    $types .= 'sss';
+    $types .= 'ss';
 }
 
-$query .= " ORDER BY dpk.created_at DESC";
+$query .= " ORDER BY tanggal_khl DESC";
 
 // Prepare dan execute query
 $stmt = $conn->prepare($query);
@@ -82,23 +66,32 @@ if (!empty($params)) {
 $stmt->execute();
 $result = $stmt->get_result();
 
-// Hitung statistik untuk semua data (tanpa filter)
+// Hitung statistik untuk data pribadi direktur
 $stats_query = "SELECT 
     COUNT(*) as total_khl,
     SUM(CASE WHEN status_khl = 'disetujui' THEN 1 ELSE 0 END) as disetujui,
     SUM(CASE WHEN status_khl = 'ditolak' THEN 1 ELSE 0 END) as ditolak,
     SUM(CASE WHEN status_khl = 'pending' THEN 1 ELSE 0 END) as pending
-    FROM data_pengajuan_khl";
-$stats_result = $conn->query($stats_query);
+    FROM data_pengajuan_khl 
+    WHERE role = 'direktur' AND kode_karyawan = ?";
+    
+$stats_stmt = $conn->prepare($stats_query);
+$stats_stmt->bind_param("s", $kode_direktur);
+$stats_stmt->execute();
+$stats_result = $stats_stmt->get_result();
 $stats = $stats_result->fetch_assoc();
 
-$total_khl = $stats['total_khl'];
-$disetujui = $stats['disetujui'];
-$ditolak = $stats['ditolak'];
-$pending = $stats['pending'];
+$total_khl = $stats['total_khl'] ?? 0;
+$disetujui = $stats['disetujui'] ?? 0;
+$ditolak = $stats['ditolak'] ?? 0;
+$pending = $stats['pending'] ?? 0;
+
+$stats_stmt->close();
 
 // Reset pointer result untuk iterasi data
-$result->data_seek(0);
+if ($result) {
+    $result->data_seek(0);
+}
 ?>
 
 <!DOCTYPE html>
@@ -106,7 +99,7 @@ $result->data_seek(0);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Riwayat KHL Perusahaan - Direksi</title>
+    <title>Riwayat KHL Pribadi - Direktur</title>
     <style>
         :root { 
             --primary-color: #1E105E; 
@@ -425,17 +418,7 @@ $result->data_seek(0);
             font-weight: 500;
         }
         
-        .role-karyawan {
-            background: #d4edda;
-            color: #155724;
-        }
-        
-        .role-penanggung-jawab {
-            background: #cce7ff;
-            color: #004085;
-        }
-        
-        .role-direksi {
+        .role-direktur {
             background: #f8d7da;
             color: #721c24;
         }
@@ -478,42 +461,34 @@ $result->data_seek(0);
     <div class="logo"><img src="image/namayayasan.png" alt="Logo"><span>Yayasan Purba Danarta</span></div>
     <nav>
         <ul>
-            <li><a href="dashboarddirektur.php">Beranda</a></li>
+            <li><a href="dashboard_direktur.php">Beranda</a></li>
             <li><a href="#">Cuti ▾</a>
                 <ul>
-                    <li><a href="persetujuan_cuti_direksi.php">Persetujuan Cuti</a></li>
-                    <li><a href="riwayat_cuti_direktur.php">Riwayat Cuti Perusahaan</a></li>
-                    <li><a href="kalender_cuti_direksi.php">Kalender Cuti Perusahaan</a></li>
+                    <li><a href="riwayat_cuti_pribadi_direktur.php">Riwayat Cuti Pribadi</a></li>
                 </ul>
             </li>
             <li><a href="#">KHL ▾</a>
                 <ul>
-                    <li><a href="persetujuan_khl_direksi.php">Persetujuan KHL</a></li>
-                    <li><a href="riwayat_khl_direktur.php">Riwayat KHL Perusahaan</a></li>
-                    <li><a href="kalender_khl_direksi.php">Kalender KHL Perusahaan</a></li>
+                    <li><a href="riwayat_khl_pribadi_direktur.php">Riwayat KHL Pribadi</a></li>
                 </ul>
             </li>
-            <li><a href="data_karyawan_direksi.php">Data Karyawan</a></li>
-            <li><a href="#">Profil ▾</a>
-                <ul>
-                    <li><a href="profil_direksi.php">Profil Saya</a></li>
-                    <li><a href="logout2.php">Logout</a></li>
-                </ul>
-            </li>
+            <li><a href="profil_direktur.php">Profil</a></li>
+            <li><a href="logout.php">Logout</a></li>
         </ul>
     </nav>
 </header>
 
 <main>
     <div class="heading-section">
-        <h1>Riwayat Kerja Hari Libur (KHL)</h1>
-        <p>Riwayat pengajuan KHL seluruh perusahaan</p>
+        <h1>Riwayat Kerja Hari Libur (KHL) Pribadi</h1>
+        <p>Riwayat pengajuan KHL pribadi Anda sebagai Direktur</p>
     </div>
     
     <div class="container">
         <div class="info-divisi">
-            <strong>Peran:</strong> Direksi | 
-            <strong>Nama:</strong> <?php echo htmlspecialchars($nama_direksi); ?>
+            <strong>Peran:</strong> Direktur | 
+            <strong>Nama:</strong> <?php echo htmlspecialchars($nama_direktur); ?> |
+            <strong>Kode:</strong> <?php echo htmlspecialchars($kode_direktur); ?>
         </div>
 
         <!-- Tampilkan pesan status dari persetujuan -->
@@ -553,7 +528,7 @@ $result->data_seek(0);
         <div class="filter-section">
             <form method="GET" class="search-box">
                 <input type="text" name="search" value="<?php echo htmlspecialchars($search); ?>" 
-                       placeholder="Cari berdasarkan nama, kode karyawan, atau proyek...">
+                       placeholder="Cari berdasarkan proyek atau kode karyawan...">
                 <button type="submit">🔍 Cari</button>
             </form>
 
@@ -568,33 +543,11 @@ $result->data_seek(0);
                     <option value="ditolak" <?php echo ($status_filter == 'ditolak') ? 'selected' : ''; ?>>Ditolak</option>
                 </select>
                 
-                <select name="divisi_filter">
-                    <option value="">Semua Divisi</option>
-                    <?php
-                    // Ambil daftar divisi unik
-                    $divisi_query = "SELECT DISTINCT divisi FROM data_karyawan ORDER BY divisi";
-                    $divisi_result = $conn->query($divisi_query);
-                    while ($divisi = $divisi_result->fetch_assoc()):
-                    ?>
-                        <option value="<?php echo $divisi['divisi']; ?>" 
-                            <?php echo ($divisi_filter == $divisi['divisi']) ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($divisi['divisi']); ?>
-                        </option>
-                    <?php endwhile; ?>
-                </select>
-                
-                <select name="role_filter">
-                    <option value="">Semua Role</option>
-                    <option value="karyawan" <?php echo ($role_filter == 'karyawan') ? 'selected' : ''; ?>>Karyawan</option>
-                    <option value="penanggung jawab" <?php echo ($role_filter == 'penanggung jawab') ? 'selected' : ''; ?>>Penanggung Jawab</option>
-                    <option value="direksi" <?php echo ($role_filter == 'direksi') ? 'selected' : ''; ?>>Direksi</option>
-                </select>
-                
                 <input type="date" name="start_date" value="<?php echo htmlspecialchars($start_date); ?>" placeholder="Dari Tanggal">
                 <input type="date" name="end_date" value="<?php echo htmlspecialchars($end_date); ?>" placeholder="Sampai Tanggal">
                 
                 <button type="submit">Filter</button>
-                <a href="riwayat_khl_direktur.php" style="color: var(--primary-color); text-decoration: none; margin-left: 10px;">Reset</a>
+                <a href="riwayat_khl_pribadi_direktur.php" style="color: var(--primary-color); text-decoration: none; margin-left: 10px;">Reset</a>
             </form>
         </div>
 
@@ -602,8 +555,6 @@ $result->data_seek(0);
         <?php 
         $active_filters = [];
         if (!empty($status_filter)) $active_filters[] = "Status: " . ucfirst($status_filter);
-        if (!empty($divisi_filter)) $active_filters[] = "Divisi: " . $divisi_filter;
-        if (!empty($role_filter)) $active_filters[] = "Role: " . ucfirst($role_filter);
         if (!empty($start_date)) $active_filters[] = "Dari: " . $start_date;
         if (!empty($end_date)) $active_filters[] = "Sampai: " . $end_date;
         if (!empty($search)) $active_filters[] = "Pencarian: " . $search;
@@ -617,25 +568,26 @@ $result->data_seek(0);
 
         <!-- Jumlah Hasil -->
         <?php 
-        $filtered_count = $result->num_rows;
+        $filtered_count = $result ? $result->num_rows : 0;
         if ($filtered_count > 0): 
         ?>
             <div class="result-count">
-                Menampilkan <?php echo $filtered_count; ?> data KHL
+                Menampilkan <?php echo $filtered_count; ?> data KHL pribadi
                 <?php if ($filtered_count < $total_khl): ?>
                     (difilter dari total <?php echo $total_khl; ?> data)
                 <?php endif; ?>
             </div>
         <?php endif; ?>
         
-        <?php if ($result->num_rows > 0): ?>
+        <?php if ($result && $result->num_rows > 0): ?>
             <table>
                 <thead>
                     <tr>
                         <th>No</th>
+                        <th>ID KHL</th>
                         <th>Kode</th>
-                        <th>Nama</th>
                         <th>Divisi</th>
+                        <th>Jabatan</th>
                         <th>Role</th>
                         <th>Proyek</th>
                         <th>Tanggal KHL</th>
@@ -644,7 +596,6 @@ $result->data_seek(0);
                         <th>Jam Cuti</th>
                         <th>Status</th>
                         <th>Alasan Penolakan</th>
-                        <th>Tanggal Pengajuan</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -654,11 +605,12 @@ $result->data_seek(0);
                     ?>
                         <tr>
                             <td><?php echo $no++; ?></td>
+                            <td><?php echo htmlspecialchars($row['id_khl'] ?? ''); ?></td>
                             <td><?php echo htmlspecialchars($row['kode_karyawan']); ?></td>
-                            <td><?php echo htmlspecialchars($row['nama_lengkap']); ?></td>
                             <td><?php echo htmlspecialchars($row['divisi']); ?></td>
+                            <td><?php echo htmlspecialchars($row['jabatan']); ?></td>
                             <td>
-                                <span class="role-badge role-<?php echo str_replace(' ', '-', $row['role']); ?>">
+                                <span class="role-badge role-direktur">
                                     <?php echo htmlspecialchars(ucfirst($row['role'])); ?>
                                 </span>
                             </td>
@@ -675,7 +627,7 @@ $result->data_seek(0);
                                         'disetujui' => 'Disetujui',
                                         'ditolak' => 'Ditolak'
                                     ];
-                                    echo $status_text[$row['status_khl']]; 
+                                    echo $status_text[$row['status_khl']] ?? $row['status_khl']; 
                                     ?>
                                 </span>
                             </td>
@@ -690,23 +642,22 @@ $result->data_seek(0);
                                     <div class="alasan-penolakan empty">-</div>
                                 <?php endif; ?>
                             </td>
-                            <td><?php echo date('d/m/Y H:i', strtotime($row['created_at'])); ?></td>
                         </tr>
                     <?php endwhile; ?>
                 </tbody>
             </table>
         <?php else: ?>
             <div class="no-data">
-                <p>Belum ada riwayat KHL untuk perusahaan</p>
+                <p>Belum ada riwayat KHL pribadi</p>
                 <?php if (!empty($active_filters)): ?>
-                    <p><small>Atau tidak ada data yang sesuai dengan filter yang diterapkan. <a href="riwayat_khl_direktur.php" style="color: var(--primary-color);">Tampilkan semua data</a></small></p>
+                    <p><small>Atau tidak ada data yang sesuai dengan filter yang diterapkan. <a href="riwayat_khl_pribadi_direktur.php" style="color: var(--primary-color);">Tampilkan semua data</a></small></p>
                 <?php endif; ?>
             </div>
         <?php endif; ?>
         
         <div style="text-align: center; margin-top: 30px;">
-            <a href="persetujuan_khl_direksi.php" class="back-link">📋 Kembali ke Persetujuan KHL</a>
-            <a href="dashboard_direksi.php" class="back-link">← Kembali ke Dashboard</a>
+            <a href="pengajuan_khl_direktur.php" class="back-link">📋 Ajukan KHL Baru</a>
+            <a href="dashboard_direktur.php" class="back-link">← Kembali ke Dashboard</a>
         </div>
     </div>
 </main>
@@ -715,6 +666,8 @@ $result->data_seek(0);
 
 <?php
 // Tutup koneksi
-$stmt->close();
+if (isset($stmt)) {
+    $stmt->close();
+}
 $conn->close();
 ?>
