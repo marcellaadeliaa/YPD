@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 04 Okt 2025 pada 08.48
+-- Waktu pembuatan: 05 Okt 2025 pada 06.22
 -- Versi server: 10.4.22-MariaDB
 -- Versi PHP: 7.3.33
 
@@ -125,6 +125,33 @@ INSERT INTO `data_pelamar` (`id`, `user_id`, `nama_lengkap`, `posisi_dilamar`, `
 (14, 23, 'Kelra', 'Wisma', 'Laki-laki', 'Medan', '2001-02-11', '1234512347', 'Jl. Mawar Medan', 'Jl. Pawiyatan Luhur Semarang', '081868456985', 'kelra123@gmail.com', 'Khonghucu', '081256478988', 'Sarjana', 'uploads/1759560025-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560025-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560025-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560025-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560025-Pernyataan_Penyelesaian_Proyek.docx', NULL, 'Diterima', 'Proses seleksi sedang berlangsung', 'Belum ada pengumuman saat ini.', '2025-10-04 06:40:25'),
 (15, 24, 'Lyra', 'SDM', 'Perempuan', 'Denpasar', '2005-05-05', '1122334457', 'Jl. Residence Denpasar', 'Jl. Pawiyatan Luhur Semarang', '081868456987', 'lyra1234@gmail.com', 'Hindu', '081256478988', 'Sarjana', 'uploads/1759560177-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560177-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560177-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560177-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560177-Pernyataan_Penyelesaian_Proyek.docx', NULL, 'Diterima', 'Proses seleksi sedang berlangsung', 'Belum ada pengumuman saat ini.', '2025-10-04 06:42:57'),
 (16, 25, 'Yovan', 'SDM', 'Laki-laki', 'Malang', '2001-02-21', '1234512346', 'Jl. Mawar Malang', 'Jl. Pawiyatan Luhur Semarang', '081868456985', 'yovan1234@gmail.com', 'Katholik', '081258962812', 'Sarjana', 'uploads/1759560300-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560300-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560300-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560300-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560300-Pernyataan_Penyelesaian_Proyek.docx', NULL, 'Diterima', 'Proses seleksi sedang berlangsung', 'Belum ada pengumuman saat ini.', '2025-10-04 06:45:00');
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `data_pengajuan_khl`
+--
+
+CREATE TABLE `data_pengajuan_khl` (
+  `id_khl` int(11) NOT NULL,
+  `kode_karyawan` varchar(20) NOT NULL,
+  `proyek` varchar(100) NOT NULL,
+  `tanggal_khl` date NOT NULL,
+  `jam_mulai_kerja` time NOT NULL,
+  `jam_akhir_kerja` time NOT NULL,
+  `tanggal_cuti_khl` date NOT NULL,
+  `jam_mulai_cuti_khl` time NOT NULL,
+  `jam_akhir_cuti_khl` time NOT NULL,
+  `status_khl` enum('pending','disetujui','ditolak') DEFAULT 'pending',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data untuk tabel `data_pengajuan_khl`
+--
+
+INSERT INTO `data_pengajuan_khl` (`id_khl`, `kode_karyawan`, `proyek`, `tanggal_khl`, `jam_mulai_kerja`, `jam_akhir_kerja`, `tanggal_cuti_khl`, `jam_mulai_cuti_khl`, `jam_akhir_cuti_khl`, `status_khl`, `created_at`) VALUES
+(1, 'YPD021', 'Projek Training Karyawan Baru', '2025-10-06', '08:00:00', '18:00:00', '2025-10-14', '08:00:00', '17:00:00', 'pending', '2025-10-05 04:17:15');
 
 -- --------------------------------------------------------
 
@@ -528,6 +555,13 @@ ALTER TABLE `data_pelamar`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indeks untuk tabel `data_pengajuan_khl`
+--
+ALTER TABLE `data_pengajuan_khl`
+  ADD PRIMARY KEY (`id_khl`),
+  ADD KEY `kode_karyawan` (`kode_karyawan`);
+
+--
 -- Indeks untuk tabel `lamaran`
 --
 ALTER TABLE `lamaran`
@@ -625,6 +659,12 @@ ALTER TABLE `data_pelamar`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
+-- AUTO_INCREMENT untuk tabel `data_pengajuan_khl`
+--
+ALTER TABLE `data_pengajuan_khl`
+  MODIFY `id_khl` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- AUTO_INCREMENT untuk tabel `lamaran`
 --
 ALTER TABLE `lamaran`
@@ -699,6 +739,12 @@ ALTER TABLE `users`
 --
 -- Ketidakleluasaan untuk tabel pelimpahan (Dumped Tables)
 --
+
+--
+-- Ketidakleluasaan untuk tabel `data_pengajuan_khl`
+--
+ALTER TABLE `data_pengajuan_khl`
+  ADD CONSTRAINT `data_pengajuan_khl_ibfk_1` FOREIGN KEY (`kode_karyawan`) REFERENCES `data_karyawan` (`kode_karyawan`);
 
 --
 -- Ketidakleluasaan untuk tabel `lamaran`

@@ -3,27 +3,29 @@ session_start();
 require_once 'config.php';
 
 // Cek apakah user sudah login
-if (!isset($_SESSION['user_id']) && !isset($_SESSION['user'])) {
+if (!isset($_SESSION['user'])) {
     header("Location: login_karyawan.php");
     exit;
 }
 
-// Tentukan user_id berdasarkan session yang ada
-if (isset($_SESSION['user_id'])) {
-    $user_id = $_SESSION['user_id'];
-} elseif (isset($_SESSION['user']['id_karyawan'])) {
-    $user_id = $_SESSION['user']['id_karyawan'];
-} else {
-    header("Location: login_karyawan.php");
-    exit;
-}
+// Ambil data dari session
+$user = $_SESSION['user'];
+$user_id = $user['id_karyawan'];
+$nik = $user['kode_karyawan'];
+$nama_lengkap = $user['nama_lengkap'];
 
 // Ambil data karyawan dari database
 $sql = "SELECT * FROM data_karyawan WHERE id_karyawan = ?";
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$result = $stmt->get_result();
+$stmt = mysqli_prepare($conn, $sql);
+
+// Cek jika prepared statement gagal
+if (!$stmt) {
+    die("Error preparing statement: " . mysqli_error($conn));
+}
+
+mysqli_stmt_bind_param($stmt, "i", $user_id);
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
 $karyawan = $result->fetch_assoc();
 
 // Jika data tidak ditemukan, hapus session dan redirect ke login
@@ -33,7 +35,7 @@ if (!$karyawan) {
     exit;
 }
 
-$stmt->close();
+mysqli_stmt_close($stmt);
 
 // Ambil data dari database
 $nama = $karyawan['nama_lengkap'];
@@ -47,8 +49,40 @@ $status_cuti = null;
 $tanggal_khl = "-";
 $jenis_khl = "-";
 $status_khl = null;
-?>
 
+// Query untuk mendapatkan pengajuan cuti terakhir (jika tabelnya ada)
+$sql_cuti = "SELECT * FROM pengajuan_cuti WHERE id_karyawan = ? ORDER BY created_at DESC LIMIT 1";
+$stmt_cuti = mysqli_prepare($conn, $sql_cuti);
+
+if ($stmt_cuti) {
+    mysqli_stmt_bind_param($stmt_cuti, "i", $user_id);
+    mysqli_stmt_execute($stmt_cuti);
+    $result_cuti = mysqli_stmt_get_result($stmt_cuti);
+    if ($cuti = $result_cuti->fetch_assoc()) {
+        $tanggal_cuti = date('d/m/Y', strtotime($cuti['tanggal_mulai'])) . " - " . date('d/m/Y', strtotime($cuti['tanggal_selesai']));
+        $jenis_cuti = $cuti['jenis_cuti'];
+        $status_cuti = $cuti['status'];
+    }
+    mysqli_stmt_close($stmt_cuti);
+}
+
+// Query untuk mendapatkan pengajuan KHL terakhir
+$sql_khl = "SELECT * FROM data_pengajuan_khl WHERE kode_karyawan = ? ORDER BY created_at DESC LIMIT 1";
+$stmt_khl = mysqli_prepare($conn, $sql_khl);
+
+if ($stmt_khl) {
+    $kode_karyawan = $karyawan['kode_karyawan'];
+    mysqli_stmt_bind_param($stmt_khl, "s", $kode_karyawan);
+    mysqli_stmt_execute($stmt_khl);
+    $result_khl = mysqli_stmt_get_result($stmt_khl);
+    if ($khl = $result_khl->fetch_assoc()) {
+        $tanggal_khl = date('d/m/Y', strtotime($khl['tanggal_khl']));
+        $jenis_khl = $khl['proyek'];
+        $status_khl = $khl['status_khl'];
+    }
+    mysqli_stmt_close($stmt_khl);
+}
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -255,6 +289,10 @@ h1 {text-align:center;font-size:26px;margin-bottom:30px;}
     <h3>Informasi Pribadi</h3>
     <div class="info-grid">
       <div class="info-item">
+        <strong>Kode Karyawan:</strong><br>
+        <?= htmlspecialchars($karyawan['kode_karyawan']) ?>
+      </div>
+      <div class="info-item">
         <strong>Nama:</strong><br>
         <?= htmlspecialchars($karyawan['nama_lengkap']) ?>
       </div>
@@ -269,6 +307,10 @@ h1 {text-align:center;font-size:26px;margin-bottom:30px;}
       <div class="info-item">
         <strong>Role:</strong><br>
         <?= htmlspecialchars($karyawan['role']) ?>
+      </div>
+      <div class="info-item">
+        <strong>Email:</strong><br>
+        <?= htmlspecialchars($karyawan['email']) ?>
       </div>
     </div>
     <a href="data_pribadi.php" class="btn" style="margin-top: 15px;">Lihat Detail Lengkap</a>
