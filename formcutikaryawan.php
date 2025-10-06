@@ -1,9 +1,38 @@
 <?php
 session_start();
-// if (!isset($_SESSION['user_id'])) {
-//     header("Location: login.php");
-//     exit;
-// }
+require_once 'config.php';
+
+// Cek apakah user sudah login
+if (!isset($_SESSION['user'])) {
+    header("Location: login_karyawan.php");
+    exit();
+}
+
+// Ambil data dari session
+$user = $_SESSION['user'];
+$nik = $user['kode_karyawan'];
+$nama_lengkap = $user['nama_lengkap'];
+$divisi = $user['divisi'];
+$jabatan = $user['jabatan'];
+
+// Jika ada data yang kosong, ambil dari database
+if (empty($divisi) || empty($jabatan)) {
+    $query_karyawan = "SELECT divisi, jabatan FROM data_karyawan WHERE kode_karyawan = ?";
+    $stmt = mysqli_prepare($conn, $query_karyawan);
+    mysqli_stmt_bind_param($stmt, "s", $nik);
+    mysqli_stmt_execute($stmt);
+    $result_karyawan = mysqli_stmt_get_result($stmt);
+    $karyawan_detail = mysqli_fetch_assoc($result_karyawan);
+    
+    if ($karyawan_detail) {
+        $divisi = $karyawan_detail['divisi'];
+        $jabatan = $karyawan_detail['jabatan'];
+        // Update session
+        $_SESSION['user']['divisi'] = $divisi;
+        $_SESSION['user']['jabatan'] = $jabatan;
+    }
+    mysqli_stmt_close($stmt);
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -15,20 +44,18 @@ session_start();
   body {
     margin:0;
     font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    /* Satu gradasi penuh dari atas ke bawah */
     background: linear-gradient(180deg,#1E105E 0%,#8897AE 100%);
     min-height:100vh;
     display:flex;
     flex-direction:column;
   }
   header {
-    background:rgba(255, 255, 255, 1);
+    background:#fff;
     padding:20px 40px;
     display:flex;
     justify-content:space-between;
     align-items:center;
     border-bottom:2px solid #34377c;
-    backdrop-filter: blur(5px);
   }
   .logo {display:flex;align-items:center;gap:16px;font-weight:500;font-size:20px;color:#2e1f4f;}
   .logo img {width:140px;height:50px;object-fit:contain;}
@@ -66,22 +93,25 @@ session_start();
   }
   h2 {
     text-align:center;
-    font-size:24px;
+    font-size:22px;
     color:#2e1f4f;
-    margin-bottom:25px;
-    border-bottom:2px solid #eee;
-    padding-bottom:10px;
+    margin-bottom:20px;
   }
-  label {display:block;font-weight:600;margin:18px 0 6px;color:#222;}
+  label {display:block;font-weight:600;margin:16px 0 6px;color:#222;}
   input[type="text"],
   input[type="date"],
-  select {
+  select,
+  textarea {
     width:100%;
     padding:10px;
     border:1px solid #ccc;
     border-radius:8px;
     background-color:#f9f9f9;
     box-sizing:border-box;
+  }
+  textarea {
+    min-height: 80px;
+    resize: vertical;
   }
   button {
     display:block;
@@ -98,20 +128,113 @@ session_start();
   }
   button:hover {background-color:#3a3162;}
   
-  /* Style untuk input manual yang tersembunyi */
-  .manual-input {
+  .success-message {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 12px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    border: 1px solid #c3e6cb;
+    text-align: center;
+  }
+  
+  .error-message {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 12px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    border: 1px solid #f5c6cb;
+    text-align: center;
+  }
+  
+  .user-info {
+    background-color: #f0f0f0;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border-left: 4px solid #4a3f81;
+  }
+  
+  .user-info p {
+    margin: 8px 0;
+    font-size: 14px;
+    color: #333;
+  }
+  
+  .user-info strong {
+    color: #4a3f81;
+  }
+
+  .info-message {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    padding: 12px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    border: 1px solid #bee5eb;
+    text-align: center;
+  }
+
+  /* Style untuk input conditional */
+  .conditional-input {
     display: none;
     margin-top: 10px;
     animation: fadeIn 0.3s ease-in;
   }
   
-  .manual-input.show {
+  .conditional-input.show {
     display: block;
   }
   
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-10px); }
     to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .date-range-container {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  
+  .date-range-container input {
+    flex: 1;
+  }
+  
+  .date-range-container span {
+    font-weight: bold;
+    color: #4a3f81;
+  }
+  
+  small {
+    display:block;
+    margin-top:5px;
+    color:#666;
+    font-size:12px;
+  }
+  
+  .file-input-container {
+    margin-top: 5px;
+  }
+  
+  .file-input-container input[type="file"] {
+    padding: 8px;
+    border: 1px dashed #ccc;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    width: 100%;
+  }
+  
+  .max-days-info {
+    color: #e74c3c;
+    font-weight: 600;
+    font-size: 12px;
+    margin-top: 5px;
+    padding: 5px;
+    background-color: #fdf2f2;
+    border-radius: 4px;
+    border-left: 3px solid #e74c3c;
   }
 </style>
 </head>
@@ -121,9 +244,9 @@ session_start();
     <img src="image/namayayasan.png" alt="Logo Yayasan">
     <span>Yayasan Purba Danarta</span>
   </div>
-   <nav>
+  <nav>
     <ul>
-      <li><a href="dashboard.php">Beranda</a></li>
+      <li><a href="dashboardkaryawan.php">Beranda</a></li>
       <li><a href="#">Cuti ▾</a>
         <ul>
           <li><a href="formcutikaryawan.php">Pengajuan Cuti</a></li>
@@ -139,7 +262,7 @@ session_start();
       <li><a href="#">Profil ▾</a>
         <ul>
           <li><a href="data_pribadi.php">Data Pribadi</a></li>
-          <li><a href="logout.php">Logout</a></li>
+          <li><a href="logout2.php">Logout</a></li>
         </ul>
       </li>
     </ul>
@@ -149,68 +272,246 @@ session_start();
 <main>
   <div class="form-container">
     <h2>Pengajuan Cuti</h2>
-    <form method="post" action="prosescuti_karyawan.php" id="formCuti">
+    
+    <!-- Tampilkan pesan sukses/error jika ada -->
+    <?php
+    if (isset($_GET['status'])) {
+        if ($_GET['status'] == 'success') {
+            $success_message = isset($_GET['message']) ? 
+                htmlspecialchars($_GET['message']) : 'Pengajuan cuti berhasil dikirim!';
+            echo '<div class="success-message">' . $success_message . '</div>';
+        } elseif ($_GET['status'] == 'error') {
+            $error_message = isset($_GET['message']) ? 
+                htmlspecialchars($_GET['message']) : 'Terjadi kesalahan. Silakan coba lagi.';
+            echo '<div class="error-message">' . $error_message . '</div>';
+        } elseif ($_GET['status'] == 'info') {
+            $info_message = isset($_GET['message']) ? 
+                htmlspecialchars($_GET['message']) : 'Informasi';
+            echo '<div class="info-message">' . $info_message . '</div>';
+        }
+    }
+    ?>
+
+    <!-- Info Pengguna -->
+    <div class="user-info">
+      <p><strong>Kode Karyawan:</strong> <?php echo htmlspecialchars($nik); ?></p>
+      <p><strong>Nama:</strong> <?php echo htmlspecialchars($nama_lengkap); ?></p>
+      <p><strong>Divisi:</strong> <?php echo htmlspecialchars($divisi); ?></p>
+      <p><strong>Jabatan:</strong> <?php echo htmlspecialchars($jabatan); ?></p>
+    </div>
+    
+    <form method="post" action="prosescuti_karyawan.php" id="formCuti" enctype="multipart/form-data">
+      
       <label>No. Induk Karyawan</label>
-      <input type="text" name="nik" value="YPD002" readonly>
+      <input type="text" name="nik" value="<?php echo htmlspecialchars($nik); ?>" readonly>
+
+      <label>Nama Karyawan</label>
+      <input type="text" value="<?php echo htmlspecialchars($nama_lengkap); ?>" readonly>
+
+      <label>Divisi</label>
+      <input type="text" value="<?php echo htmlspecialchars($divisi); ?>" readonly>
 
       <label>Jenis Cuti</label>
-      <select name="jenis_cuti" id="jenisCuti" required onchange="toggleManualInput()">
+      <select name="jenis_cuti" id="jenisCuti" required onchange="toggleConditionalInputs()">
         <option value="">Pilih Jenis Cuti</option>
         <option value="Tahunan">Cuti Tahunan</option>
         <option value="Lustrum">Cuti Lustrum</option>
         <option value="Khusus">Cuti Khusus</option>
-        <option value="Sakit">Cuti Diluar Tanggungan</option>
+        <option value="DiluarTanggungan">Cuti Diluar Tanggungan</option>
         <option value="Sakit">Cuti Sakit</option>
         <option value="Ibadah">Cuti Ibadah</option>
-        <option value="Lainnya">Lainnya</option>
       </select>
 
-      <!-- Input manual untuk jenis cuti lainnya -->
-      <div id="manualInputContainer" class="manual-input">
-        <label for="jenis_cuti_manual">Tulis Jenis Cuti</label>
-        <input type="text" name="jenis_cuti_manual" id="jenis_cuti_manual" placeholder="Masukkan jenis cuti lainnya...">
+      <!-- Pilihan dropdown untuk jenis cuti khusus -->
+      <div id="khususInputContainer" class="conditional-input">
+        <label for="jenis_cuti_khusus">Jenis Cuti Khusus</label>
+        <select name="jenis_cuti_khusus" id="jenis_cuti_khusus" onchange="updateMaxDaysInfo()">
+          <option value="">Pilih Jenis Cuti Khusus</option>
+          <option value="Menikah" data-max-days="3">Menikah</option>
+          <option value="Pernikahan Anak/Pembatisan Anak/Pengkhitanan Anak" data-max-days="2">Pernikahan Anak/Pembatisan Anak/Pengkhitanan Anak</option>
+          <option value="Istri Melahirkan/Keguguran" data-max-days="2">Istri Melahirkan/Keguguran</option>
+          <option value="Suami istri, anak/menantu, orangtua/mertua meninggal" data-max-days="2">Suami istri, anak/menantu, orangtua/mertua meninggal</option>
+          <option value="Anggota keluarga dalam satu rumah meninggal" data-max-days="1">Anggota keluarga dalam satu rumah meninggal</option>
+          <option value="Pemeriksaan Kesehatan/Pindah Rumah" data-max-days="1">Pemeriksaan Kesehatan/Pindah Rumah</option>
+        </select>
+        <div id="maxDaysInfo" class="max-days-info" style="display: none;"></div>
       </div>
 
-      <label>Tanggal Cuti</label>
-      <input type="date" name="tanggal_cuti" min="<?php echo date('Y-m-d'); ?>" required>
+      <!-- Input file untuk bukti surat dokter (hanya untuk cuti sakit) -->
+      <div id="sakitInputContainer" class="conditional-input">
+        <label for="bukti_surat_dokter">Bukti Surat Keterangan Dokter</label>
+        <div class="file-input-container">
+          <input type="file" name="bukti_surat_dokter" id="bukti_surat_dokter" accept="image/*,.pdf">
+        </div>
+        <small>Format: JPG, PNG, atau PDF (maks. 5MB)</small>
+      </div>
 
-      <button type="submit">Masukkan</button>
+      <label>Periode Cuti</label>
+      <div class="date-range-container">
+        <input type="date" name="tanggal_mulai" id="tanggal_mulai" min="<?php echo date('Y-m-d'); ?>" required onchange="updateTanggalAkhir(); validateMaxDays();">
+        <span>s/d</span>
+        <input type="date" name="tanggal_akhir" id="tanggal_akhir" min="<?php echo date('Y-m-d'); ?>" required onchange="validateMaxDays();">
+      </div>
+      <small>Untuk cuti 1 hari, isi tanggal yang sama pada kedua kolom</small>
+
+      <label>Alasan Cuti</label>
+      <textarea name="alasan_cuti" id="alasan_cuti" placeholder="Tuliskan alasan cuti Anda..." required></textarea>
+
+      <button type="submit">Ajukan Cuti</button>
     </form>
   </div>
 </main>
 
 <script>
-  function toggleManualInput() {
+  let currentMaxDays = 0;
+
+  function toggleConditionalInputs() {
     const jenisCutiSelect = document.getElementById('jenisCuti');
-    const manualInputContainer = document.getElementById('manualInputContainer');
-    const manualInput = document.getElementById('jenis_cuti_manual');
+    const khususInputContainer = document.getElementById('khususInputContainer');
+    const khususInput = document.getElementById('jenis_cuti_khusus');
+    const sakitInputContainer = document.getElementById('sakitInputContainer');
+    const sakitInput = document.getElementById('bukti_surat_dokter');
+    const maxDaysInfo = document.getElementById('maxDaysInfo');
     
-    if (jenisCutiSelect.value === 'Lainnya') {
-      manualInputContainer.classList.add('show');
-      manualInput.required = true;
+    // Reset semua input conditional
+    khususInputContainer.classList.remove('show');
+    khususInput.required = false;
+    sakitInputContainer.classList.remove('show');
+    sakitInput.required = false;
+    maxDaysInfo.style.display = 'none';
+    currentMaxDays = 0;
+    
+    // Tampilkan input yang sesuai dengan pilihan
+    if (jenisCutiSelect.value === 'Khusus') {
+      khususInputContainer.classList.add('show');
+      khususInput.required = true;
+    } else if (jenisCutiSelect.value === 'Sakit') {
+      sakitInputContainer.classList.add('show');
+      sakitInput.required = true;
+    }
+    // Untuk "Cuti Diluar Tanggungan" tidak perlu input tambahan
+  }
+
+  function updateMaxDaysInfo() {
+    const khususSelect = document.getElementById('jenis_cuti_khusus');
+    const maxDaysInfo = document.getElementById('maxDaysInfo');
+    const selectedOption = khususSelect.options[khususSelect.selectedIndex];
+    
+    if (selectedOption.value !== '') {
+      currentMaxDays = parseInt(selectedOption.getAttribute('data-max-days'));
+      maxDaysInfo.textContent = `Batas maksimal cuti: ${currentMaxDays} hari`;
+      maxDaysInfo.style.display = 'block';
+      
+      // Validasi langsung setelah pilihan berubah
+      validateMaxDays();
     } else {
-      manualInputContainer.classList.remove('show');
-      manualInput.required = false;
-      manualInput.value = ''; // Clear input ketika tidak dipakai
+      maxDaysInfo.style.display = 'none';
+      currentMaxDays = 0;
+    }
+  }
+
+  function updateTanggalAkhir() {
+    const tanggalMulai = document.getElementById('tanggal_mulai');
+    const tanggalAkhir = document.getElementById('tanggal_akhir');
+    
+    // Set nilai minimal tanggal akhir sama dengan tanggal mulai
+    if (tanggalMulai.value) {
+      tanggalAkhir.min = tanggalMulai.value;
+      
+      // Jika tanggal akhir sebelumnya lebih kecil dari tanggal mulai, update
+      if (tanggalAkhir.value && tanggalAkhir.value < tanggalMulai.value) {
+        tanggalAkhir.value = tanggalMulai.value;
+      }
+    }
+    
+    // Validasi jumlah hari setelah update
+    validateMaxDays();
+  }
+
+  function validateMaxDays() {
+    const tanggalMulai = document.getElementById('tanggal_mulai');
+    const tanggalAkhir = document.getElementById('tanggal_akhir');
+    const maxDaysInfo = document.getElementById('maxDaysInfo');
+    
+    if (tanggalMulai.value && tanggalAkhir.value && currentMaxDays > 0) {
+      const startDate = new Date(tanggalMulai.value);
+      const endDate = new Date(tanggalAkhir.value);
+      
+      // Hitung selisih hari (termasuk hari mulai)
+      const timeDiff = endDate.getTime() - startDate.getTime();
+      const dayDiff = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
+      
+      if (dayDiff > currentMaxDays) {
+        maxDaysInfo.innerHTML = `Batas maksimal cuti: ${currentMaxDays} hari <span style="color: #e74c3c;">(Anda mengajukan ${dayDiff} hari - Melebihi batas!)</span>`;
+        maxDaysInfo.style.display = 'block';
+      } else {
+        maxDaysInfo.innerHTML = `Batas maksimal cuti: ${currentMaxDays} hari (Anda mengajukan ${dayDiff} hari)`;
+        maxDaysInfo.style.display = 'block';
+      }
     }
   }
 
   // Validasi form sebelum submit
   document.getElementById('formCuti').addEventListener('submit', function(e) {
     const jenisCutiSelect = document.getElementById('jenisCuti');
-    const manualInput = document.getElementById('jenis_cuti_manual');
+    const khususInput = document.getElementById('jenis_cuti_khusus');
+    const sakitInput = document.getElementById('bukti_surat_dokter');
+    const tanggalMulai = document.getElementById('tanggal_mulai');
+    const tanggalAkhir = document.getElementById('tanggal_akhir');
     
-    if (jenisCutiSelect.value === 'Lainnya' && !manualInput.value.trim()) {
+    // Validasi untuk cuti khusus
+    if (jenisCutiSelect.value === 'Khusus' && !khususInput.value.trim()) {
       e.preventDefault();
-      alert('Silakan tulis jenis cuti lainnya');
-      manualInput.focus();
+      alert('Silakan pilih jenis cuti khusus');
+      khususInput.focus();
+      return;
+    }
+    
+    // Validasi untuk cuti sakit
+    if (jenisCutiSelect.value === 'Sakit' && !sakitInput.value) {
+      e.preventDefault();
+      alert('Silakan unggah bukti surat keterangan dokter');
+      sakitInput.focus();
+      return;
+    }
+    
+    // Validasi tanggal
+    if (tanggalMulai.value && tanggalAkhir.value && tanggalAkhir.value < tanggalMulai.value) {
+      e.preventDefault();
+      alert('Tanggal akhir tidak boleh lebih awal dari tanggal mulai');
+      tanggalAkhir.focus();
+      return;
+    }
+    
+    // Validasi batas maksimal hari untuk cuti khusus
+    if (jenisCutiSelect.value === 'Khusus' && khususInput.value.trim()) {
+      const selectedOption = khususInput.options[khususInput.selectedIndex];
+      const maxDays = parseInt(selectedOption.getAttribute('data-max-days'));
+      
+      if (tanggalMulai.value && tanggalAkhir.value) {
+        const startDate = new Date(tanggalMulai.value);
+        const endDate = new Date(tanggalAkhir.value);
+        const timeDiff = endDate.getTime() - startDate.getTime();
+        const dayDiff = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
+        
+        if (dayDiff > maxDays) {
+          e.preventDefault();
+          alert(`Jumlah hari cuti untuk ${selectedOption.text} maksimal ${maxDays} hari. Anda mengajukan ${dayDiff} hari.`);
+          return;
+        }
+      }
     }
   });
 
   // Inisialisasi saat page load
   document.addEventListener('DOMContentLoaded', function() {
-    toggleManualInput();
+    toggleConditionalInputs();
   });
 </script>
+
+<?php
+// Tutup koneksi database
+mysqli_close($conn);
+?>
 </body>
 </html>
