@@ -2,6 +2,11 @@
 session_start();
 require 'config.php';
 
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+    header("Location: login_karyawan.php?error=unauthorized");
+    exit();
+}
+
 // AMBIL DATA ADMIN UNTUK WELCOME MESSAGE
 $nama_user = 'Admin';
 if (isset($_SESSION['user_id'])) {

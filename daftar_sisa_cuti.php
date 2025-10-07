@@ -30,19 +30,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['karyawan_id'])) {
     exit();
 }
 
-
 // --- Logika untuk Mengambil Data Karyawan ---
 $search_query = $_GET['search'] ?? '';
 
-// Query dasar untuk mengambil data karyawan
-$sql = "SELECT id_karyawan, kode_karyawan, nama_lengkap, divisi, sisa_cuti_tahunan, sisa_cuti_lustrum FROM data_karyawan";
+// Query dasar untuk mengambil data karyawan (termasuk role)
+$sql = "SELECT id_karyawan, kode_karyawan, nama_lengkap, divisi, role, sisa_cuti_tahunan, sisa_cuti_lustrum FROM data_karyawan";
 
 // Tambahkan filter pencarian jika ada
 if (!empty($search_query)) {
     $search_term = "%" . $search_query . "%";
-    $sql .= " WHERE nama_lengkap LIKE ? OR kode_karyawan LIKE ? OR divisi LIKE ?";
+    $sql .= " WHERE nama_lengkap LIKE ? OR kode_karyawan LIKE ? OR divisi LIKE ? OR role LIKE ?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sss", $search_term, $search_term, $search_term);
+    $stmt->bind_param("ssss", $search_term, $search_term, $search_term, $search_term);
 } else {
     $stmt = $conn->prepare($sql);
 }
@@ -77,7 +76,7 @@ $conn->close();
     h1 { text-align:left; font-size:28px; margin-bottom:10px; }
     p.admin-title { font-size: 16px; margin-top: 0; margin-bottom: 30px; font-weight: 400; opacity: 0.9; }
     .card { background:#fff; border-radius:20px; padding:30px 40px; box-shadow:0 2px 10px rgba(0,0,0,0.15); }
-    .page-title { font-size: 24px; font-weight: 600; text-align: center; margin-bottom: 30px; color: #1E105E; }
+    .page-title { font-size: 30px; font-weight: 600; text-align: center; margin-bottom: 30px; color: #1E105E; }
     
     .filter-section { background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 25px; }
     .filter-row { display: flex; gap: 15px; align-items: end; flex-wrap: wrap; }
@@ -139,6 +138,8 @@ $conn->close();
         .action-bar { flex-direction: column; }
         .btn { width: 100%; }
         .action-cell { flex-direction: column; }
+        .data-table { font-size: 12px; }
+        .data-table th, .data-table td { padding: 8px 10px; }
     }
 </style>
 </head>
@@ -185,9 +186,6 @@ $conn->close();
 </header>
 
 <main>
-    <h1>Welcome, Cell!</h1>
-    <p class="admin-title">Administrator</p>
-
     <div class="card">
         <h2 class="page-title">Daftar Sisa Cuti Karyawan</h2>
         
@@ -202,8 +200,8 @@ $conn->close();
             <form method="GET" action="daftar_sisa_cuti.php">
                 <div class="filter-row">
                     <div class="filter-group search-group">
-                        <label for="search">Cari Karyawan (Nama/Kode/Divisi)</label>
-                        <input type="text" id="search" name="search" placeholder="Cari berdasarkan nama, kode, atau divisi..." value="<?= htmlspecialchars($search_query) ?>">
+                        <label for="search">Cari Karyawan (Nama/Kode/Divisi/Role)</label>
+                        <input type="text" id="search" name="search" placeholder="Cari berdasarkan nama, kode, divisi, atau role..." value="<?= htmlspecialchars($search_query) ?>">
                     </div>
                 </div>
                 
@@ -229,6 +227,7 @@ $conn->close();
                     <th>No. Kode</th>
                     <th>Nama Karyawan</th>
                     <th>Divisi</th>
+                    <th>Role</th>
                     <th>Sisa Cuti Tahunan</th>
                     <th>Sisa Cuti Lustrum</th>
                     <th>Total Sisa</th>
@@ -256,6 +255,7 @@ $conn->close();
                         <td><?= htmlspecialchars($karyawan['kode_karyawan']) ?></td>
                         <td><?= htmlspecialchars($karyawan['nama_lengkap']) ?></td>
                         <td><?= htmlspecialchars($karyawan['divisi']) ?></td>
+                        <td><?= htmlspecialchars(ucfirst($karyawan['role'])) ?></td>
                         <td><?= htmlspecialchars($karyawan['sisa_cuti_tahunan']) ?> hari</td>
                         <td><?= htmlspecialchars($karyawan['sisa_cuti_lustrum']) ?> hari</td>
                         <td>
@@ -271,7 +271,7 @@ $conn->close();
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="8" class="no-data">Tidak ada data karyawan yang ditemukan</td>
+                        <td colspan="9" class="no-data">Tidak ada data karyawan yang ditemukan</td>
                     </tr>
                 <?php endif; ?>
             </tbody>

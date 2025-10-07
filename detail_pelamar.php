@@ -26,7 +26,7 @@ $pelamar = $result->fetch_assoc();
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Detail Pelamar - Admin SDM</title>
+<title>Detail Pelamar</title>
 <style>
     /* Gaya CSS Anda tetap sama */
     body { margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg,#1E105E 0%,#8897AE 100%); min-height:100vh; color:#333; }

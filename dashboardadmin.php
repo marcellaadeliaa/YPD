@@ -2,6 +2,11 @@
 session_start();
 require 'config.php'; 
 
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+    header("Location: login_karyawan.php?error=unauthorized");
+    exit();
+}
+
 $nama_user = 'Cell';
 
 // 1. Menghitung Total Pelamar Aktif

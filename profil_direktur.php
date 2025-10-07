@@ -12,6 +12,7 @@ if ($conn->connect_error) {
     die("Koneksi gagal: " . $conn->connect_error);
 }
 
+
 // Ambil data direktur dari database
 $id_karyawan = 1; // sementara hardcode, bisa diganti $_SESSION['id_karyawan']
 $data = null;

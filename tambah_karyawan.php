@@ -1,6 +1,11 @@
 <?php
 session_start();
 require_once 'config.php';
+
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+    header("Location: login_karyawan.php?error=unauthorized");
+    exit();
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">

@@ -98,7 +98,7 @@ $conn->close();
     h1 { text-align:left; font-size:28px; margin-bottom:10px; }
     p.admin-title { font-size: 16px; margin-top: 0; margin-bottom: 30px; font-weight: 400; opacity: 0.9; }
     .card { background:#fff; border-radius:20px; padding:30px 40px; box-shadow:0 2px 10px rgba(0,0,0,0.15); }
-    .page-title { font-size: 24px; font-weight: 600; text-align: center; margin-bottom: 30px; color: #1E105E; }
+    .page-title { font-size: 30px; font-weight: 600; text-align: center; margin-bottom: 30px; color: #1E105E; }
     
     .filter-section { background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 25px; }
     .filter-row { display: flex; gap: 15px; align-items: end; flex-wrap: wrap; }
@@ -181,9 +181,6 @@ $conn->close();
 </header>
 
 <main>
-    <h1>Welcome, Cell!</h1>
-    <p class="admin-title">Administrator</p>
-
     <div class="card">
         <h2 class="page-title">Riwayat Cuti Pegawai</h2>
         

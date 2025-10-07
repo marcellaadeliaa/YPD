@@ -2,6 +2,11 @@
 session_start();
 require 'config.php';
 
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+    header("Location: login_karyawan.php?error=unauthorized");
+    exit();
+}
+
 // --- PROSES PENCARIAN ---
 $search_keyword = '';
 if (isset($_GET['search']) && !empty(trim($_GET['search']))) {

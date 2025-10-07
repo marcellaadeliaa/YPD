@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 07 Okt 2025 pada 05.10
+-- Waktu pembuatan: 07 Okt 2025 pada 10.29
 -- Versi server: 10.4.22-MariaDB
 -- Versi PHP: 7.3.33
 
@@ -20,6 +20,53 @@ SET time_zone = "+00:00";
 --
 -- Database: `ypd_ibd`
 --
+
+DELIMITER $$
+--
+-- Prosedur
+--
+CREATE DEFINER=`root`@`localhost` PROCEDURE `KurangiSisaCuti` (IN `p_kode_karyawan` VARCHAR(20), IN `p_jenis_cuti` VARCHAR(50), IN `p_tanggal_mulai` DATE, IN `p_tanggal_akhir` DATE)  BEGIN
+    DECLARE jumlah_hari INT DEFAULT 0;
+    DECLARE sisa_tahunan INT DEFAULT 0;
+    DECLARE sisa_lustrum INT DEFAULT 0;
+    DECLARE tgl DATE;
+    
+    -- Hitung hari kerja (Senin-Jumat)
+    SET tgl = p_tanggal_mulai;
+    WHILE tgl <= p_tanggal_akhir DO
+        IF DAYOFWEEK(tgl) BETWEEN 2 AND 6 THEN
+            SET jumlah_hari = jumlah_hari + 1;
+        END IF;
+        SET tgl = DATE_ADD(tgl, INTERVAL 1 DAY);
+    END WHILE;
+    
+    -- Ambil sisa cuti
+    SELECT sisa_cuti_tahunan, sisa_cuti_lustrum 
+    INTO sisa_tahunan, sisa_lustrum
+    FROM data_karyawan 
+    WHERE kode_karyawan = p_kode_karyawan;
+    
+    -- Proses pengurangan
+    IF p_jenis_cuti = 'Tahunan' THEN
+        IF sisa_tahunan >= jumlah_hari THEN
+            UPDATE data_karyawan 
+            SET sisa_cuti_tahunan = sisa_cuti_tahunan - jumlah_hari
+            WHERE kode_karyawan = p_kode_karyawan;
+        END IF;
+        
+    ELSEIF p_jenis_cuti = 'Lustrum' THEN
+        IF sisa_lustrum >= jumlah_hari THEN
+            UPDATE data_karyawan 
+            SET sisa_cuti_lustrum = sisa_cuti_lustrum - jumlah_hari
+            WHERE kode_karyawan = p_kode_karyawan;
+        END IF;
+        
+    -- Untuk Sakit dan Khusus, tidak ada pengurangan
+    END IF;
+    
+END$$
+
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -50,7 +97,7 @@ CREATE TABLE `data_karyawan` (
 INSERT INTO `data_karyawan` (`id_karyawan`, `kode_karyawan`, `nama_lengkap`, `email`, `password`, `jabatan`, `divisi`, `role`, `no_telp`, `sisa_cuti_tahunan`, `sisa_cuti_lustrum`, `status_aktif`, `created_at`) VALUES
 (1, 'YPD001', 'Pico', 'pico.dir@ypd.com', 'hashed_password_direktur', 'Direktur Utama', 'Direktsi', 'direktur', '081234567890', 0, 0, 'aktif', '2025-09-30 23:37:17'),
 (2, 'YPD002', 'Cell', 'cell.sdm@ypd.com', 'hashed_password_admin', 'Administrator', '', 'admin', '081234567891', 0, 0, 'aktif', '2025-09-30 23:37:17'),
-(3, 'YPD010', 'Adrian', 'adrian.karyawan@ypd.com', 'hashed_password_karyawan', 'Staf Training', 'Training', 'karyawan', '081234567892', 12, 5, 'aktif', '2025-09-30 23:37:17'),
+(3, 'YPD010', 'Adrian', 'adrian.karyawan@ypd.com', 'hashed_password_karyawan', 'Staf Training', 'Training', 'karyawan', '081234567892', 12, 4, 'aktif', '2025-09-30 23:37:17'),
 (4, 'YPD003', 'Ria', 'ria.direksi@ypd.com', 'hashed_password_ria', 'Penanggung Jawab Training', 'Training', 'penanggung jawab', '081234567893', 12, 5, 'aktif', '2025-09-30 23:45:32'),
 (5, 'YPD004', 'Dani', 'dani.pj@ypd.com', 'hashed_password_dani', 'Staf Keuangan', 'Keuangan', 'karyawan', '081234567894', 12, 5, 'aktif', '2025-09-30 23:45:32'),
 (6, 'YPD005', 'Budi', 'budibudi@gmail.com', 'hashed_password_budi', 'Penanggung Jawab Konsultasi', 'Konsultasi', 'penanggung jawab', '12345677654', 12, 5, 'aktif', '2025-10-02 08:30:16'),
@@ -58,17 +105,17 @@ INSERT INTO `data_karyawan` (`id_karyawan`, `kode_karyawan`, `nama_lengkap`, `em
 (8, 'YPD007', 'Dian', 'didi@gmail.com', 'hashed_password_dian', 'Penanggung Jawab SDM', 'SDM', 'penanggung jawab', '5981731412', 12, 5, 'aktif', '2025-10-02 15:10:28'),
 (9, 'YPD008', 'Jasmine', 'minminja@gmail.com', 'hashed_password_jasmine', 'Penanggung Jawab Sekretariat', 'Sekretariat', 'penanggung jawab', '123415654312', 12, 5, 'aktif', '2025-10-02 15:24:59'),
 (10, 'YPD009', 'Mega', 'gamega@gmail.com', 'hashed_password_mega', 'Penanggung Jawab Keuangan', 'Keuangan', 'penanggung jawab', '12347358642879', 12, 5, 'aktif', '2025-10-02 15:46:27'),
-(11, 'YPD011', 'Lala Marcella', 'lala.marcella@ypd.com', 'hashed_password_lala', 'Staf Keuangan', 'Keuangan', 'karyawan', '08186845699', 12, 5, 'aktif', '2025-10-04 05:27:28'),
-(12, 'YPD012', 'Hezkiel', 'hezkiel@ypd.com', 'hashed_password_hezkiel', 'Staf Sekretariat', 'Sekretariat', 'karyawan', '08186889777', 12, 5, 'aktif', '2025-10-04 06:13:54'),
-(13, 'YPD013', 'Adelia', 'adelia@ypd.com', 'hashed_password_adelia', 'Staf Sekretariat', 'Sekretariat', 'karyawan', '08186889755', 12, 5, 'aktif', '2025-10-04 06:15:55'),
-(14, 'YPD014', 'Cici', 'cici@ypd.com', 'hashed_password_cici', 'Staf Keuangan', 'Keuangan', 'karyawan', '081868456987', 12, 5, 'aktif', '2025-10-04 06:18:48'),
-(15, 'YPD015', 'Leonardo', 'leonardo@ypd.com', 'hashed_password_leonardo', 'Staf Training', 'Training', 'karyawan', '08186889751', 12, 5, 'aktif', '2025-10-04 06:26:05'),
-(16, 'YPD016', 'Naomi', 'naomi@ypd.com', 'hashed_password_naomi', 'Staf Konsultasi', 'Konsultasi', 'karyawan', '081868456987', 12, 5, 'aktif', '2025-10-04 06:30:39'),
-(17, 'YPD017', 'Aurora', 'aurora@ypd.com', 'hashed_password_aurora', 'Staf Konsultasi', 'Konsultasi', 'karyawan', '081868456988', 12, 5, 'aktif', '2025-10-04 06:35:02'),
-(18, 'YPD018', 'Selena', 'selena@ypd.com', 'hashed_password_selena', 'Staf Wisma', 'Wisma', 'karyawan', '081868456978', 12, 5, 'aktif', '2025-10-04 06:38:26'),
-(19, 'YPD019', 'Kelra', 'kelra@ypd.com', 'hashed_password_kelra', 'Staf Wisma', 'Wisma', 'karyawan', '081868456985', 12, 5, 'aktif', '2025-10-04 06:46:13'),
-(20, 'YPD020', 'Lyra', 'lyra@ypd.com', 'hashed_password_lyra', 'Staf SDM', 'SDM', 'karyawan', '081868456987', 12, 5, 'aktif', '2025-10-04 06:47:18'),
-(21, 'YPD021', 'Yovan', 'yovan@ypd.com', 'hashed_password_yovan', 'Staf SDM', 'SDM', 'karyawan', '081868456985', 0, 0, 'aktif', '2025-10-04 06:48:16');
+(11, 'YPD011', 'Lala Marcella', 'lala.marcella@ypd.com', 'hashed_password_lala', 'Staf Keuangan', 'Keuangan', 'karyawan', '08186845699', 4, 0, 'aktif', '2025-10-04 05:27:28'),
+(12, 'YPD012', 'Hezkiel', 'hezkiel@ypd.com', 'hashed_password_hezkiel', 'Staf Sekretariat', 'Sekretariat', 'karyawan', '08186889777', 12, 0, 'aktif', '2025-10-04 06:13:54'),
+(13, 'YPD013', 'Adelia', 'adelia@ypd.com', 'hashed_password_adelia', 'Staf Sekretariat', 'Sekretariat', 'karyawan', '08186889755', 12, 0, 'aktif', '2025-10-04 06:15:55'),
+(14, 'YPD014', 'Cici', 'cici@ypd.com', 'hashed_password_cici', 'Staf Keuangan', 'Keuangan', 'karyawan', '081868456987', 12, 2, 'aktif', '2025-10-04 06:18:48'),
+(15, 'YPD015', 'Leonardo', 'leonardo@ypd.com', 'hashed_password_leonardo', 'Staf Training', 'Training', 'karyawan', '08186889751', 6, 0, 'aktif', '2025-10-04 06:26:05'),
+(16, 'YPD016', 'Naomi', 'naomi@ypd.com', 'hashed_password_naomi', 'Staf Konsultasi', 'Konsultasi', 'karyawan', '081868456987', 0, 0, 'aktif', '2025-10-04 06:30:39'),
+(17, 'YPD017', 'Aurora', 'aurora@ypd.com', 'hashed_password_aurora', 'Staf Konsultasi', 'Konsultasi', 'karyawan', '081868456988', 0, 0, 'aktif', '2025-10-04 06:35:02'),
+(18, 'YPD018', 'Selena', 'selena@ypd.com', 'hashed_password_selena', 'Staf Wisma', 'Wisma', 'karyawan', '081868456978', 0, 0, 'aktif', '2025-10-04 06:38:26'),
+(19, 'YPD019', 'Kelra', 'kelra@ypd.com', 'hashed_password_kelra', 'Staf Wisma', 'Wisma', 'karyawan', '081868456985', 0, 0, 'aktif', '2025-10-04 06:46:13'),
+(20, 'YPD020', 'Lyra', 'lyra@ypd.com', 'hashed_password_lyra', 'Staf SDM', 'SDM', 'karyawan', '081868456987', 5, 0, 'aktif', '2025-10-04 06:47:18'),
+(21, 'YPD021', 'Yovan', 'yovan@ypd.com', 'hashed_password_yovan', 'Staf SDM', 'SDM', 'karyawan', '081868456985', 5, 0, 'aktif', '2025-10-04 06:48:16');
 
 -- --------------------------------------------------------
 
@@ -155,8 +202,33 @@ CREATE TABLE `data_pengajuan_cuti` (
 --
 
 INSERT INTO `data_pengajuan_cuti` (`id`, `kode_karyawan`, `nama_karyawan`, `divisi`, `jabatan`, `role`, `jenis_cuti`, `tanggal_mulai`, `tanggal_akhir`, `alasan`, `file_surat_dokter`, `status`, `created_at`, `waktu_persetujuan`) VALUES
-(1, 'YPD021', 'Yovan', 'SDM', 'Staf SDM', 'karyawan', 'Khusus - Menikah', '2025-10-06', '2025-10-08', 'menikah\r\n', NULL, 'Menunggu Persetujuan', '2025-10-06 16:49:59', NULL),
-(2, 'YPD021', 'Yovan', 'SDM', 'Staf SDM', 'karyawan', 'Sakit', '2025-10-06', '2025-10-08', 'sakit', 'uploads/surat_sakit/1759769935_Request for Quotation.pdf', 'Menunggu Persetujuan', '2025-10-06 16:58:55', NULL);
+(1, 'YPD021', 'Yovan', 'SDM', 'Staf SDM', 'karyawan', 'Khusus - Menikah', '2025-10-06', '2025-10-08', NULL, NULL, 'Diterima', '2025-10-06 16:49:59', '2025-10-07 08:00:13'),
+(2, 'YPD021', 'Yovan', 'SDM', 'Staf SDM', 'karyawan', 'Sakit', '2025-10-06', '2025-10-08', 'sakit', 'uploads/surat_sakit/1759769935_Request for Quotation.pdf', 'Diterima', '2025-10-06 16:58:55', '2025-10-07 07:47:58'),
+(3, 'YPD021', 'Yovan', 'SDM', 'Staf SDM', 'karyawan', 'Sakit', '2025-10-07', '2025-10-09', 'nono ya', 'uploads/surat_sakit/1759816970_ChatGPT Image 5 Okt 2025, 00.02.09.png', 'Ditolak', '2025-10-07 06:02:50', '2025-10-07 08:04:59'),
+(4, 'YPD011', 'Lala Marcella', 'Keuangan', 'Staf Keuangan', 'karyawan', 'Tahunan', '2025-12-28', '2026-01-04', 'mau holiday', NULL, 'Diterima', '2025-10-07 06:07:58', '2025-10-07 08:28:27'),
+(5, 'YPD014', 'Cici', 'Keuangan', 'Staf Keuangan', 'karyawan', 'Lustrum', '2025-10-17', '2025-10-17', 'Mau ke luar kota', NULL, 'Diterima', '2025-10-07 06:11:46', '2025-10-07 08:27:27'),
+(6, 'YPD010', 'Adrian', 'Training', 'Staf Training', 'karyawan', 'Lustrum', '2025-10-15', '2025-10-15', 'Pergi 1 hari', NULL, 'Diterima', '2025-10-07 06:48:59', '2025-10-07 08:51:02'),
+(7, 'YPD015', 'Leonardo', 'Training', 'Staf Training', 'karyawan', 'Tahunan', '2025-11-10', '2025-11-17', 'pergi holiday ke LN hehe', NULL, 'Diterima', '2025-10-07 06:49:55', '2025-10-07 08:50:45'),
+(8, 'YPD003', 'Ria', 'Training', 'Penanggung Jawab Training', 'penanggung jawab', 'Tahunan', '2025-10-09', '2025-10-09', 'sakit', NULL, 'Menunggu Persetujuan', '2025-10-07 07:57:10', NULL);
+
+--
+-- Trigger `data_pengajuan_cuti`
+--
+DELIMITER $$
+CREATE TRIGGER `after_cuti_disetujui` AFTER UPDATE ON `data_pengajuan_cuti` FOR EACH ROW BEGIN
+    -- Hanya trigger ketika status berubah menjadi 'Diterima'
+    IF NEW.status = 'Diterima' AND OLD.status != 'Diterima' THEN
+        -- Panggil stored procedure untuk mengurangi sisa cuti
+        CALL KurangiSisaCuti(
+            NEW.kode_karyawan, 
+            NEW.jenis_cuti, 
+            NEW.tanggal_mulai, 
+            NEW.tanggal_akhir
+        );
+    END IF;
+END
+$$
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -728,7 +800,7 @@ ALTER TABLE `data_pelamar`
 -- AUTO_INCREMENT untuk tabel `data_pengajuan_cuti`
 --
 ALTER TABLE `data_pengajuan_cuti`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT untuk tabel `data_pengajuan_khl`

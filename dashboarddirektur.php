@@ -3,7 +3,11 @@
 
 session_start(); // Memulai session
 require 'config.php';
-
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'direktur') {
+    // Jika tidak ada session atau role bukan direktur, tendang ke halaman login
+    header("Location: login_karyawan.php?error=unauthorized");
+    exit(); // Penting: Hentikan eksekusi skrip
+}
 // Data Direktur (Sebaiknya diambil dari session)
 $nama_direktur = "Pico"; 
 $jabatan = "Direktur";
