@@ -1,21 +1,112 @@
 <?php
 session_start();
+require_once 'config.php'; // Memanggil file koneksi database
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nik     = $_POST['nik'] ?? '';
-    $jenis   = $_POST['jenis_cuti'] ?? '';
-    $tanggal = $_POST['tanggal_cuti'] ?? '';
+// Inisialisasi variabel untuk menampilkan data nanti
+$display_data = false;
+$error_msg = '';
+$file_surat_path = null; // Variabel untuk menyimpan path file
 
-    // ✅ Simpan ke session agar dashboard bisa menampilkan otomatis
-    $_SESSION['last_cuti'] = [
-        'tanggal' => $tanggal,
-        'jenis'   => $jenis,
-        'status'  => 'Menunggu Persetujuan'
-    ];
+// Fungsi untuk menangani upload file
+function handleFileUpload($file) {
+    // Cek jika tidak ada file atau ada error saat upload
+    if (!isset($file) || $file['error'] !== UPLOAD_ERR_OK) {
+        return null;
+    }
 
+    $uploadDir = 'uploads/surat_sakit/';
+    // Buat direktori jika belum ada
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0777, true);
+    }
+
+    // Buat nama file yang unik untuk menghindari penimpaan
+    $fileName = time() . '_' . basename($file['name']);
+    $targetPath = $uploadDir . $fileName;
+
+    // Pindahkan file dari temporary location ke direktori tujuan
+    if (move_uploaded_file($file['tmp_name'], $targetPath)) {
+        return $targetPath; // Kembalikan path file jika berhasil
+    } else {
+        return false; // Kembalikan false jika gagal
+    }
+}
+
+// Cek apakah user sudah login dan form dikirim dengan metode POST
+if (!isset($_SESSION['user']) || $_SERVER["REQUEST_METHOD"] != "POST") {
+    header("Location: login_karyawan.php");
+    exit();
+}
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Ambil data dari session dan form
+    $user = $_SESSION['user'];
+    $kode_karyawan = $user['kode_karyawan'];
+    $nama_karyawan = $user['nama_lengkap'];
+    $divisi = $user['divisi'];
+    $jabatan = $user['jabatan'];
+    $role = $user['role'];
+
+    $jenis_cuti_raw = $_POST['jenis_cuti'];
+    $tanggal_mulai = $_POST['tanggal_mulai'];
+    $tanggal_akhir = $_POST['tanggal_akhir'];
+    $alasan = $_POST['alasan_cuti'];
+    $jenis_cuti = $jenis_cuti_raw;
+
+    // Handle jika jenis cuti adalah 'Khusus'
+    if ($jenis_cuti_raw === 'Khusus' && !empty($_POST['jenis_cuti_khusus'])) {
+        $jenis_cuti = 'Khusus - ' . $_POST['jenis_cuti_khusus'];
+    }
+
+    // Handle upload file jika jenis cuti adalah 'Sakit'
+    if ($jenis_cuti_raw === 'Sakit') {
+        $uploadResult = handleFileUpload($_FILES['bukti_surat_dokter']);
+        if ($uploadResult === false) {
+            header("Location: formcutikaryawan.php?status=error&message=Gagal mengunggah file surat dokter.");
+            exit();
+        }
+        $file_surat_path = $uploadResult;
+    }
+
+    // Validasi dasar
+    if (empty($kode_karyawan) || empty($jenis_cuti) || empty($tanggal_mulai) || empty($tanggal_akhir) || empty($alasan)) {
+        header("Location: formcutikaryawan.php?status=error&message=Semua field wajib diisi.");
+        exit();
+    }
+
+    // Siapkan query SQL untuk INSERT data
+    $sql = "INSERT INTO data_pengajuan_cuti (
+                kode_karyawan, nama_karyawan, divisi, jabatan, role, 
+                jenis_cuti, tanggal_mulai, tanggal_akhir, alasan, file_surat_dokter, status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Menunggu Persetujuan')";
+
+    $stmt = $conn->prepare($sql);
+
+    if ($stmt) {
+        // Bind parameter ke query (tambahkan 's' untuk file_surat_dokter)
+        $stmt->bind_param("ssssssssss", 
+            $kode_karyawan, $nama_karyawan, $divisi, $jabatan, $role, 
+            $jenis_cuti, $tanggal_mulai, $tanggal_akhir, $alasan, $file_surat_path
+        );
+
+        if ($stmt->execute()) {
+            $display_data = true;
+        } else {
+            $error_msg = "Gagal menyimpan pengajuan: " . $stmt->error;
+        }
+        $stmt->close();
+    } else {
+        $error_msg = "Terjadi kesalahan pada server: " . $conn->error;
+    }
+    $conn->close();
+
+    if (!empty($error_msg)) {
+        header("Location: formcutikaryawan.php?status=error&message=" . urlencode($error_msg));
+        exit();
+    }
 } else {
     header("Location: formcutikaryawan.php");
-    exit;
+    exit();
 }
 ?>
 <!DOCTYPE html>
@@ -29,6 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       margin:0;
       font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: linear-gradient(180deg, #1E105E 0%, #8897AE 100%);
+      color: #333;
     }
     header {
       background:#fff;
@@ -39,7 +131,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       border-bottom:2px solid #34377c;
     }
     .logo {display:flex;align-items:center;gap:16px;font-weight:500;font-size:20px;color:#2e1f4f;}
-    .logo img {width:130px;height:50px;object-fit:contain;}
+    .logo img {width:140px;height:50px;object-fit:contain;}
+    nav a { text-decoration:none; color:#333; font-weight:600; }
     main {
       max-width:600px;
       margin:60px auto;
@@ -49,12 +142,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       box-shadow:0 0 10px rgba(72,54,120,0.2);
       text-align:center;
     }
-    h1 {font-size:24px;color:#2e1f4f;margin-bottom:20px;}
-    .data-cuti {text-align:left;font-size:16px;line-height:1.8;}
+    h1 {font-size:24px;color:#2e1f4f;margin-bottom:10px;}
+    .success-icon { font-size: 48px; color: #28a745; margin-bottom: 15px; }
+    .data-cuti {
+        text-align:left; 
+        font-size:16px; 
+        line-height:1.8; 
+        border-top: 1px solid #eee; 
+        margin-top: 20px;
+        padding-top: 20px;
+    }
+    .data-cuti p {
+        margin: 8px 0;
+        display: grid;
+        grid-template-columns: 180px 1fr;
+    }
+    .data-cuti strong { color: #4a3f81; }
     a.btn {
-      display:inline-block;margin-top:30px;padding:10px 20px;
-      background-color:#4a3f81;color:#fff;text-decoration:none;
-      border-radius:8px;font-weight:600;
+      display:inline-block;
+      margin-top:30px;
+      padding:12px 25px;
+      background-color:#4a3f81;
+      color:#fff;
+      text-decoration:none;
+      border-radius:8px;
+      font-weight:600;
+      transition: background-color 0.3s;
     }
     a.btn:hover { background-color:#3a3162; }
 </style>
@@ -71,13 +184,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </header>
 
   <main>
-    <h1>Pengajuan Cuti Terkirim</h1>
-    <div class="data-cuti">
-      <strong>No. Induk Karyawan:</strong> <?= htmlspecialchars($nik) ?><br>
-      <strong>Jenis Cuti:</strong> <?= htmlspecialchars($jenis) ?><br>
-      <strong>Tanggal Cuti:</strong> <?= htmlspecialchars($tanggal) ?><br>
-    </div>
-    <a href="dashboardkaryawan.php" class="btn">Kembali ke Dashboard</a>
+    <?php if ($display_data): ?>
+        <div class="success-icon">✓</div>
+        <h1>Pengajuan Cuti Berhasil Terkirim</h1>
+        <p>Data pengajuan Anda telah berhasil disimpan dan akan segera diproses. Berikut adalah rinciannya:</p>
+        <div class="data-cuti">
+            <p><strong>Kode Karyawan:</strong> <?= htmlspecialchars($kode_karyawan) ?></p>
+            <p><strong>Nama Karyawan:</strong> <?= htmlspecialchars($nama_karyawan) ?></p>
+            <p><strong>Jenis Cuti:</strong> <?= htmlspecialchars($jenis_cuti) ?></p>
+            <p><strong>Tanggal Mulai:</strong> <?= date('d F Y', strtotime($tanggal_mulai)) ?></p>
+            <p><strong>Tanggal Akhir:</strong> <?= date('d F Y', strtotime($tanggal_akhir)) ?></p>
+            <p><strong>Alasan:</strong> <?= htmlspecialchars($alasan) ?></p>
+            <?php if ($file_surat_path): ?>
+                <p><strong>Surat Dokter:</strong> Berkas telah diunggah.</p>
+            <?php endif; ?>
+            <p><strong>Status:</strong> <span style="font-weight:bold; color: #f39c12;">Menunggu Persetujuan</span></p>
+        </div>
+        <a href="riwayat_cuti_pribadi.php" class="btn">Lihat Riwayat Cuti</a>
+    <?php else: ?>
+        <h1>Terjadi Kesalahan</h1>
+        <p>Maaf, terjadi kesalahan saat memproses pengajuan Anda. Silakan coba lagi.</p>
+        <a href="formcutikaryawan.php" class="btn">Kembali ke Formulir</a>
+    <?php endif; ?>
   </main>
 </body>
 </html>

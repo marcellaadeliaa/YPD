@@ -12,26 +12,29 @@ if (!isset($_SESSION['user'])) {
 $user = $_SESSION['user'];
 $nik = $user['kode_karyawan'];
 $nama_lengkap = $user['nama_lengkap'];
-$divisi = $user['divisi'];
-$jabatan = $user['jabatan'];
+$divisi = $user['divisi'] ?? ''; // Tambahkan fallback jika tidak ada di session
+$jabatan = $user['jabatan'] ?? ''; // Tambahkan fallback jika tidak ada di session
 
-// Jika ada data yang kosong, ambil dari database
+// Jika ada data yang kosong di session, ambil dari database untuk melengkapi
 if (empty($divisi) || empty($jabatan)) {
     $query_karyawan = "SELECT divisi, jabatan FROM data_karyawan WHERE kode_karyawan = ?";
     $stmt = mysqli_prepare($conn, $query_karyawan);
-    mysqli_stmt_bind_param($stmt, "s", $nik);
-    mysqli_stmt_execute($stmt);
-    $result_karyawan = mysqli_stmt_get_result($stmt);
-    $karyawan_detail = mysqli_fetch_assoc($result_karyawan);
     
-    if ($karyawan_detail) {
-        $divisi = $karyawan_detail['divisi'];
-        $jabatan = $karyawan_detail['jabatan'];
-        // Update session
-        $_SESSION['user']['divisi'] = $divisi;
-        $_SESSION['user']['jabatan'] = $jabatan;
+    if($stmt) {
+        mysqli_stmt_bind_param($stmt, "s", $nik);
+        mysqli_stmt_execute($stmt);
+        $result_karyawan = mysqli_stmt_get_result($stmt);
+        $karyawan_detail = mysqli_fetch_assoc($result_karyawan);
+        
+        if ($karyawan_detail) {
+            $divisi = $karyawan_detail['divisi'];
+            $jabatan = $karyawan_detail['jabatan'];
+            // Update session agar tidak perlu query lagi nanti
+            $_SESSION['user']['divisi'] = $divisi;
+            $_SESSION['user']['jabatan'] = $jabatan;
+        }
+        mysqli_stmt_close($stmt);
     }
-    mysqli_stmt_close($stmt);
 }
 ?>
 <!DOCTYPE html>
@@ -273,7 +276,6 @@ if (empty($divisi) || empty($jabatan)) {
   <div class="form-container">
     <h2>Pengajuan Cuti</h2>
     
-    <!-- Tampilkan pesan sukses/error jika ada -->
     <?php
     if (isset($_GET['status'])) {
         if ($_GET['status'] == 'success') {
@@ -292,7 +294,6 @@ if (empty($divisi) || empty($jabatan)) {
     }
     ?>
 
-    <!-- Info Pengguna -->
     <div class="user-info">
       <p><strong>Kode Karyawan:</strong> <?php echo htmlspecialchars($nik); ?></p>
       <p><strong>Nama:</strong> <?php echo htmlspecialchars($nama_lengkap); ?></p>
@@ -322,7 +323,6 @@ if (empty($divisi) || empty($jabatan)) {
         <option value="Ibadah">Cuti Ibadah</option>
       </select>
 
-      <!-- Pilihan dropdown untuk jenis cuti khusus -->
       <div id="khususInputContainer" class="conditional-input">
         <label for="jenis_cuti_khusus">Jenis Cuti Khusus</label>
         <select name="jenis_cuti_khusus" id="jenis_cuti_khusus" onchange="updateMaxDaysInfo()">
@@ -337,7 +337,6 @@ if (empty($divisi) || empty($jabatan)) {
         <div id="maxDaysInfo" class="max-days-info" style="display: none;"></div>
       </div>
 
-      <!-- Input file untuk bukti surat dokter (hanya untuk cuti sakit) -->
       <div id="sakitInputContainer" class="conditional-input">
         <label for="bukti_surat_dokter">Bukti Surat Keterangan Dokter</label>
         <div class="file-input-container">
@@ -389,7 +388,6 @@ if (empty($divisi) || empty($jabatan)) {
       sakitInputContainer.classList.add('show');
       sakitInput.required = true;
     }
-    // Untuk "Cuti Diluar Tanggungan" tidak perlu input tambahan
   }
 
   function updateMaxDaysInfo() {
@@ -402,7 +400,6 @@ if (empty($divisi) || empty($jabatan)) {
       maxDaysInfo.textContent = `Batas maksimal cuti: ${currentMaxDays} hari`;
       maxDaysInfo.style.display = 'block';
       
-      // Validasi langsung setelah pilihan berubah
       validateMaxDays();
     } else {
       maxDaysInfo.style.display = 'none';
@@ -414,17 +411,14 @@ if (empty($divisi) || empty($jabatan)) {
     const tanggalMulai = document.getElementById('tanggal_mulai');
     const tanggalAkhir = document.getElementById('tanggal_akhir');
     
-    // Set nilai minimal tanggal akhir sama dengan tanggal mulai
     if (tanggalMulai.value) {
       tanggalAkhir.min = tanggalMulai.value;
       
-      // Jika tanggal akhir sebelumnya lebih kecil dari tanggal mulai, update
       if (tanggalAkhir.value && tanggalAkhir.value < tanggalMulai.value) {
         tanggalAkhir.value = tanggalMulai.value;
       }
     }
     
-    // Validasi jumlah hari setelah update
     validateMaxDays();
   }
 
@@ -437,7 +431,6 @@ if (empty($divisi) || empty($jabatan)) {
       const startDate = new Date(tanggalMulai.value);
       const endDate = new Date(tanggalAkhir.value);
       
-      // Hitung selisih hari (termasuk hari mulai)
       const timeDiff = endDate.getTime() - startDate.getTime();
       const dayDiff = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
       
@@ -451,7 +444,6 @@ if (empty($divisi) || empty($jabatan)) {
     }
   }
 
-  // Validasi form sebelum submit
   document.getElementById('formCuti').addEventListener('submit', function(e) {
     const jenisCutiSelect = document.getElementById('jenisCuti');
     const khususInput = document.getElementById('jenis_cuti_khusus');
@@ -459,7 +451,6 @@ if (empty($divisi) || empty($jabatan)) {
     const tanggalMulai = document.getElementById('tanggal_mulai');
     const tanggalAkhir = document.getElementById('tanggal_akhir');
     
-    // Validasi untuk cuti khusus
     if (jenisCutiSelect.value === 'Khusus' && !khususInput.value.trim()) {
       e.preventDefault();
       alert('Silakan pilih jenis cuti khusus');
@@ -467,7 +458,6 @@ if (empty($divisi) || empty($jabatan)) {
       return;
     }
     
-    // Validasi untuk cuti sakit
     if (jenisCutiSelect.value === 'Sakit' && !sakitInput.value) {
       e.preventDefault();
       alert('Silakan unggah bukti surat keterangan dokter');
@@ -475,7 +465,6 @@ if (empty($divisi) || empty($jabatan)) {
       return;
     }
     
-    // Validasi tanggal
     if (tanggalMulai.value && tanggalAkhir.value && tanggalAkhir.value < tanggalMulai.value) {
       e.preventDefault();
       alert('Tanggal akhir tidak boleh lebih awal dari tanggal mulai');
@@ -483,7 +472,6 @@ if (empty($divisi) || empty($jabatan)) {
       return;
     }
     
-    // Validasi batas maksimal hari untuk cuti khusus
     if (jenisCutiSelect.value === 'Khusus' && khususInput.value.trim()) {
       const selectedOption = khususInput.options[khususInput.selectedIndex];
       const maxDays = parseInt(selectedOption.getAttribute('data-max-days'));
@@ -503,7 +491,6 @@ if (empty($divisi) || empty($jabatan)) {
     }
   });
 
-  // Inisialisasi saat page load
   document.addEventListener('DOMContentLoaded', function() {
     toggleConditionalInputs();
   });
@@ -511,7 +498,9 @@ if (empty($divisi) || empty($jabatan)) {
 
 <?php
 // Tutup koneksi database
-mysqli_close($conn);
+if(isset($conn)) {
+    mysqli_close($conn);
+}
 ?>
 </body>
 </html>
