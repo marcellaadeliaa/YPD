@@ -14,12 +14,20 @@ $nama_pj = $user['nama_lengkap'];
 $divisi_pj = $user['divisi'];
 $jabatan = "Penanggung Jawab Divisi " . $divisi_pj;
 
-// Query untuk mengambil riwayat KHL pribadi penanggung jawab
+// --- KONFIGURASI PAGINASI ---
+$limit = 5; // Hanya tampilkan 5 data per halaman
+$page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+if ($page < 1) $page = 1;
+
+$offset = ($page - 1) * $limit;
+
+// --- QUERY UTAMA DENGAN LIMIT & OFFSET ---
 $sql = "SELECT * FROM data_pengajuan_khl 
         WHERE kode_karyawan = ? 
-        ORDER BY created_at DESC";
+        ORDER BY created_at DESC
+        LIMIT ? OFFSET ?";
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("s", $kode_karyawan);
+$stmt->bind_param("sii", $kode_karyawan, $limit, $offset);
 $stmt->execute();
 $result = $stmt->get_result();
 
@@ -28,7 +36,37 @@ while ($row = $result->fetch_assoc()) {
     $riwayat_khl[] = $row;
 }
 
+// --- QUERY UNTUK TOTAL DATA (untuk pagination) ---
+$sql_total = "SELECT COUNT(*) as total FROM data_pengajuan_khl WHERE kode_karyawan = ?";
+$stmt_total = $conn->prepare($sql_total);
+$stmt_total->bind_param("s", $kode_karyawan);
+$stmt_total->execute();
+$result_total = $stmt_total->get_result();
+$total_data = $result_total->fetch_assoc()['total'];
+$total_pages = ceil($total_data / $limit);
+
+// --- HITUNG STATISTIK (dari semua data) ---
+$sql_stats = "SELECT 
+              COUNT(*) as total,
+              SUM(CASE WHEN status_khl = 'disetujui' THEN 1 ELSE 0 END) as disetujui,
+              SUM(CASE WHEN status_khl = 'ditolak' THEN 1 ELSE 0 END) as ditolak,
+              SUM(CASE WHEN status_khl = 'pending' THEN 1 ELSE 0 END) as pending
+              FROM data_pengajuan_khl 
+              WHERE kode_karyawan = ?";
+$stmt_stats = $conn->prepare($sql_stats);
+$stmt_stats->bind_param("s", $kode_karyawan);
+$stmt_stats->execute();
+$result_stats = $stmt_stats->get_result();
+$stats = $result_stats->fetch_assoc();
+
+$total_pengajuan = $stats['total'];
+$disetujui_count = $stats['disetujui'];
+$ditolak_count = $stats['ditolak'];
+$pending_count = $stats['pending'];
+
 $stmt->close();
+$stmt_total->close();
+$stmt_stats->close();
 $conn->close();
 ?>
 
@@ -284,6 +322,82 @@ $conn->close();
             font-size: 0.8rem; 
             color: #666; 
         }
+        
+        /* --- GAYA PAGINASI BARU --- */
+        .pagination-wrapper {
+            background-color: #f8f9fa;
+            padding: 20px 15px;
+            margin-top: 30px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .pagination-wrapper a, 
+        .pagination-wrapper span {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 40px;
+            height: 40px;
+            padding: 0 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.2s ease-in-out;
+            user-select: none;
+        }
+
+        .pagination-wrapper a {
+            color: var(--primary-color);
+            background-color: #fff;
+            border: 1px solid #dee2e6;
+        }
+
+        .pagination-wrapper a:hover {
+            background-color: var(--primary-color);
+            color: #fff;
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .pagination-wrapper span.active {
+            background-color: var(--primary-color);
+            color: #fff;
+            border: 1px solid var(--primary-color);
+            cursor: default;
+            box-shadow: 0 4px 10px rgba(30, 16, 94, 0.3);
+        }
+
+        .pagination-wrapper span.disabled {
+            color: #adb5bd;
+            background-color: #e9ecef;
+            border: 1px solid #dee2e6;
+            cursor: not-allowed;
+        }
+
+        .pagination-wrapper span.ellipsis {
+            background-color: transparent;
+            border: none;
+            color: #6c757d;
+            font-weight: bold;
+        }
+        
+        .info-pagination {
+            background: #e7f3ff;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: 500;
+            color: var(--primary-color);
+        }
     </style>
 </head>
 <body>
@@ -339,6 +453,12 @@ $conn->close();
             <p><strong>Jabatan:</strong> <?= htmlspecialchars($jabatan) ?></p>
         </div>
 
+        <!-- Info Pagination -->
+        <div class="info-pagination">
+            Menampilkan <?php echo count($riwayat_khl); ?> dari <?php echo $total_data; ?> KHL 
+            (Halaman <?php echo $page; ?> dari <?php echo $total_pages; ?>)
+        </div>
+
         <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
             <a href="pengajuankhl_penanggungjawab.php" class="btn">+ Ajukan KHL Baru</a>
         </div>
@@ -366,7 +486,10 @@ $conn->close();
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($riwayat_khl as $khl): ?>
+                        <?php 
+                        $no = $offset + 1;
+                        foreach ($riwayat_khl as $khl): 
+                        ?>
                             <tr>
                                 <td>#<?= $khl['id_khl'] ?></td>
                                 <td>
@@ -424,22 +547,57 @@ $conn->close();
                         <?php endforeach; ?>
                     </tbody>
                 </table>
+
+                <!-- PAGINATION -->
+                <?php if ($total_pages > 1): ?>
+                <div class="pagination-wrapper">
+                    <?php
+                    // Tombol Sebelumnya
+                    if ($page > 1) {
+                        echo '<a href="?page=' . ($page - 1) . '">‹ Sebelumnya</a>';
+                    } else {
+                        echo '<span class="disabled">‹ Sebelumnya</span>';
+                    }
+
+                    // Nomor halaman
+                    $range = 1;
+                    if ($page > ($range + 1)) {
+                        echo '<a href="?page=1">1</a>';
+                        if ($page > ($range + 2)) {
+                            echo '<span class="ellipsis">...</span>';
+                        }
+                    }
+
+                    for ($i = max(1, $page - $range); $i <= min($total_pages, $page + $range); $i++) {
+                        if ($i == $page) {
+                            echo '<span class="active">' . $i . '</span>';
+                        } else {
+                            echo '<a href="?page=' . $i . '">' . $i . '</a>';
+                        }
+                    }
+
+                    if ($page < ($total_pages - $range)) {
+                        if ($page < ($total_pages - $range - 1)) {
+                            echo '<span class="ellipsis">...</span>';
+                        }
+                        echo '<a href="?page=' . $total_pages . '">' . $total_pages . '</a>';
+                    }
+
+                    // Tombol Selanjutnya
+                    if ($page < $total_pages) {
+                        echo '<a href="?page=' . ($page + 1) . '">Selanjutnya ›</a>';
+                    } else {
+                        echo '<span class="disabled">Selanjutnya ›</span>';
+                    }
+                    ?>
+                </div>
+                <?php endif; ?>
+
             <?php endif; ?>
         </div>
 
+        <!-- STATISTIK -->
         <?php if (!empty($riwayat_khl)): ?>
-            <?php
-            $total_pengajuan = count($riwayat_khl);
-            $disetujui = array_filter($riwayat_khl, function($khl) {
-                return $khl['status_khl'] == 'disetujui';
-            });
-            $ditolak = array_filter($riwayat_khl, function($khl) {
-                return $khl['status_khl'] == 'ditolak';
-            });
-            $pending = array_filter($riwayat_khl, function($khl) {
-                return $khl['status_khl'] == 'pending';
-            });
-            ?>
             <div style="margin-top: 30px; padding: 15px; background: #f8f9fa; border-radius: 10px;">
                 <h4 style="margin-top: 0; color: var(--primary-color);">Statistik Pengajuan KHL</h4>
                 <div style="display: flex; gap: 20px; flex-wrap: wrap;">
@@ -448,15 +606,15 @@ $conn->close();
                         <div style="font-size: 0.8rem; color: #666;">Total Pengajuan</div>
                     </div>
                     <div style="text-align: center;">
-                        <div style="font-size: 1.5rem; font-weight: bold; color: var(--status-disetujui);"><?= count($disetujui) ?></div>
+                        <div style="font-size: 1.5rem; font-weight: bold; color: var(--status-disetujui);"><?= $disetujui_count ?></div>
                         <div style="font-size: 0.8rem; color: #666;">Disetujui</div>
                     </div>
                     <div style="text-align: center;">
-                        <div style="font-size: 1.5rem; font-weight: bold; color: var(--status-pending);"><?= count($pending) ?></div>
+                        <div style="font-size: 1.5rem; font-weight: bold; color: var(--status-pending);"><?= $pending_count ?></div>
                         <div style="font-size: 0.8rem; color: #666;">Menunggu</div>
                     </div>
                     <div style="text-align: center;">
-                        <div style="font-size: 1.5rem; font-weight: bold; color: var(--status-ditolak);"><?= count($ditolak) ?></div>
+                        <div style="font-size: 1.5rem; font-weight: bold; color: var(--status-ditolak);"><?= $ditolak_count ?></div>
                         <div style="font-size: 0.8rem; color: #666;">Ditolak</div>
                     </div>
                 </div>
