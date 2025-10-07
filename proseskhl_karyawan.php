@@ -33,7 +33,7 @@ if (empty($nik) || empty($proyek) || empty($tanggal_khl) || empty($jam_mulai_ker
 }
 
 // Ambil data karyawan untuk mendapatkan divisi, jabatan, dan role
-$query_karyawan = "SELECT divisi, jabatan, role FROM data_karyawan WHERE kode_karyawan = ?";
+$query_karyawan = "SELECT nama_lengkap, divisi, jabatan, role FROM data_karyawan WHERE kode_karyawan = ?";
 $stmt_karyawan = mysqli_prepare($conn, $query_karyawan);
 mysqli_stmt_bind_param($stmt_karyawan, "s", $nik);
 mysqli_stmt_execute($stmt_karyawan);
@@ -45,6 +45,7 @@ if (!$karyawan) {
     exit();
 }
 
+$nama_lengkap = $karyawan['nama_lengkap'];
 $divisi = $karyawan['divisi'];
 $jabatan = $karyawan['jabatan'];
 $role = $karyawan['role'];
@@ -74,8 +75,8 @@ if (mysqli_num_rows($check_table) == 0) {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci";
     
     if (!mysqli_query($conn, $create_table)) {
-        header("Location: formkhlkaryawan.php?status=error&message=Gagal membuat tabel database");
-        exit();
+        $error_message = "Gagal membuat tabel database";
+        $status = "error";
     }
 } else {
     // Periksa dan tambahkan kolom yang belum ada
@@ -90,37 +91,270 @@ if (mysqli_num_rows($check_table) == 0) {
         $check_column = mysqli_query($conn, "SHOW COLUMNS FROM data_pengajuan_khl LIKE '$column_name'");
         if (mysqli_num_rows($check_column) == 0) {
             if (!mysqli_query($conn, $alter_query)) {
-                header("Location: formkhlkaryawan.php?status=error&message=Gagal menambahkan kolom $column_name");
-                exit();
+                $error_message = "Gagal menambahkan kolom $column_name";
+                $status = "error";
+                break;
             }
         }
     }
 }
 
-// Insert data dengan informasi lengkap
-$sql = "INSERT INTO data_pengajuan_khl 
-        (kode_karyawan, divisi, jabatan, role, proyek, tanggal_khl, jam_mulai_kerja, jam_akhir_kerja, 
-         tanggal_cuti_khl, jam_mulai_cuti_khl, jam_akhir_cuti_khl, status_khl) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')";
+// Jika tidak ada error sebelumnya, lakukan insert data
+if (!isset($status)) {
+    // Insert data dengan informasi lengkap
+    $sql = "INSERT INTO data_pengajuan_khl 
+            (kode_karyawan, divisi, jabatan, role, proyek, tanggal_khl, jam_mulai_kerja, jam_akhir_kerja, 
+             tanggal_cuti_khl, jam_mulai_cuti_khl, jam_akhir_cuti_khl, status_khl) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')";
 
-$stmt = mysqli_prepare($conn, $sql);
-if ($stmt) {
-    mysqli_stmt_bind_param($stmt, "sssssssssss", 
-        $nik, $divisi, $jabatan, $role, $proyek, $tanggal_khl, $jam_mulai_kerja, $jam_akhir_kerja,
-        $tanggal_cuti_khl, $jam_mulai_cuti_khl, $jam_akhir_cuti_khl);
-    
-    if (mysqli_stmt_execute($stmt)) {
-        // Redirect ke dashboard dengan pesan sukses
-        header("Location: dashboardkaryawan.php?status=success&message=Pengajuan KHL berhasil dikirim!");
+    $stmt = mysqli_prepare($conn, $sql);
+    if ($stmt) {
+        mysqli_stmt_bind_param($stmt, "sssssssssss", 
+            $nik, $divisi, $jabatan, $role, $proyek, $tanggal_khl, $jam_mulai_kerja, $jam_akhir_kerja,
+            $tanggal_cuti_khl, $jam_mulai_cuti_khl, $jam_akhir_cuti_khl);
+        
+        if (mysqli_stmt_execute($stmt)) {
+            $success_message = "Pengajuan KHL berhasil dikirim!";
+            $status = "success";
+        } else {
+            $error_message = "Gagal menyimpan data: " . mysqli_error($conn);
+            $status = "error";
+        }
+        mysqli_stmt_close($stmt);
     } else {
-        $error_msg = "Gagal menyimpan data: " . mysqli_error($conn);
-        header("Location: formkhlkaryawan.php?status=error&message=" . urlencode($error_msg));
+        $error_message = "Gagal mempersiapkan statement: " . mysqli_error($conn);
+        $status = "error";
     }
-    mysqli_stmt_close($stmt);
-} else {
-    $error_msg = "Gagal mempersiapkan statement: " . mysqli_error($conn);
-    header("Location: formkhlkaryawan.php?status=error&message=" . urlencode($error_msg));
 }
 
 mysqli_close($conn);
-?>                       
+?>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Proses Pengajuan KHL</title>
+<style>
+  body {
+    margin:0;
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(180deg,#1E105E 0%,#8897AE 100%);
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+  }
+  header {
+    background:#fff;
+    padding:20px 40px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    border-bottom:2px solid #34377c;
+  }
+  .logo {display:flex;align-items:center;gap:16px;font-weight:500;font-size:20px;color:#2e1f4f;}
+  .logo img {width:140px;height:50px;object-fit:contain;}
+
+  nav ul {list-style:none;margin:0;padding:0;display:flex;gap:30px;}
+  nav li {position:relative;}
+  nav a {text-decoration:none;color:#333;font-weight:600;}
+  nav li ul {
+      display:none;
+      position:absolute;
+      background:#fff;
+      padding:10px 0;
+      border-radius:8px;
+      box-shadow:0 2px 8px rgba(0,0,0,.15);
+      min-width:150px;
+  }
+  nav li:hover ul {display:block;}
+  nav li ul li {padding:5px 20px;}
+  nav li ul li a {color:#333;font-weight:400;}
+
+  main {
+    flex:1;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:40px 20px;
+  }
+  .form-container {
+    width:100%;
+    max-width:500px;
+    background:rgba(255,255,255,0.95);
+    border-radius:15px;
+    padding:30px 40px;
+    box-shadow:0 0 15px rgba(0,0,0,0.2);
+  }
+  h2 {
+    text-align:center;
+    font-size:22px;
+    color:#2e1f4f;
+    margin-bottom:20px;
+  }
+  
+  .success-message {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 12px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    border: 1px solid #c3e6cb;
+    text-align: center;
+  }
+  
+  .error-message {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 12px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    border: 1px solid #f5c6cb;
+    text-align: center;
+  }
+  
+  .user-info {
+    background-color: #f0f0f0;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border-left: 4px solid #4a3f81;
+  }
+  
+  .user-info p {
+    margin: 8px 0;
+    font-size: 14px;
+    color: #333;
+  }
+  
+  .user-info strong {
+    color: #4a3f81;
+  }
+
+  .info-message {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    padding: 12px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    border: 1px solid #bee5eb;
+    text-align: center;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 25px;
+  }
+  
+  .btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+  }
+  
+  .btn-primary {
+    background-color: #4a3f81;
+    color: #fff;
+  }
+  
+  .btn-primary:hover {
+    background-color: #3a3162;
+  }
+  
+  .btn-secondary {
+    background-color: #6c757d;
+    color: #fff;
+  }
+  
+  .btn-secondary:hover {
+    background-color: #545b62;
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">
+    <img src="image/namayayasan.png" alt="Logo Yayasan">
+    <span>Yayasan Purba Danarta</span>
+  </div>
+  <nav>
+    <ul>
+      <li><a href="dashboardkaryawan.php">Beranda</a></li>
+      <li><a href="#">Cuti ▾</a>
+        <ul>
+          <li><a href="formcutikaryawan.php">Pengajuan Cuti</a></li>
+          <li><a href="riwayat_cuti_pribadi.php">Riwayat Cuti</a></li>
+        </ul>
+      </li>
+      <li><a href="#">KHL ▾</a>
+        <ul>
+          <li><a href="formkhlkaryawan.php">Pengajuan KHL</a></li>
+          <li><a href="riwayat_khl_pribadi.php">Riwayat KHL</a></li>
+        </ul>
+      </li>
+      <li><a href="#">Profil ▾</a>
+        <ul>
+          <li><a href="data_pribadi.php">Data Pribadi</a></li>
+          <li><a href="logout2.php">Logout</a></li>
+        </ul>
+      </li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <div class="form-container">
+    <h2>Status Pengajuan KHL</h2>
+    
+    <!-- Tampilkan pesan sukses/error -->
+    <?php if (isset($status)): ?>
+        <?php if ($status == 'success'): ?>
+            <div class="success-message">
+                <?php echo htmlspecialchars($success_message); ?>
+            </div>
+        <?php elseif ($status == 'error'): ?>
+            <div class="error-message">
+                <?php echo htmlspecialchars($error_message); ?>
+            </div>
+        <?php endif; ?>
+    <?php endif; ?>
+
+    <!-- Info Pengguna -->
+    <div class="user-info">
+      <p><strong>Kode Karyawan:</strong> <?php echo htmlspecialchars($nik); ?></p>
+      <p><strong>Nama:</strong> <?php echo htmlspecialchars($nama_lengkap); ?></p>
+      <p><strong>Divisi:</strong> <?php echo htmlspecialchars($divisi); ?></p>
+      <p><strong>Jabatan:</strong> <?php echo htmlspecialchars($jabatan); ?></p>
+      <p><strong>Role:</strong> <?php echo htmlspecialchars(ucfirst(str_replace('_', ' ', $role))); ?></p>
+    </div>
+
+    <!-- Detail Pengajuan KHL -->
+    <div class="user-info">
+      <h3 style="margin-top: 0; color: #4a3f81;">Detail Pengajuan KHL</h3>
+      <p><strong>Proyek:</strong> <?php echo htmlspecialchars($proyek); ?></p>
+      <p><strong>Tanggal KHL:</strong> <?php echo htmlspecialchars($tanggal_khl); ?></p>
+      <p><strong>Jam Mulai Kerja:</strong> <?php echo htmlspecialchars($jam_mulai_kerja); ?></p>
+      <p><strong>Jam Akhir Kerja:</strong> <?php echo htmlspecialchars($jam_akhir_kerja); ?></p>
+      <p><strong>Tanggal Cuti KHL:</strong> <?php echo htmlspecialchars($tanggal_cuti_khl); ?></p>
+      <p><strong>Jam Mulai Cuti KHL:</strong> <?php echo htmlspecialchars($jam_mulai_cuti_khl); ?></p>
+      <p><strong>Jam Akhir Cuti KHL:</strong> <?php echo htmlspecialchars($jam_akhir_cuti_khl); ?></p>
+      <p><strong>Status:</strong> <span style="color: #ffa500; font-weight: bold;">Pending</span></p>
+    </div>
+
+    <!-- Tombol Aksi -->
+    <div class="action-buttons">
+      <a href="formkhlkaryawan.php" class="btn btn-primary">Ajukan KHL Lain</a>
+      <a href="dashboardkaryawan.php" class="btn btn-secondary">Kembali ke Dashboard</a>
+    </div>
+  </div>
+</main>
+</body>
+</html>

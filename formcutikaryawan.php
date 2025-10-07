@@ -376,7 +376,7 @@ if (empty($divisi) || empty($jabatan)) {
         <option value="Tahunan">Cuti Tahunan</option>
         <option value="Lustrum">Cuti Lustrum</option>
         <option value="Khusus">Cuti Khusus</option>
-        <option value="DiluarTanggungan">Cuti Diluar Tanggungan</option>
+        <option value="Diluar Tanggungan">Cuti Diluar Tanggungan</option>
         <option value="Sakit">Cuti Sakit</option>
         <option value="Ibadah">Cuti Ibadah</option>
       </select>
