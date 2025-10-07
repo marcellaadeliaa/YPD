@@ -193,6 +193,7 @@ $conn->close();
             <h4>📋 Informasi Kuota Cuti</h4>
             <p><strong>Cuti Tahunan:</strong> Kuota awal 12 hari per tahun (default).</p>
             <p><strong>Cuti Lustrum:</strong> Kuota bervariasi per karyawan.</p>
+            <p>Untuk karyawan baru, belum mendapat jatah untuk cuti tahunan dan lustrum.</p>
             <p>Anda dapat menyesuaikan sisa cuti karyawan melalui tombol "Edit Sisa Cuti".</p>
         </div>
         

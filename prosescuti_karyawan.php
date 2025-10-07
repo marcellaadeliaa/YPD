@@ -58,11 +58,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $jenis_cuti = 'Khusus - ' . $_POST['jenis_cuti_khusus'];
     }
 
-    // Handle upload file jika jenis cuti adalah 'Sakit'
+    // Validasi khusus untuk cuti sakit - wajib ada file
     if ($jenis_cuti_raw === 'Sakit') {
+        if (!isset($_FILES['bukti_surat_dokter']) || $_FILES['bukti_surat_dokter']['error'] === UPLOAD_ERR_NO_FILE) {
+            header("Location: formcutikaryawan.php?status=error&message=Untuk cuti sakit, wajib mengunggah bukti surat keterangan dokter.");
+            exit();
+        }
+        
         $uploadResult = handleFileUpload($_FILES['bukti_surat_dokter']);
         if ($uploadResult === false) {
             header("Location: formcutikaryawan.php?status=error&message=Gagal mengunggah file surat dokter.");
+            exit();
+        } elseif ($uploadResult === null) {
+            header("Location: formcutikaryawan.php?status=error&message=Terjadi kesalahan saat upload file.");
             exit();
         }
         $file_surat_path = $uploadResult;
@@ -72,39 +80,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (empty($kode_karyawan) || empty($jenis_cuti) || empty($tanggal_mulai) || empty($tanggal_akhir) || empty($alasan)) {
         header("Location: formcutikaryawan.php?status=error&message=Semua field wajib diisi.");
         exit();
-    }
-
-    // Siapkan query SQL untuk INSERT data
-    $sql = "INSERT INTO data_pengajuan_cuti (
-                kode_karyawan, nama_karyawan, divisi, jabatan, role, 
-                jenis_cuti, tanggal_mulai, tanggal_akhir, alasan, file_surat_dokter, status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Menunggu Persetujuan')";
-
-    $stmt = $conn->prepare($sql);
-
-    if ($stmt) {
-        // Bind parameter ke query (tambahkan 's' untuk file_surat_dokter)
-        $stmt->bind_param("ssssssssss", 
-            $kode_karyawan, $nama_karyawan, $divisi, $jabatan, $role, 
-            $jenis_cuti, $tanggal_mulai, $tanggal_akhir, $alasan, $file_surat_path
-        );
-
-        if ($stmt->execute()) {
-            $display_data = true;
-        } else {
-            $error_msg = "Gagal menyimpan pengajuan: " . $stmt->error;
         }
-        $stmt->close();
     } else {
-        $error_msg = "Terjadi kesalahan pada server: " . $conn->error;
-    }
-    $conn->close();
-
-    if (!empty($error_msg)) {
-        header("Location: formcutikaryawan.php?status=error&message=" . urlencode($error_msg));
-        exit();
-    }
-} else {
     header("Location: formcutikaryawan.php");
     exit();
 }
@@ -117,59 +94,144 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <title>Hasil Pengajuan Cuti</title>
 <style>
     body {
-      margin:0;
-      font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: linear-gradient(180deg, #1E105E 0%, #8897AE 100%);
       color: #333;
+      min-height: 100vh;
     }
+    
     header {
-      background:#fff;
-      padding:20px 40px;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      border-bottom:2px solid #34377c;
+      background: #fff;
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #34377c;
     }
-    .logo {display:flex;align-items:center;gap:16px;font-weight:500;font-size:20px;color:#2e1f4f;}
-    .logo img {width:140px;height:50px;object-fit:contain;}
-    nav a { text-decoration:none; color:#333; font-weight:600; }
-    main {
-      max-width:600px;
-      margin:60px auto;
-      background:#fff;
-      border-radius:15px;
-      padding:30px 40px;
-      box-shadow:0 0 10px rgba(72,54,120,0.2);
-      text-align:center;
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-weight: 500;
+      font-size: 20px;
+      color: #2e1f4f;
     }
-    h1 {font-size:24px;color:#2e1f4f;margin-bottom:10px;}
-    .success-icon { font-size: 48px; color: #28a745; margin-bottom: 15px; }
-    .data-cuti {
-        text-align:left; 
-        font-size:16px; 
-        line-height:1.8; 
-        border-top: 1px solid #eee; 
-        margin-top: 20px;
-        padding-top: 20px;
+    
+    .logo img {
+      width: 140px;
+      height: 50px;
+      object-fit: contain;
     }
-    .data-cuti p {
-        margin: 8px 0;
-        display: grid;
-        grid-template-columns: 180px 1fr;
-    }
-    .data-cuti strong { color: #4a3f81; }
-    a.btn {
-      display:inline-block;
-      margin-top:30px;
-      padding:12px 25px;
-      background-color:#4a3f81;
-      color:#fff;
-      text-decoration:none;
-      border-radius:8px;
-      font-weight:600;
+    
+    nav a {
+      text-decoration: none;
+      color: #333;
+      font-weight: 600;
+      padding: 8px 16px;
+      border-radius: 5px;
       transition: background-color 0.3s;
     }
-    a.btn:hover { background-color:#3a3162; }
+    
+    nav a:hover {
+      background-color: #f0f0f0;
+    }
+    
+    main {
+      max-width: 600px;
+      margin: 60px auto;
+      background: #fff;
+      border-radius: 15px;
+      padding: 30px 40px;
+      box-shadow: 0 0 10px rgba(72, 54, 120, 0.2);
+      text-align: center;
+    }
+    
+    h1 {
+      font-size: 24px;
+      color: #2e1f4f;
+      margin-bottom: 10px;
+    }
+    
+    .success-icon {
+      font-size: 48px;
+      color: #28a745;
+      margin-bottom: 15px;
+    }
+    
+    .data-cuti {
+      text-align: left;
+      font-size: 16px;
+      line-height: 1.8;
+      border-top: 1px solid #eee;
+      margin-top: 20px;
+      padding-top: 20px;
+    }
+    
+    .data-cuti p {
+      margin: 8px 0;
+      display: grid;
+      grid-template-columns: 180px 1fr;
+    }
+    
+    .data-cuti strong {
+      color: #4a3f81;
+    }
+    
+    a.btn {
+      display: inline-block;
+      margin-top: 30px;
+      padding: 12px 25px;
+      background-color: #4a3f81;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      transition: background-color 0.3s;
+      border: none;
+      cursor: pointer;
+    }
+    
+    a.btn:hover {
+      background-color: #3a3162;
+    }
+    
+    .error-message {
+      color: #dc3545;
+      background-color: #f8d7da;
+      border: 1px solid #f5c6cb;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+    
+    .success-message {
+      color: #155724;
+      background-color: #d4edda;
+      border: 1px solid #c3e6cb;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+    
+    @media (max-width: 768px) {
+      header {
+        padding: 15px 20px;
+        flex-direction: column;
+        gap: 15px;
+      }
+      
+      main {
+        margin: 30px 20px;
+        padding: 20px;
+      }
+      
+      .data-cuti p {
+        grid-template-columns: 1fr;
+        gap: 5px;
+      }
+    }
 </style>
 </head>
 <body>

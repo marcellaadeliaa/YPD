@@ -20,7 +20,8 @@ $result = $stmt->get_result();
 if ($result->num_rows > 0) {
     // Jika data ditemukan, artinya user sudah pernah mendaftar.
     $data_pelamar = $result->fetch_assoc();
-    $status_pelamar = htmlspecialchars($data_pelamar['status']);
+    // TAMBAHKAN '??' UNTUK MEMBERI NILAI DEFAULT JIKA STATUS KOSONG
+    $status_pelamar = htmlspecialchars($data_pelamar['status'] ?? 'Menunggu Proses');
 
     //Tampilan pesan pemberitahuan dan hentikan script agar form tidak muncul.
     ?>
@@ -34,7 +35,16 @@ if ($result->num_rows > 0) {
             .notice-card { background: #fff; padding: 40px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); text-align: center; max-width: 500px; }
             .notice-card h2 { color: #1E105E; margin-top: 0; }
             .notice-card p { font-size: 1.1em; line-height: 1.6; }
-            .notice-card .status { font-weight: bold; font-size: 1.2em; padding: 10px; border-radius: 8px; background-color: #f0f0f0; display: inline-block; margin-top: 10px; }
+            .notice-card .status { 
+                font-weight: bold; 
+                font-size: 1.2em; 
+                padding: 10px; 
+                border-radius: 8px; 
+                background-color: #f0f0f0; 
+                display: block; 
+                width: fit-content; 
+                margin: 15px auto 25px; 
+            }
             .notice-card a { display: inline-block; margin-top: 30px; padding: 12px 25px; background-color: #4a3f81; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; transition: background-color 0.3s; }
             .notice-card a:hover { background-color: #3a3162; }
         </style>
