@@ -16,6 +16,26 @@ $divisi = $user['divisi'];
 $jabatan = $user['jabatan'];
 $role = $user['role'];
 
+// Ambil sisa cuti dari database
+$sisa_cuti_tahunan = 0;
+$sisa_cuti_lustrum = 0;
+
+$query_sisa_cuti = "SELECT sisa_cuti_tahunan, sisa_cuti_lustrum FROM data_karyawan WHERE kode_karyawan = ?";
+$stmt_sisa = mysqli_prepare($conn, $query_sisa_cuti);
+
+if($stmt_sisa) {
+    mysqli_stmt_bind_param($stmt_sisa, "s", $nik);
+    mysqli_stmt_execute($stmt_sisa);
+    $result_sisa = mysqli_stmt_get_result($stmt_sisa);
+    $sisa_cuti_data = mysqli_fetch_assoc($result_sisa);
+    
+    if ($sisa_cuti_data) {
+        $sisa_cuti_tahunan = $sisa_cuti_data['sisa_cuti_tahunan'];
+        $sisa_cuti_lustrum = $sisa_cuti_data['sisa_cuti_lustrum'];
+    }
+    mysqli_stmt_close($stmt_sisa);
+}
+
 // Hitung statistik untuk header (sama seperti dashboard)
 $stmt_cuti = $conn->prepare("SELECT COUNT(id) as total FROM pengajuan_cuti WHERE divisi = ? AND status = 'Menunggu'");
 $stmt_cuti->bind_param("s", $divisi);
@@ -229,6 +249,11 @@ if (empty($divisi) || empty($jabatan)) {
             background-color: #3a3162;
         }
         
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
         .success-message {
             background-color: #d4edda;
             color: #155724;
@@ -352,6 +377,33 @@ if (empty($divisi) || empty($jabatan)) {
             border-radius: 4px;
             border-left: 3px solid #e74c3c;
         }
+        
+        .sisa-cuti-info {
+            color: #2e7d32;
+            font-weight: 600;
+            font-size: 12px;
+            margin-top: 5px;
+            padding: 5px;
+            background-color: #f1f8e9;
+            border-radius: 4px;
+            border-left: 3px solid #2e7d32;
+        }
+        
+        .warning-message {
+            color: #e65100;
+            font-weight: 600;
+            font-size: 12px;
+            margin-top: 5px;
+            padding: 5px;
+            background-color: #fff3e0;
+            border-radius: 4px;
+            border-left: 3px solid #e65100;
+        }
+
+        .file-required {
+            border: 1px solid #e74c3c !important;
+            background-color: #fdf2f2 !important;
+        }
     </style>
 </head>
 <body>
@@ -423,6 +475,8 @@ if (empty($divisi) || empty($jabatan)) {
                 <p><strong>Divisi:</strong> <?php echo htmlspecialchars($divisi); ?></p>
                 <p><strong>Jabatan:</strong> <?php echo htmlspecialchars($jabatan); ?></p>
                 <p><strong>Role:</strong> <?php echo htmlspecialchars(ucfirst(str_replace('_', ' ', $role))); ?></p>
+                <p><strong>Sisa Cuti Tahunan:</strong> <?php echo htmlspecialchars($sisa_cuti_tahunan); ?> hari</p>
+                <p><strong>Sisa Cuti Lustrum:</strong> <?php echo htmlspecialchars($sisa_cuti_lustrum); ?> hari</p>
             </div>
 
             <div class="form-note">
@@ -441,7 +495,7 @@ if (empty($divisi) || empty($jabatan)) {
                 <input type="text" value="<?php echo htmlspecialchars($divisi); ?>" readonly>
 
                 <label class="required">Jenis Cuti</label>
-                <select name="jenis_cuti" id="jenisCuti" required onchange="toggleConditionalInputs()">
+                <select name="jenis_cuti" id="jenisCuti" required onchange="toggleConditionalInputs(); checkSisaCuti(); validateFileRequired();">
                     <option value="">Pilih Jenis Cuti</option>
                     <option value="Tahunan">Cuti Tahunan</option>
                     <option value="Lustrum">Cuti Lustrum</option>
@@ -451,8 +505,11 @@ if (empty($divisi) || empty($jabatan)) {
                     <option value="Ibadah">Cuti Ibadah</option>
                 </select>
 
+                <div id="sisaCutiInfo" class="sisa-cuti-info" style="display: none;"></div>
+                <div id="warningMessage" class="warning-message" style="display: none;"></div>
+
                 <div id="khususInputContainer" class="conditional-input">
-                    <label for="jenis_cuti_khusus">Jenis Cuti Khusus</label>
+                    <label for="jenis_cuti_khusus" class="required">Jenis Cuti Khusus</label>
                     <select name="jenis_cuti_khusus" id="jenis_cuti_khusus" onchange="updateMaxDaysInfo()">
                         <option value="">Pilih Jenis Cuti Khusus</option>
                         <option value="Menikah" data-max-days="3">Menikah</option>
@@ -466,31 +523,37 @@ if (empty($divisi) || empty($jabatan)) {
                 </div>
 
                 <div id="sakitInputContainer" class="conditional-input">
-                    <label for="bukti_surat_dokter">Bukti Surat Keterangan Dokter</label>
+                    <label for="bukti_surat_dokter" class="required">Bukti Surat Keterangan Dokter</label>
                     <div class="file-input-container">
-                        <input type="file" name="bukti_surat_dokter" id="bukti_surat_dokter" accept="image/*,.pdf">
+                        <input type="file" name="bukti_surat_dokter" id="bukti_surat_dokter" accept="image/*,.pdf" onchange="validateFileUpload(this)">
                     </div>
                     <small>Format: JPG, PNG, atau PDF (maks. 5MB)</small>
+                    <div id="fileError" class="error-message" style="display: none; margin-top: 5px; font-size: 12px; padding: 8px;"></div>
+                    <div id="fileSuccess" class="success-message" style="display: none; margin-top: 5px; font-size: 12px; padding: 8px;"></div>
                 </div>
 
                 <label class="required">Periode Cuti</label>
                 <div class="date-range-container">
-                    <input type="date" name="tanggal_mulai" id="tanggal_mulai" min="<?php echo date('Y-m-d'); ?>" required onchange="updateTanggalAkhir(); validateMaxDays();">
+                    <input type="date" name="tanggal_mulai" id="tanggal_mulai" min="<?php echo date('Y-m-d'); ?>" required onchange="updateTanggalAkhir(); validateMaxDays(); checkSisaCuti();">
                     <span>s/d</span>
-                    <input type="date" name="tanggal_akhir" id="tanggal_akhir" min="<?php echo date('Y-m-d'); ?>" required onchange="validateMaxDays();">
+                    <input type="date" name="tanggal_akhir" id="tanggal_akhir" min="<?php echo date('Y-m-d'); ?>" required onchange="validateMaxDays(); checkSisaCuti();">
                 </div>
                 <small>Untuk cuti 1 hari, isi tanggal yang sama pada kedua kolom</small>
+
+                <div id="totalHariInfo" class="sisa-cuti-info" style="display: none;"></div>
 
                 <label class="required">Alasan Cuti</label>
                 <textarea name="alasan_cuti" id="alasan_cuti" placeholder="Tuliskan alasan cuti Anda..." required></textarea>
 
-                <button type="submit">Ajukan Cuti</button>
+                <button type="submit" id="submitButton">Ajukan Cuti</button>
             </form>
         </div>
     </main>
 
     <script>
         let currentMaxDays = 0;
+        const sisaCutiTahunan = <?php echo $sisa_cuti_tahunan; ?>;
+        const sisaCutiLustrum = <?php echo $sisa_cuti_lustrum; ?>;
 
         function toggleConditionalInputs() {
             const jenisCutiSelect = document.getElementById('jenisCuti');
@@ -508,6 +571,10 @@ if (empty($divisi) || empty($jabatan)) {
             maxDaysInfo.style.display = 'none';
             currentMaxDays = 0;
             
+            // Reset file validation messages
+            document.getElementById('fileError').style.display = 'none';
+            document.getElementById('fileSuccess').style.display = 'none';
+            
             // Tampilkan input yang sesuai dengan pilihan
             if (jenisCutiSelect.value === 'Khusus') {
                 khususInputContainer.classList.add('show');
@@ -515,7 +582,62 @@ if (empty($divisi) || empty($jabatan)) {
             } else if (jenisCutiSelect.value === 'Sakit') {
                 sakitInputContainer.classList.add('show');
                 sakitInput.required = true;
+                validateFileRequired();
             }
+            
+            checkSisaCuti();
+        }
+
+        function validateFileRequired() {
+            const jenisCutiSelect = document.getElementById('jenisCuti');
+            const fileInput = document.getElementById('bukti_surat_dokter');
+            
+            if (jenisCutiSelect.value === 'Sakit') {
+                fileInput.required = true;
+                fileInput.classList.add('file-required');
+            } else {
+                fileInput.required = false;
+                fileInput.classList.remove('file-required');
+            }
+        }
+
+        function validateFileUpload(input) {
+            const fileError = document.getElementById('fileError');
+            const fileSuccess = document.getElementById('fileSuccess');
+            
+            // Reset messages
+            fileError.style.display = 'none';
+            fileSuccess.style.display = 'none';
+            
+            if (input.files.length > 0) {
+                const file = input.files[0];
+                const fileSize = file.size / 1024 / 1024; // in MB
+                const fileType = file.type;
+                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+                
+                // Validasi tipe file
+                if (!allowedTypes.includes(fileType)) {
+                    fileError.textContent = 'Format file tidak didukung. Harap unggah file JPG, PNG, atau PDF.';
+                    fileError.style.display = 'block';
+                    input.value = ''; // Clear the file input
+                    return false;
+                }
+                
+                // Validasi ukuran file (maks 5MB)
+                if (fileSize > 5) {
+                    fileError.textContent = 'Ukuran file terlalu besar. Maksimal 5MB.';
+                    fileError.style.display = 'block';
+                    input.value = ''; // Clear the file input
+                    return false;
+                }
+                
+                // File valid
+                fileSuccess.textContent = 'File berhasil diunggah.';
+                fileSuccess.style.display = 'block';
+                return true;
+            }
+            
+            return false;
         }
 
         function updateMaxDaysInfo() {
@@ -548,6 +670,7 @@ if (empty($divisi) || empty($jabatan)) {
             }
             
             validateMaxDays();
+            checkSisaCuti();
         }
 
         function validateMaxDays() {
@@ -572,6 +695,79 @@ if (empty($divisi) || empty($jabatan)) {
             }
         }
 
+        function calculateWorkingDays(startDate, endDate) {
+            let count = 0;
+            const current = new Date(startDate);
+            const end = new Date(endDate);
+            
+            while (current <= end) {
+                const dayOfWeek = current.getDay();
+                // Hanya hitung hari Senin-Jumat (1-5)
+                if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                    count++;
+                }
+                current.setDate(current.getDate() + 1);
+            }
+            
+            return count;
+        }
+
+        function checkSisaCuti() {
+            const jenisCutiSelect = document.getElementById('jenisCuti');
+            const tanggalMulai = document.getElementById('tanggal_mulai');
+            const tanggalAkhir = document.getElementById('tanggal_akhir');
+            const sisaCutiInfo = document.getElementById('sisaCutiInfo');
+            const warningMessage = document.getElementById('warningMessage');
+            const totalHariInfo = document.getElementById('totalHariInfo');
+            const submitButton = document.getElementById('submitButton');
+            
+            // Reset messages
+            sisaCutiInfo.style.display = 'none';
+            warningMessage.style.display = 'none';
+            totalHariInfo.style.display = 'none';
+            submitButton.disabled = false;
+            
+            if (jenisCutiSelect.value && tanggalMulai.value && tanggalAkhir.value) {
+                const startDate = new Date(tanggalMulai.value);
+                const endDate = new Date(tanggalAkhir.value);
+                
+                // Hitung total hari cuti (termasuk weekend)
+                const timeDiff = endDate.getTime() - startDate.getTime();
+                const totalDays = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
+                
+                // Hitung hari kerja (Senin-Jumat)
+                const workingDays = calculateWorkingDays(startDate, endDate);
+                
+                totalHariInfo.innerHTML = `Total hari cuti: ${totalDays} hari (${workingDays} hari kerja)`;
+                totalHariInfo.style.display = 'block';
+                
+                if (jenisCutiSelect.value === 'Tahunan') {
+                    sisaCutiInfo.innerHTML = `Sisa cuti tahunan Anda: ${sisaCutiTahunan} hari`;
+                    sisaCutiInfo.style.display = 'block';
+                    
+                    if (workingDays > sisaCutiTahunan) {
+                        warningMessage.innerHTML = `PERINGATAN: Anda mengajukan ${workingDays} hari kerja, tetapi sisa cuti tahunan hanya ${sisaCutiTahunan} hari. Pengajuan tidak dapat diproses.`;
+                        warningMessage.style.display = 'block';
+                        submitButton.disabled = true;
+                    } else if (workingDays > 0) {
+                        sisaCutiInfo.innerHTML += ` - Setelah cuti ini, sisa cuti tahunan: ${sisaCutiTahunan - workingDays} hari`;
+                    }
+                    
+                } else if (jenisCutiSelect.value === 'Lustrum') {
+                    sisaCutiInfo.innerHTML = `Sisa cuti lustrum Anda: ${sisaCutiLustrum} hari`;
+                    sisaCutiInfo.style.display = 'block';
+                    
+                    if (workingDays > sisaCutiLustrum) {
+                        warningMessage.innerHTML = `PERINGATAN: Anda mengajukan ${workingDays} hari kerja, tetapi sisa cuti lustrum hanya ${sisaCutiLustrum} hari. Pengajuan tidak dapat diproses.`;
+                        warningMessage.style.display = 'block';
+                        submitButton.disabled = true;
+                    } else if (workingDays > 0) {
+                        sisaCutiInfo.innerHTML += ` - Setelah cuti ini, sisa cuti lustrum: ${sisaCutiLustrum - workingDays} hari`;
+                    }
+                }
+            }
+        }
+
         document.getElementById('formCuti').addEventListener('submit', function(e) {
             const jenisCutiSelect = document.getElementById('jenisCuti');
             const khususInput = document.getElementById('jenis_cuti_khusus');
@@ -579,6 +775,7 @@ if (empty($divisi) || empty($jabatan)) {
             const tanggalMulai = document.getElementById('tanggal_mulai');
             const tanggalAkhir = document.getElementById('tanggal_akhir');
             
+            // Validasi dasar
             if (jenisCutiSelect.value === 'Khusus' && !khususInput.value.trim()) {
                 e.preventDefault();
                 alert('Silakan pilih jenis cuti khusus');
@@ -586,11 +783,21 @@ if (empty($divisi) || empty($jabatan)) {
                 return;
             }
             
-            if (jenisCutiSelect.value === 'Sakit' && !sakitInput.value) {
-                e.preventDefault();
-                alert('Silakan unggah bukti surat keterangan dokter');
-                sakitInput.focus();
-                return;
+            // Validasi khusus untuk cuti sakit - wajib upload file
+            if (jenisCutiSelect.value === 'Sakit') {
+                if (!sakitInput.value) {
+                    e.preventDefault();
+                    alert('Untuk cuti sakit, wajib mengunggah bukti surat keterangan dokter');
+                    sakitInput.focus();
+                    return;
+                }
+                
+                // Validasi file yang sudah diupload
+                if (!validateFileUpload(sakitInput)) {
+                    e.preventDefault();
+                    alert('File surat dokter tidak valid. Pastikan format JPG, PNG, atau PDF dan ukuran maksimal 5MB.');
+                    return;
+                }
             }
             
             if (tanggalMulai.value && tanggalAkhir.value && tanggalAkhir.value < tanggalMulai.value) {
@@ -600,6 +807,7 @@ if (empty($divisi) || empty($jabatan)) {
                 return;
             }
             
+            // Validasi cuti khusus
             if (jenisCutiSelect.value === 'Khusus' && khususInput.value.trim()) {
                 const selectedOption = khususInput.options[khususInput.selectedIndex];
                 const maxDays = parseInt(selectedOption.getAttribute('data-max-days'));
@@ -613,6 +821,27 @@ if (empty($divisi) || empty($jabatan)) {
                     if (dayDiff > maxDays) {
                         e.preventDefault();
                         alert(`Jumlah hari cuti untuk ${selectedOption.text} maksimal ${maxDays} hari. Anda mengajukan ${dayDiff} hari.`);
+                        return;
+                    }
+                }
+            }
+            
+            // Validasi sisa cuti tahunan dan lustrum
+            if (jenisCutiSelect.value === 'Tahunan' || jenisCutiSelect.value === 'Lustrum') {
+                if (tanggalMulai.value && tanggalAkhir.value) {
+                    const startDate = new Date(tanggalMulai.value);
+                    const endDate = new Date(tanggalAkhir.value);
+                    const workingDays = calculateWorkingDays(startDate, endDate);
+                    
+                    if (jenisCutiSelect.value === 'Tahunan' && workingDays > sisaCutiTahunan) {
+                        e.preventDefault();
+                        alert(`Sisa cuti tahunan Anda tidak mencukupi. Anda mengajukan ${workingDays} hari kerja, tetapi sisa cuti hanya ${sisaCutiTahunan} hari.`);
+                        return;
+                    }
+                    
+                    if (jenisCutiSelect.value === 'Lustrum' && workingDays > sisaCutiLustrum) {
+                        e.preventDefault();
+                        alert(`Sisa cuti lustrum Anda tidak mencukupi. Anda mengajukan ${workingDays} hari kerja, tetapi sisa cuti hanya ${sisaCutiLustrum} hari.`);
                         return;
                     }
                 }
