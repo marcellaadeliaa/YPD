@@ -1,83 +1,180 @@
 <?php
 session_start();
+require_once 'config.php'; // Memanggil file koneksi database
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nik     = $_POST['nik'] ?? '';
-    $jenis   = $_POST['jenis_cuti'] ?? '';
-    $tanggal = $_POST['tanggal_cuti'] ?? '';
+// Inisialisasi variabel
+$display_data = false;
+$error_msg = '';
+$file_surat_path = null;
 
-    // ✅ Simpan ke session agar dashboard bisa menampilkan otomatis
-    $_SESSION['last_cuti'] = [
-        'tanggal' => $tanggal,
-        'jenis'   => $jenis,
-        'status'  => 'Menunggu Persetujuan'
-    ];
-
-} else {
-    header("Location: formcutikaryawan.php");
-    exit;
+// Fungsi untuk menangani upload file (tetap sama)
+function handleFileUpload($file) {
+    if (!isset($file) || $file['error'] !== UPLOAD_ERR_OK) {
+        return null;
+    }
+    $uploadDir = 'uploads/surat_sakit/';
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0777, true);
+    }
+    $fileName = time() . '_' . basename($file['name']);
+    $targetPath = $uploadDir . $fileName;
+    if (move_uploaded_file($file['tmp_name'], $targetPath)) {
+        return $targetPath;
+    } else {
+        return false;
+    }
 }
+
+// Cek apakah user sudah login
+if (!isset($_SESSION['user'])) {
+    header("Location: login_karyawan.php");
+    exit();
+}
+
+// Hanya proses jika metode request adalah POST
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Ambil data dari session dan form
+    $user = $_SESSION['user'];
+    $kode_karyawan = $user['kode_karyawan'];
+    $nama_karyawan = $user['nama_lengkap'];
+    $divisi = $user['divisi'];
+    $jabatan = $user['jabatan'];
+    $role = $user['role'];
+
+    $jenis_cuti_raw = $_POST['jenis_cuti'];
+    $tanggal_mulai = $_POST['tanggal_mulai'];
+    $tanggal_akhir = $_POST['tanggal_akhir'];
+    $alasan = $_POST['alasan_cuti'];
+    $jenis_cuti = $jenis_cuti_raw;
+
+    // Handle jika jenis cuti adalah 'Khusus'
+    if ($jenis_cuti_raw === 'Khusus' && !empty($_POST['jenis_cuti_khusus'])) {
+        $jenis_cuti = 'Khusus - ' . $_POST['jenis_cuti_khusus'];
+    }
+
+    // Handle upload file untuk cuti sakit
+    if ($jenis_cuti_raw === 'Sakit') {
+        if (!isset($_FILES['bukti_surat_dokter']) || $_FILES['bukti_surat_dokter']['error'] === UPLOAD_ERR_NO_FILE) {
+            $error_msg = "Untuk cuti sakit, wajib mengunggah bukti surat keterangan dokter.";
+        } else {
+            $uploadResult = handleFileUpload($_FILES['bukti_surat_dokter']);
+            if ($uploadResult === false) {
+                $error_msg = "Gagal mengunggah file surat dokter.";
+            } else {
+                $file_surat_path = $uploadResult;
+            }
+        }
+    }
+
+    // Validasi dasar
+    if (empty($kode_karyawan) || empty($jenis_cuti) || empty($tanggal_mulai) || empty($tanggal_akhir) || empty($alasan)) {
+        $error_msg = "Semua field wajib diisi.";
+    }
+
+    // Jika tidak ada error, lanjutkan proses ke database
+    if (empty($error_msg)) {
+        $sql = "INSERT INTO data_pengajuan_cuti (kode_karyawan, nama_karyawan, divisi, jabatan, role, jenis_cuti, tanggal_mulai, tanggal_akhir, alasan, file_surat_dokter, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Menunggu Persetujuan')";
+        $stmt = mysqli_prepare($conn, $sql);
+        
+        if ($stmt) {
+            mysqli_stmt_bind_param($stmt, "ssssssssss", $kode_karyawan, $nama_karyawan, $divisi, $jabatan, $role, $jenis_cuti, $tanggal_mulai, $tanggal_akhir, $alasan, $file_surat_path);
+            if (mysqli_stmt_execute($stmt)) {
+                $display_data = true; // Set flag untuk menampilkan data di HTML
+            } else {
+                $error_msg = "Gagal menyimpan data: " . mysqli_error($conn);
+            }
+            mysqli_stmt_close($stmt);
+        } else {
+            $error_msg = "Gagal mempersiapkan statement: " . mysqli_error($conn);
+        }
+    }
+} else {
+    // Jika bukan metode POST, langsung tampilkan halaman error
+    $display_data = false;
+    $error_msg = "Metode request tidak valid.";
+}
+
+mysqli_close($conn);
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hasil Pengajuan Cuti</title>
+<title>Status Pengajuan Cuti</title>
 <style>
-    body {
-      margin:0;
-      font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(180deg, #1E105E 0%, #8897AE 100%);
-    }
-    header {
-      background:#fff;
-      padding:20px 40px;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      border-bottom:2px solid #34377c;
-    }
+    /* Menggunakan style yang mirip dengan referensi proseskhl_karyawan.php */
+    body { margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg,#1E105E 0%,#8897AE 100%); min-height:100vh; display:flex; flex-direction:column; }
+    header { background:#fff; padding:20px 40px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #34377c; }
     .logo {display:flex;align-items:center;gap:16px;font-weight:500;font-size:20px;color:#2e1f4f;}
-    .logo img {width:130px;height:50px;object-fit:contain;}
-    main {
-      max-width:600px;
-      margin:60px auto;
-      background:#fff;
-      border-radius:15px;
-      padding:30px 40px;
-      box-shadow:0 0 10px rgba(72,54,120,0.2);
-      text-align:center;
-    }
-    h1 {font-size:24px;color:#2e1f4f;margin-bottom:20px;}
-    .data-cuti {text-align:left;font-size:16px;line-height:1.8;}
-    a.btn {
-      display:inline-block;margin-top:30px;padding:10px 20px;
-      background-color:#4a3f81;color:#fff;text-decoration:none;
-      border-radius:8px;font-weight:600;
-    }
-    a.btn:hover { background-color:#3a3162; }
+    .logo img {width:140px;height:50px;object-fit:contain;}
+    nav a {text-decoration:none;color:#333;font-weight:600;}
+    main { flex:1; display:flex; justify-content:center; align-items:center; padding:40px 20px; }
+    .container { width:100%; max-width:600px; background:rgba(255,255,255,0.95); border-radius:15px; padding:30px 40px; box-shadow:0 0 15px rgba(0,0,0,0.2); }
+    h2 { text-align:center; font-size:22px; color:#2e1f4f; margin-bottom:20px; }
+    .message { padding: 12px; border-radius: 5px; margin-bottom: 20px; border: 1px solid transparent; text-align: center; font-weight: 600; }
+    .success-message { background-color: #d4edda; color: #155724; border-color: #c3e6cb; }
+    .error-message { background-color: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+    .info-box { background-color: #f0f0f0; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #4a3f81; text-align: left; }
+    .info-box p { margin: 8px 0; font-size: 14px; color: #333; }
+    .info-box strong { color: #4a3f81; }
+    .action-buttons { display: flex; gap: 10px; margin-top: 25px; }
+    .btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: 700; font-size: 15px; cursor: pointer; text-align: center; text-decoration: none; display: inline-block; }
+    .btn-primary { background-color: #4a3f81; color: #fff; }
+    .btn-primary:hover { background-color: #3a3162; }
+    .btn-secondary { background-color: #6c757d; color: #fff; }
+    .btn-secondary:hover { background-color: #545b62; }
 </style>
 </head>
 <body>
-  <header>
+<header>
     <div class="logo">
-      <img src="image/namayayasan.png" alt="Logo Yayasan">
-      <span>Yayasan Purba Danarta</span>
+        <img src="image/namayayasan.png" alt="Logo Yayasan">
+        <span>Yayasan Purba Danarta</span>
     </div>
     <nav>
-      <a href="dashboardkaryawan.php">Beranda</a>
+        <a href="dashboardkaryawan.php">Beranda</a>
     </nav>
-  </header>
+</header>
 
-  <main>
-    <h1>Pengajuan Cuti Terkirim</h1>
-    <div class="data-cuti">
-      <strong>No. Induk Karyawan:</strong> <?= htmlspecialchars($nik) ?><br>
-      <strong>Jenis Cuti:</strong> <?= htmlspecialchars($jenis) ?><br>
-      <strong>Tanggal Cuti:</strong> <?= htmlspecialchars($tanggal) ?><br>
+<main>
+    <div class="container">
+        <h2>Status Pengajuan Cuti</h2>
+
+        <?php if ($display_data): ?>
+            <div class="message success-message">Pengajuan Cuti berhasil dikirim!</div>
+            
+            <div class="info-box">
+                <p><strong>Kode Karyawan:</strong> <?php echo htmlspecialchars($kode_karyawan); ?></p>
+                <p><strong>Nama:</strong> <?php echo htmlspecialchars($nama_karyawan); ?></p>
+                <p><strong>Divisi:</strong> <?php echo htmlspecialchars($divisi); ?></p>
+                <p><strong>Jabatan:</strong> <?php echo htmlspecialchars($jabatan); ?></p>
+                <p><strong>Role:</strong> <?php echo htmlspecialchars(ucfirst($role)); ?></p>
+            </div>
+
+            <div class="info-box">
+                <h3 style="margin-top: 0; color: #4a3f81;">Detail Pengajuan Cuti</h3>
+                <p><strong>Jenis Cuti:</strong> <?php echo htmlspecialchars($jenis_cuti); ?></p>
+                <p><strong>Tanggal Mulai:</strong> <?php echo htmlspecialchars($tanggal_mulai); ?></p>
+                <p><strong>Tanggal Akhir:</strong> <?php echo htmlspecialchars($tanggal_akhir); ?></p>
+                <p><strong>Alasan:</strong> <?php echo htmlspecialchars($alasan); ?></p>
+                <?php if ($file_surat_path): ?>
+                    <p><strong>Bukti Surat Dokter:</strong> Berkas Terlampir</p>
+                <?php endif; ?>
+                <p><strong>Status:</strong> <span style="color: #f39c12; font-weight: bold;">Menunggu Persetujuan</span></p>
+            </div>
+
+        <?php else: ?>
+            <div class="message error-message">
+                <?php echo !empty($error_msg) ? htmlspecialchars($error_msg) : 'Terjadi kesalahan saat memproses pengajuan Anda.'; ?>
+            </div>
+        <?php endif; ?>
+
+        <div class="action-buttons">
+            <a href="formcutikaryawan.php" class="btn btn-primary">Ajukan Cuti Lain</a>
+            <a href="dashboardkaryawan.php" class="btn btn-secondary">Kembali ke Dashboard</a>
+        </div>
     </div>
-    <a href="dashboardkaryawan.php" class="btn">Kembali ke Dashboard</a>
-  </main>
+</main>
 </body>
 </html>

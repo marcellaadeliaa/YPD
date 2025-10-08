@@ -2,12 +2,93 @@
 session_start();
 require 'config.php'; 
 
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+    header("Location: login_karyawan.php?error=unauthorized");
+    exit();
+}
+
 $nama_user = 'Cell';
 
-// 1. Menghitung Total Pelamar Aktif
-$query_total_pelamar = "SELECT COUNT(id) AS total FROM data_pelamar WHERE status = 'Menunggu Proses'";
-$result_total = $conn->query($query_total_pelamar);
-$total_pelamar = $result_total->fetch_assoc()['total'] ?? 0;
+// QUERY YANG DIPERBAIKI - Berdasarkan riwayat_pelamar
+$query_status_pelamar = "
+    SELECT 
+        -- Menunggu Proses: Pelamar yang belum ada riwayat atau masih di tahap awal
+        COUNT(CASE WHEN (rp.status_administratif IS NULL OR rp.status_administratif = '') 
+                    AND (rp.status_wawancara IS NULL OR rp.status_wawancara = '') 
+                    AND (rp.status_psikotes IS NULL OR rp.status_psikotes = '') 
+                    AND (rp.status_kesehatan IS NULL OR rp.status_kesehatan = '') 
+                    AND (rp.status_final IS NULL OR rp.status_final = '') 
+              THEN 1 END) AS menunggu_proses,
+        
+        -- Administratif: Lolos administratif, tapi belum wawancara
+        COUNT(CASE WHEN rp.status_administratif = 'Lolos' 
+                    AND (rp.status_wawancara IS NULL OR rp.status_wawancara = '') 
+              THEN 1 END) AS administratif,
+        
+        -- Wawancara: Lolos wawancara, tapi belum psikotes
+        COUNT(CASE WHEN rp.status_wawancara = 'Lolos' 
+                    AND (rp.status_psikotes IS NULL OR rp.status_psikotes = '') 
+              THEN 1 END) AS wawancara,
+        
+        -- Psikotes saja: Lolos psikotes, tapi belum kesehatan
+        COUNT(CASE WHEN rp.status_psikotes = 'Lolos' 
+                    AND (rp.status_kesehatan IS NULL OR rp.status_kesehatan = '') 
+              THEN 1 END) AS psikotes,
+        
+        -- Psikotes (Selanjutnya Tes Kesehatan): Lolos psikotes dan kesehatan, tapi belum final
+        COUNT(CASE WHEN rp.status_psikotes = 'Lolos' 
+                    AND rp.status_kesehatan = 'Lolos' 
+                    AND (rp.status_final IS NULL OR rp.status_final = '') 
+              THEN 1 END) AS psikotes_kesehatan,
+        
+        -- Kesehatan: Lolos kesehatan dan sudah final diterima
+        COUNT(CASE WHEN rp.status_kesehatan = 'Lolos' 
+                    AND rp.status_final = 'Diterima' 
+              THEN 1 END) AS kesehatan,
+        
+        -- Total Pelamar Aktif: Semua yang belum final atau finalnya bukan Diterima/Tidak Lolos
+        COUNT(CASE WHEN rp.status_final IS NULL 
+                    OR rp.status_final = '' 
+                    OR rp.status_final NOT IN ('Diterima', 'Tidak Lolos') 
+              THEN 1 END) AS total_pelamar_aktif
+        
+    FROM data_pelamar dp
+    LEFT JOIN riwayat_pelamar rp ON dp.id = rp.pelamar_id
+    WHERE dp.status != 'Diterima' AND dp.status != 'Tidak Lolos'
+";
+
+$result_status = $conn->query($query_status_pelamar);
+$status_pelamar = $result_status->fetch_assoc();
+
+// Jika masih kosong, coba query alternatif berdasarkan data_pelamar.status
+if (!$status_pelamar || array_sum($status_pelamar) == 0) {
+    $query_alternatif = "
+        SELECT 
+            COUNT(CASE WHEN status = 'Menunggu Proses' THEN 1 END) AS menunggu_proses,
+            COUNT(CASE WHEN status = 'Administratif' THEN 1 END) AS administratif,
+            COUNT(CASE WHEN status = 'Wawancara' THEN 1 END) AS wawancara,
+            COUNT(CASE WHEN status = 'Psikotes' THEN 1 END) AS psikotes,
+            COUNT(CASE WHEN status = 'Psikotes (Selanjutnya Tes Kesehatan)' THEN 1 END) AS psikotes_kesehatan,
+            COUNT(CASE WHEN status = 'Kesehatan' THEN 1 END) AS kesehatan,
+            COUNT(id) AS total_pelamar_aktif
+        FROM data_pelamar 
+        WHERE status NOT IN ('Diterima', 'Tidak Lolos')
+    ";
+    
+    $result_alt = $conn->query($query_alternatif);
+    $status_pelamar = $result_alt->fetch_assoc();
+}
+
+// Set default values jika masih kosong
+$status_pelamar = array_merge([
+    'menunggu_proses' => 0,
+    'administratif' => 0,
+    'wawancara' => 0,
+    'psikotes' => 0,
+    'psikotes_kesehatan' => 0,
+    'kesehatan' => 0,
+    'total_pelamar_aktif' => 0
+], $status_pelamar ?: []);
 
 // 2. Mengambil data untuk tabel
 $query_tabel = "SELECT nama_lengkap, posisi_dilamar, created_at FROM data_pelamar ORDER BY created_at DESC LIMIT 5";
@@ -16,6 +97,7 @@ $result_tabel = $conn->query($query_tabel);
 // Menutup koneksi database setelah selesai mengambil data
 $conn->close();
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -143,6 +225,22 @@ p.admin-title {
     line-height: 1.6;
 }
 
+/* Style untuk status pelamar */
+.status-list {
+    margin: 10px 0;
+}
+.status-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    padding: 3px 0;
+    border-bottom: 1px dotted #eee;
+}
+.status-count {
+    font-weight: bold;
+    color: #1E105E;
+}
+
 /* Style untuk tombol */
 .btn {
   display:inline-block;
@@ -246,13 +344,42 @@ p.admin-title {
 <main>
     <div class="welcome-section">
       <h1>Welcome, <?= htmlspecialchars($nama_user) ?>!</h1>
-      <h2>Adminsitrator</h2>
+      <h2>Administrator</h2>
     </div>
 
     <div class="dashboard-grid">
         <div class="card">
             <h3>Lamaran Kerja</h3>
-            <p><strong>Total Pelamar Aktif: <?php echo $total_pelamar; ?> orang</strong></p>
+            <div class="status-list">
+                <div class="status-item">
+                    <span>Menunggu Proses:</span>
+                    <span class="status-count"><?= $status_pelamar['menunggu_proses'] ?> orang</span>
+                </div>
+                <div class="status-item">
+                    <span>Administratif:</span>
+                    <span class="status-count"><?= $status_pelamar['administratif'] ?> orang</span>
+                </div>
+                <div class="status-item">
+                    <span>Wawancara:</span>
+                    <span class="status-count"><?= $status_pelamar['wawancara'] ?> orang</span>
+                </div>
+                <div class="status-item">
+                    <span>Psikotes saja:</span>
+                    <span class="status-count"><?= $status_pelamar['psikotes'] ?> orang</span>
+                </div>
+                <div class="status-item">
+                    <span>Psikotes (Selanjutnya Tes Kesehatan):</span>
+                    <span class="status-count"><?= $status_pelamar['psikotes_kesehatan'] ?> orang</span>
+                </div>
+                <div class="status-item">
+                    <span>Kesehatan:</span>
+                    <span class="status-count"><?= $status_pelamar['kesehatan'] ?> orang</span>
+                </div>
+                <div class="status-item" style="border-top: 2px solid #1E105E; margin-top: 8px; padding-top: 8px; font-weight: bold;">
+                    <span>Total Pelamar Aktif:</span>
+                    <span class="status-count"><?= $status_pelamar['total_pelamar_aktif'] ?> orang</span>
+                </div>
+            </div>
             <a href="administrasi_pelamar.php" class="btn">Lihat Rincian</a>
         </div>
 

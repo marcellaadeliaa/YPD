@@ -1,113 +1,75 @@
 <?php
 session_start();
+require 'config.php'; // Menghubungkan ke database
 
-// Data karyawan yang sedang login (dummy data)
-$user_data = [
-    'nik' => '123456789',
-    'nama' => 'Cell',
-    'divisi' => 'Training'
-];
+// 1. Ambil data karyawan yang sedang login dari session
+if (!isset($_SESSION['user']['kode_karyawan'])) {
+    // Jika tidak ada session, kembali ke halaman login
+    header("Location: login_karyawan.php");
+    exit();
+}
+$user_data = $_SESSION['user'];
+$kode_karyawan_login = $user_data['kode_karyawan'];
 
-// Inisialisasi variabel filter
+// Inisialisasi variabel filter dari URL
 $start_date = $_GET['start_date'] ?? '';
 $end_date = $_GET['end_date'] ?? '';
 $search_query = $_GET['search'] ?? '';
 
-// --- DUMMY DATA RIWAYAT CUTI PRIBADI ---
-$riwayat_cuti_pribadi = [
-    [
-        'id' => 1,
-        'kode_karyawan' => '123456789',
-        'nama_karyawan' => 'Cell',
-        'divisi' => 'Training',
-        'tanggal_cuti' => '2025-09-08',
-        'jenis_cuti' => 'Lustrum',
-        'status' => 'Diterima',
-        'waktu_persetujuan' => '2025-09-09 15:47:00'
-    ],
-    [
-        'id' => 2,
-        'kode_karyawan' => '123456789',
-        'nama_karyawan' => 'Cell',
-        'divisi' => 'Training',
-        'tanggal_cuti' => '2025-09-15',
-        'jenis_cuti' => 'Tahunan',
-        'status' => 'Diterima',
-        'waktu_persetujuan' => '2025-09-10 14:34:00'
-    ],
-    [
-        'id' => 3,
-        'kode_karyawan' => '123456789',
-        'nama_karyawan' => 'Cell',
-        'divisi' => 'Training',
-        'tanggal_cuti' => '2025-09-20',
-        'jenis_cuti' => 'Sakit',
-        'status' => 'Ditolak',
-        'waktu_persetujuan' => '2025-09-21 10:15:00'
-    ],
-    [
-        'id' => 4,
-        'kode_karyawan' => '123456789',
-        'nama_karyawan' => 'Cell',
-        'divisi' => 'Training',
-        'tanggal_cuti' => '2025-10-01',
-        'jenis_cuti' => 'Tahunan',
-        'status' => 'Menunggu',
-        'waktu_persetujuan' => ''
-    ],
-];
+// 2. Query database untuk mengambil riwayat cuti PRIBADI, termasuk tanggal_akhir
+$sql = "SELECT 
+            id, 
+            kode_karyawan, 
+            nama_karyawan, 
+            divisi, 
+            tanggal_mulai, 
+            tanggal_akhir, 
+            jenis_cuti, 
+            status, 
+            waktu_persetujuan,
+            file_surat_dokter 
+        FROM 
+            data_pengajuan_cuti 
+        WHERE 
+            kode_karyawan = ?";
 
-// Tambahkan data dari session jika ada
-if (isset($_SESSION['last_cuti'])) {
-    $last_cuti = $_SESSION['last_cuti'];
-    $riwayat_cuti_pribadi[] = [
-        'id' => count($riwayat_cuti_pribadi) + 1,
-        'kode_karyawan' => '123456789',
-        'nama_karyawan' => 'Cell',
-        'divisi' => 'Training',
-        'tanggal_cuti' => $last_cuti['tanggal'],
-        'jenis_cuti' => $last_cuti['jenis'],
-        'status' => $last_cuti['status'],
-        'waktu_persetujuan' => ''
-    ];
+$params = [$kode_karyawan_login];
+$types = "s";
+
+// Tambahkan filter ke query SQL
+if (!empty($start_date)) {
+    $sql .= " AND tanggal_mulai >= ?";
+    $params[] = $start_date;
+    $types .= "s";
 }
-
-// Filter data berdasarkan input
-$filtered_data = $riwayat_cuti_pribadi;
-
-// Filter berdasarkan tanggal
-if (!empty($start_date) && !empty($end_date)) {
-    $start_timestamp = strtotime($start_date);
-    $end_timestamp = strtotime($end_date);
-    
-    $filtered_data = array_filter($filtered_data, function($cuti) use ($start_timestamp, $end_timestamp) {
-        $cuti_timestamp = strtotime($cuti['tanggal_cuti']);
-        return $cuti_timestamp >= $start_timestamp && $cuti_timestamp <= $end_timestamp;
-    });
-} elseif (!empty($start_date)) {
-    $start_timestamp = strtotime($start_date);
-    $filtered_data = array_filter($filtered_data, function($cuti) use ($start_timestamp) {
-        return strtotime($cuti['tanggal_cuti']) >= $start_timestamp;
-    });
-} elseif (!empty($end_date)) {
-    $end_timestamp = strtotime($end_date);
-    $filtered_data = array_filter($filtered_data, function($cuti) use ($end_timestamp) {
-        return strtotime($cuti['tanggal_cuti']) <= $end_timestamp;
-    });
+if (!empty($end_date)) {
+    $sql .= " AND tanggal_mulai <= ?";
+    $params[] = $end_date;
+    $types .= "s";
 }
-
-// Filter berdasarkan pencarian
 if (!empty($search_query)) {
-    $search_lower = strtolower($search_query);
-    $filtered_data = array_filter($filtered_data, function($cuti) use ($search_lower) {
-        return strpos(strtolower($cuti['jenis_cuti']), $search_lower) !== false ||
-               strpos(strtolower($cuti['status']), $search_lower) !== false;
-    });
+    $sql .= " AND (jenis_cuti LIKE ? OR status LIKE ?)";
+    $search_param = "%" . $search_query . "%";
+    $params[] = $search_param;
+    $params[] = $search_param;
+    $types .= "ss";
 }
 
-// Reset array keys
-$filtered_data = array_values($filtered_data);
+$sql .= " ORDER BY tanggal_mulai DESC";
 
+$stmt = $conn->prepare($sql);
+if ($stmt) {
+    $stmt->bind_param($types, ...$params);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $filtered_data = $result->fetch_all(MYSQLI_ASSOC);
+    $stmt->close();
+} else {
+    // Handle error jika query gagal
+    $filtered_data = [];
+}
+
+$conn->close();
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -134,7 +96,6 @@ $filtered_data = array_values($filtered_data);
     .card { background:#fff; border-radius:20px; padding:30px 40px; box-shadow:0 2px 10px rgba(0,0,0,0.15); }
     .page-title { font-size: 24px; font-weight: 600; text-align: center; margin-bottom: 30px; color: #1E105E; }
     
-    /* Style untuk filter section */
     .filter-section { background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 25px; }
     .filter-row { display: flex; gap: 15px; align-items: end; flex-wrap: wrap; }
     .filter-group { display: flex; flex-direction: column; gap: 5px; }
@@ -146,19 +107,18 @@ $filtered_data = array_values($filtered_data);
     .action-bar { display: flex; gap: 10px; margin-top: 15px; }
     .btn { padding: 10px 20px; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; color: #fff; cursor: pointer; transition: opacity 0.3s; text-decoration: none; display: inline-block; text-align: center; }
     .btn-cari { background-color: #4a3f81; }
-    .btn-cari:hover { background-color: #3a3162; }
     .btn-reset { background-color: #6c757d; }
-    .btn-reset:hover { background-color: #545b62; }
     .btn-ajukan { background-color: #2ecc71; }
-    .btn-ajukan:hover { background-color: #27ae60; }
     
+    .data-table-container { overflow-x: auto; }
     .data-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 20px; }
     .data-table th, .data-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
     .data-table th { background-color: #f8f9fa; font-weight: 600; }
     .data-table tbody tr:hover { background-color: #f1f1f1; }
-    .status-diterima { color: #28a745; font-weight: 600; }
-    .status-ditolak { color: #d9534f; font-weight: 600; }
-    .status-menunggu { color: #f39c12; font-weight: 600; }
+    .status-Diterima { color: #28a745; font-weight: 600; }
+    .status-Ditolak { color: #d9534f; font-weight: 600; }
+    .status-Menunggu-Persetujuan { color: #f39c12; font-weight: 600; }
+    .btn-lihat-surat { background-color: #17a2b8; color: white; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-size: 12px; }
     
     .no-data { text-align: center; padding: 40px; color: #666; font-style: italic; }
     
@@ -179,12 +139,12 @@ $filtered_data = array_values($filtered_data);
         border-left: 4px solid #4a3f81;
     }
     
-    /* Responsive */
     @media (max-width: 768px) {
         .filter-row { flex-direction: column; }
         .filter-group { width: 100%; }
         .action-bar { flex-direction: column; }
         .btn { width: 100%; }
+        .data-table-container { overflow-x: auto; }
     }
 </style>
 </head>
@@ -221,21 +181,19 @@ $filtered_data = array_values($filtered_data);
 </header>
 
 <main>
-    <h1>Welcome, <?php echo $user_data['nama']; ?>!</h1>
+    <h1>Welcome, <?php echo htmlspecialchars($user_data['nama_lengkap']); ?>!</h1>
     <p class="admin-title">Riwayat Cuti Pribadi</p>
 
     <div class="card">
         <h2 class="page-title">Riwayat Cuti Pribadi</h2>
         
-        <!-- Info Pengguna -->
         <div class="user-info">
             <strong>Informasi Karyawan:</strong><br>
-            NIK: <?php echo $user_data['nik']; ?> | 
-            Nama: <?php echo $user_data['nama']; ?> | 
-            Divisi: <?php echo $user_data['divisi']; ?>
+            NIK: <?php echo htmlspecialchars($user_data['kode_karyawan']); ?> | 
+            Nama: <?php echo htmlspecialchars($user_data['nama_lengkap']); ?> | 
+            Divisi: <?php echo htmlspecialchars($user_data['divisi']); ?>
         </div>
         
-        <!-- Filter Section -->
         <div class="filter-section">
             <form method="GET" action="riwayat_cuti_pribadi.php">
                 <div class="filter-row">
@@ -263,7 +221,6 @@ $filtered_data = array_values($filtered_data);
             </form>
         </div>
 
-        <!-- Info Filter Aktif -->
         <?php if (!empty($start_date) || !empty($end_date) || !empty($search_query)): ?>
             <div class="filter-info">
                 <strong>Filter Aktif:</strong>
@@ -279,56 +236,62 @@ $filtered_data = array_values($filtered_data);
                 </span>
             </div>
         <?php endif; ?>
-
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>No.</th>
-                    <th>Tanggal Cuti</th>
-                    <th>Jenis Cuti</th>
-                    <th>Status</th>
-                    <th>Persetujuan Admin</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (!empty($filtered_data)): ?>
-                    <?php foreach($filtered_data as $index => $cuti): ?>
+        
+        <div class="data-table-container">
+            <table class="data-table">
+                <thead>
                     <tr>
-                        <td><?= $index + 1 ?></td>
-                        <td><?= date('d/m/Y', strtotime($cuti['tanggal_cuti'])) ?></td>
-                        <td><?= htmlspecialchars($cuti['jenis_cuti']) ?></td>
-                        <td>
-                            <?php if ($cuti['status'] == 'Diterima'): ?>
-                                <span class="status-diterima">Diterima</span>
-                            <?php elseif ($cuti['status'] == 'Ditolak'): ?>
-                                <span class="status-ditolak">Ditolak</span>
-                            <?php elseif ($cuti['status'] == 'Menunggu'): ?>
-                                <span class="status-menunggu">Menunggu</span>
-                            <?php else: ?>
-                                <?= htmlspecialchars($cuti['status']) ?>
-                            <?php endif; ?>
-                        </td>
-                        <td>
-                            <?php if (!empty($cuti['waktu_persetujuan'])): ?>
-                                <?= date('d/m/Y H:i', strtotime($cuti['waktu_persetujuan'])) ?>
-                            <?php else: ?>
-                                <span style="color: #999;">-</span>
-                            <?php endif; ?>
-                        </td>
+                        <th>No.</th>
+                        <th>Tanggal Mulai</th>
+                        <th>Tanggal Akhir</th>
+                        <th>Jenis Cuti</th>
+                        <th>Surat Dokter</th>
+                        <th>Status</th>
+                        <th>Waktu Persetujuan</th>
                     </tr>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <tr>
-                        <td colspan="5" class="no-data">Tidak ada data cuti yang ditemukan</td>
-                    </tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    <?php if (!empty($filtered_data)): ?>
+                        <?php foreach($filtered_data as $index => $cuti): ?>
+                        <tr>
+                            <td><?= $index + 1 ?></td>
+                            <td><?= date('d/m/Y', strtotime($cuti['tanggal_mulai'])) ?></td>
+                            <td><?= date('d/m/Y', strtotime($cuti['tanggal_akhir'])) ?></td>
+                            <td><?= htmlspecialchars($cuti['jenis_cuti']) ?></td>
+                            <td>
+                                <?php if (!empty($cuti['file_surat_dokter'])): ?>
+                                    <a href="<?= htmlspecialchars($cuti['file_surat_dokter']) ?>" target="_blank" class="btn-lihat-surat">Lihat File</a>
+                                <?php else: ?>
+                                    -
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <?php 
+                                    $status_class = 'status-' . str_replace(' ', '-', $cuti['status']);
+                                ?>
+                                <span class="<?= $status_class ?>"><?= htmlspecialchars($cuti['status']) ?></span>
+                            </td>
+                            <td>
+                                <?php if (!empty($cuti['waktu_persetujuan'])): ?>
+                                    <?= date('d/m/Y H:i', strtotime($cuti['waktu_persetujuan'])) ?>
+                                <?php else: ?>
+                                    <span style="color: #999;">-</span>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="7" class="no-data">Tidak ada data cuti yang ditemukan</td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
     </div>
 </main>
 
 <script>
-    // Validasi tanggal: end date tidak boleh kurang dari start date
     document.addEventListener('DOMContentLoaded', function() {
         const startDate = document.getElementById('start_date');
         const endDate = document.getElementById('end_date');

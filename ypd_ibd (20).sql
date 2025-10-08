@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 05 Okt 2025 pada 15.02
+-- Waktu pembuatan: 07 Okt 2025 pada 20.06
 -- Versi server: 10.4.22-MariaDB
 -- Versi PHP: 7.3.33
 
@@ -21,6 +21,53 @@ SET time_zone = "+00:00";
 -- Database: `ypd_ibd`
 --
 
+DELIMITER $$
+--
+-- Prosedur
+--
+CREATE DEFINER=`root`@`localhost` PROCEDURE `KurangiSisaCuti` (IN `p_kode_karyawan` VARCHAR(20), IN `p_jenis_cuti` VARCHAR(50), IN `p_tanggal_mulai` DATE, IN `p_tanggal_akhir` DATE)  BEGIN
+    DECLARE jumlah_hari INT DEFAULT 0;
+    DECLARE sisa_tahunan INT DEFAULT 0;
+    DECLARE sisa_lustrum INT DEFAULT 0;
+    DECLARE tgl DATE;
+    
+    -- Hitung hari kerja (Senin-Jumat)
+    SET tgl = p_tanggal_mulai;
+    WHILE tgl <= p_tanggal_akhir DO
+        IF DAYOFWEEK(tgl) BETWEEN 2 AND 6 THEN
+            SET jumlah_hari = jumlah_hari + 1;
+        END IF;
+        SET tgl = DATE_ADD(tgl, INTERVAL 1 DAY);
+    END WHILE;
+    
+    -- Ambil sisa cuti
+    SELECT sisa_cuti_tahunan, sisa_cuti_lustrum 
+    INTO sisa_tahunan, sisa_lustrum
+    FROM data_karyawan 
+    WHERE kode_karyawan = p_kode_karyawan;
+    
+    -- Proses pengurangan
+    IF p_jenis_cuti = 'Tahunan' THEN
+        IF sisa_tahunan >= jumlah_hari THEN
+            UPDATE data_karyawan 
+            SET sisa_cuti_tahunan = sisa_cuti_tahunan - jumlah_hari
+            WHERE kode_karyawan = p_kode_karyawan;
+        END IF;
+        
+    ELSEIF p_jenis_cuti = 'Lustrum' THEN
+        IF sisa_lustrum >= jumlah_hari THEN
+            UPDATE data_karyawan 
+            SET sisa_cuti_lustrum = sisa_cuti_lustrum - jumlah_hari
+            WHERE kode_karyawan = p_kode_karyawan;
+        END IF;
+        
+    -- Untuk Sakit dan Khusus, tidak ada pengurangan
+    END IF;
+    
+END$$
+
+DELIMITER ;
+
 -- --------------------------------------------------------
 
 --
@@ -37,8 +84,8 @@ CREATE TABLE `data_karyawan` (
   `divisi` varchar(50) NOT NULL,
   `role` enum('karyawan','direktur','admin','penanggung jawab') NOT NULL DEFAULT 'karyawan',
   `no_telp` varchar(20) DEFAULT NULL,
-  `sisa_cuti_tahunan` int(3) DEFAULT 12,
-  `sisa_cuti_lustrum` int(3) DEFAULT 5,
+  `sisa_cuti_tahunan` int(3) DEFAULT 0,
+  `sisa_cuti_lustrum` int(3) DEFAULT 0,
   `status_aktif` enum('aktif','non_aktif') NOT NULL DEFAULT 'aktif',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -48,9 +95,9 @@ CREATE TABLE `data_karyawan` (
 --
 
 INSERT INTO `data_karyawan` (`id_karyawan`, `kode_karyawan`, `nama_lengkap`, `email`, `password`, `jabatan`, `divisi`, `role`, `no_telp`, `sisa_cuti_tahunan`, `sisa_cuti_lustrum`, `status_aktif`, `created_at`) VALUES
-(1, 'YPD001', 'Pico', 'pico.dir@ypd.com', 'hashed_password_direktur', 'Direktur Utama', 'Direksi', 'direktur', '081234567890', 12, 5, 'aktif', '2025-09-30 23:37:17'),
-(2, 'YPD002', 'Cell', 'cell.sdm@ypd.com', 'hashed_password_admin', 'Administrator', '', 'admin', '081234567891', 12, 5, 'aktif', '2025-09-30 23:37:17'),
-(3, 'YPD010', 'Adrian', 'adrian.karyawan@ypd.com', 'hashed_password_karyawan', 'Staf Training', 'Training', 'karyawan', '081234567892', 12, 5, 'aktif', '2025-09-30 23:37:17'),
+(1, 'YPD001', 'Pico', 'pico.dir@ypd.com', 'hashed_password_direktur', 'Direktur Utama', 'Direktsi', 'direktur', '081234567890', 0, 0, 'aktif', '2025-09-30 23:37:17'),
+(2, 'YPD002', 'Cell', 'cell.sdm@ypd.com', 'hashed_password_admin', 'Administrator', '', 'admin', '081234567891', 0, 0, 'aktif', '2025-09-30 23:37:17'),
+(3, 'YPD010', 'Adrian', 'adrian.karyawan@ypd.com', 'hashed_password_karyawan', 'Staf Training', 'Training', 'karyawan', '081234567892', 12, 4, 'aktif', '2025-09-30 23:37:17'),
 (4, 'YPD003', 'Ria', 'ria.direksi@ypd.com', 'hashed_password_ria', 'Penanggung Jawab Training', 'Training', 'penanggung jawab', '081234567893', 12, 5, 'aktif', '2025-09-30 23:45:32'),
 (5, 'YPD004', 'Dani', 'dani.pj@ypd.com', 'hashed_password_dani', 'Staf Keuangan', 'Keuangan', 'karyawan', '081234567894', 12, 5, 'aktif', '2025-09-30 23:45:32'),
 (6, 'YPD005', 'Budi', 'budibudi@gmail.com', 'hashed_password_budi', 'Penanggung Jawab Konsultasi', 'Konsultasi', 'penanggung jawab', '12345677654', 12, 5, 'aktif', '2025-10-02 08:30:16'),
@@ -58,17 +105,17 @@ INSERT INTO `data_karyawan` (`id_karyawan`, `kode_karyawan`, `nama_lengkap`, `em
 (8, 'YPD007', 'Dian', 'didi@gmail.com', 'hashed_password_dian', 'Penanggung Jawab SDM', 'SDM', 'penanggung jawab', '5981731412', 12, 5, 'aktif', '2025-10-02 15:10:28'),
 (9, 'YPD008', 'Jasmine', 'minminja@gmail.com', 'hashed_password_jasmine', 'Penanggung Jawab Sekretariat', 'Sekretariat', 'penanggung jawab', '123415654312', 12, 5, 'aktif', '2025-10-02 15:24:59'),
 (10, 'YPD009', 'Mega', 'gamega@gmail.com', 'hashed_password_mega', 'Penanggung Jawab Keuangan', 'Keuangan', 'penanggung jawab', '12347358642879', 12, 5, 'aktif', '2025-10-02 15:46:27'),
-(11, 'YPD011', 'Lala Marcella', 'lala.marcella@ypd.com', 'hashed_password_lala', 'Staf Keuangan', 'Keuangan', 'karyawan', '08186845699', 12, 5, 'aktif', '2025-10-04 05:27:28'),
-(12, 'YPD012', 'Hezkiel', 'hezkiel@ypd.com', 'hashed_password_hezkiel', 'Staf Sekretariat', 'Sekretariat', 'karyawan', '08186889777', 12, 5, 'aktif', '2025-10-04 06:13:54'),
-(13, 'YPD013', 'Adelia', 'adelia@ypd.com', 'hashed_password_adelia', 'Staf Sekretariat', 'Sekretariat', 'karyawan', '08186889755', 12, 5, 'aktif', '2025-10-04 06:15:55'),
-(14, 'YPD014', 'Cici', 'cici@ypd.com', 'hashed_password_cici', 'Staf Keuangan', 'Keuangan', 'karyawan', '081868456987', 12, 5, 'aktif', '2025-10-04 06:18:48'),
-(15, 'YPD015', 'Leonardo', 'leonardo@ypd.com', 'hashed_password_leonardo', 'Staf Training', 'Training', 'karyawan', '08186889751', 12, 5, 'aktif', '2025-10-04 06:26:05'),
-(16, 'YPD016', 'Naomi', 'naomi@ypd.com', 'hashed_password_naomi', 'Staf Konsultasi', 'Konsultasi', 'karyawan', '081868456987', 12, 5, 'aktif', '2025-10-04 06:30:39'),
-(17, 'YPD017', 'Aurora', 'aurora@ypd.com', 'hashed_password_aurora', 'Staf Konsultasi', 'Konsultasi', 'karyawan', '081868456988', 12, 5, 'aktif', '2025-10-04 06:35:02'),
-(18, 'YPD018', 'Selena', 'selena@ypd.com', 'hashed_password_selena', 'Staf Wisma', 'Wisma', 'karyawan', '081868456978', 12, 5, 'aktif', '2025-10-04 06:38:26'),
-(19, 'YPD019', 'Kelra', 'kelra@ypd.com', 'hashed_password_kelra', 'Staf Wisma', 'Wisma', 'karyawan', '081868456985', 12, 5, 'aktif', '2025-10-04 06:46:13'),
-(20, 'YPD020', 'Lyra', 'lyra@ypd.com', 'hashed_password_lyra', 'Staf SDM', 'SDM', 'karyawan', '081868456987', 12, 5, 'aktif', '2025-10-04 06:47:18'),
-(21, 'YPD021', 'Yovan', 'yovan@ypd.com', 'hashed_password_yovan', 'Staf SDM', 'SDM', 'karyawan', '081868456985', 12, 5, 'aktif', '2025-10-04 06:48:16');
+(11, 'YPD011', 'Lala Marcella', 'lala.marcella@ypd.com', 'hashed_password_lala', 'Staf Keuangan', 'Keuangan', 'karyawan', '08186845699', 4, 0, 'aktif', '2025-10-04 05:27:28'),
+(12, 'YPD012', 'Hezkiel', 'hezkiel@ypd.com', 'hashed_password_hezkiel', 'Staf Sekretariat', 'Sekretariat', 'karyawan', '08186889777', 12, 0, 'aktif', '2025-10-04 06:13:54'),
+(13, 'YPD013', 'Adelia', 'adelia@ypd.com', 'hashed_password_adelia', 'Staf Sekretariat', 'Sekretariat', 'karyawan', '08186889755', 12, 0, 'aktif', '2025-10-04 06:15:55'),
+(14, 'YPD014', 'Cici', 'cici@ypd.com', 'hashed_password_cici', 'Staf Keuangan', 'Keuangan', 'karyawan', '081868456987', 11, 2, 'aktif', '2025-10-04 06:18:48'),
+(15, 'YPD015', 'Leonardo', 'leonardo@ypd.com', 'hashed_password_leonardo', 'Staf Training', 'Training', 'karyawan', '08186889751', 6, 0, 'aktif', '2025-10-04 06:26:05'),
+(16, 'YPD016', 'Naomi', 'naomi@ypd.com', 'hashed_password_naomi', 'Staf Konsultasi', 'Konsultasi', 'karyawan', '081868456987', 0, 0, 'aktif', '2025-10-04 06:30:39'),
+(17, 'YPD017', 'Aurora', 'aurora@ypd.com', 'hashed_password_aurora', 'Staf Konsultasi', 'Konsultasi', 'karyawan', '081868456988', 0, 0, 'aktif', '2025-10-04 06:35:02'),
+(18, 'YPD018', 'Selena', 'selena@ypd.com', 'hashed_password_selena', 'Staf Wisma', 'Wisma', 'karyawan', '081868456978', 0, 0, 'aktif', '2025-10-04 06:38:26'),
+(19, 'YPD019', 'Kelra', 'kelra@ypd.com', 'hashed_password_kelra', 'Staf Wisma', 'Wisma', 'karyawan', '081868456985', 0, 0, 'aktif', '2025-10-04 06:46:13'),
+(20, 'YPD020', 'Lyra', 'lyra@ypd.com', 'hashed_password_lyra', 'Staf SDM', 'SDM', 'karyawan', '081868456987', 5, 0, 'aktif', '2025-10-04 06:47:18'),
+(21, 'YPD021', 'Yovan', 'yovan@ypd.com', 'hashed_password_yovan', 'Staf SDM', 'SDM', 'karyawan', '081868456985', 4, 0, 'aktif', '2025-10-04 06:48:16');
 
 -- --------------------------------------------------------
 
@@ -125,7 +172,72 @@ INSERT INTO `data_pelamar` (`id`, `user_id`, `nama_lengkap`, `posisi_dilamar`, `
 (14, 23, 'Kelra', 'Wisma', 'Laki-laki', 'Medan', '2001-02-11', '1234512347', 'Jl. Mawar Medan', 'Jl. Pawiyatan Luhur Semarang', '081868456985', 'kelra123@gmail.com', 'Khonghucu', '081256478988', 'Sarjana', 'uploads/1759560025-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560025-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560025-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560025-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560025-Pernyataan_Penyelesaian_Proyek.docx', NULL, 'Diterima', 'Proses seleksi sedang berlangsung', 'Belum ada pengumuman saat ini.', '2025-10-04 06:40:25'),
 (15, 24, 'Lyra', 'SDM', 'Perempuan', 'Denpasar', '2005-05-05', '1122334457', 'Jl. Residence Denpasar', 'Jl. Pawiyatan Luhur II Semarang', '081868456987', 'lyra1234@gmail.com', 'Hindu', '081256478988', 'Sarjana', 'uploads/1759560177-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560177-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560177-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560177-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560177-Pernyataan_Penyelesaian_Proyek.docx', NULL, 'Diterima', 'Proses seleksi sedang berlangsung', 'Belum ada pengumuman saat ini.', '2025-10-04 06:42:57'),
 (16, 25, 'Yovan', 'SDM', 'Laki-laki', 'Malang', '2001-02-21', '1234512346', 'Jl. Mawar Malang', 'Jl. Pawiyatan Luhur Semarang', '081868456985', 'yovan1234@gmail.com', 'Katholik', '081258962812', 'Sarjana', 'uploads/1759560300-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560300-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560300-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560300-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560300-Pernyataan_Penyelesaian_Proyek.docx', NULL, 'Diterima', 'Proses seleksi sedang berlangsung', 'Belum ada pengumuman saat ini.', '2025-10-04 06:45:00'),
-(17, 26, 'Feli ', 'Konsultasi', 'Perempuan', 'Tangerang', '2000-01-30', '1234512349', 'Tangerang', 'Jl. Pawiyatan Luhur Semarang', '08186889755', 'feli1234@gmail.com', 'Buddha', '081256478988', 'Sarjana', 'uploads/1759668945-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759668945-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759668945-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759668945-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759668945-Pernyataan_Penyelesaian_Proyek.docx', NULL, 'Diterima', 'Proses seleksi sedang berlangsung', 'Belum ada pengumuman saat ini.', '2025-10-05 12:55:45');
+(17, 26, 'Feli ', 'Konsultasi', 'Perempuan', 'Tangerang', '2000-01-30', '1234512349', 'Tangerang', 'Jl. Pawiyatan Luhur Semarang', '08186889755', 'feli1234@gmail.com', 'Buddha', '081256478988', 'Sarjana', 'uploads/1759668945-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759668945-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759668945-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759668945-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759668945-Pernyataan_Penyelesaian_Proyek.docx', NULL, 'Diterima', 'Proses seleksi sedang berlangsung', 'Belum ada pengumuman saat ini.', '2025-10-05 12:55:45'),
+(18, 27, 'Dicky', 'Wisma', 'Laki-laki', 'Medan', '2001-11-11', '1234512349', 'Medan', 'Jl. Pawiyatan Luhur II Semarang', '08186889777', 'dicky1234@gmail.com', 'Buddha', '081256478988', 'Sarjana', 'uploads/1759853623-ChatGPT Image 5 Okt 2025, 00.02.09.png', 'uploads/1759853623-ChatGPT Image 5 Okt 2025, 00.02.09.png', 'uploads/1759853623-ChatGPT Image 5 Okt 2025, 00.02.09.png', 'uploads/1759853623-ChatGPT Image 5 Okt 2025, 00.02.09.png', 'uploads/1759853623-ChatGPT Image 5 Okt 2025, 00.02.09.png', 'uploads/1759853623-ChatGPT Image 5 Okt 2025, 00.02.09.png', 'Diterima', 'Proses seleksi sedang berlangsung', 'Belum ada pengumuman saat ini.', '2025-10-07 16:13:43'),
+(19, 28, 'Nindya', 'SDM', 'Perempuan', 'Jakarta', '2002-02-02', '1234512348', 'Jl. Anggrek Jakarta', 'Jl. Pawiyatan Luhur Semarang', '081868456988', 'nindya123@gmail.com', 'Islam', '081258962812', 'Sarjana', 'uploads/1759855931-ChatGPT Image 5 Okt 2025, 00.02.09.png', 'uploads/1759855931-ChatGPT Image 5 Okt 2025, 00.02.09.png', 'uploads/1759855931-ChatGPT Image 5 Okt 2025, 00.02.09.png', 'uploads/1759855931-ChatGPT Image 5 Okt 2025, 00.02.09.png', 'uploads/1759855931-ChatGPT Image 5 Okt 2025, 00.02.09.png', NULL, 'Seleksi Administratif', 'Proses seleksi sedang berlangsung', 'Belum ada pengumuman saat ini.', '2025-10-07 16:52:11');
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `data_pengajuan_cuti`
+--
+
+CREATE TABLE `data_pengajuan_cuti` (
+  `id` int(11) NOT NULL,
+  `kode_karyawan` varchar(20) NOT NULL,
+  `nama_karyawan` varchar(100) NOT NULL,
+  `divisi` varchar(50) NOT NULL,
+  `jabatan` varchar(50) NOT NULL,
+  `role` enum('karyawan','direktur','admin','penanggung jawab') NOT NULL,
+  `jenis_cuti` varchar(50) NOT NULL,
+  `tanggal_mulai` date NOT NULL,
+  `tanggal_akhir` date NOT NULL,
+  `alasan` text DEFAULT NULL,
+  `file_surat_dokter` varchar(255) DEFAULT NULL,
+  `status` enum('Menunggu Persetujuan','Diterima','Ditolak') NOT NULL DEFAULT 'Menunggu Persetujuan',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `waktu_persetujuan` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data untuk tabel `data_pengajuan_cuti`
+--
+
+INSERT INTO `data_pengajuan_cuti` (`id`, `kode_karyawan`, `nama_karyawan`, `divisi`, `jabatan`, `role`, `jenis_cuti`, `tanggal_mulai`, `tanggal_akhir`, `alasan`, `file_surat_dokter`, `status`, `created_at`, `waktu_persetujuan`) VALUES
+(1, 'YPD021', 'Yovan', 'SDM', 'Staf SDM', 'karyawan', 'Khusus - Menikah', '2025-10-06', '2025-10-08', NULL, NULL, 'Diterima', '2025-10-06 16:49:59', '2025-10-07 08:00:13'),
+(2, 'YPD021', 'Yovan', 'SDM', 'Staf SDM', 'karyawan', 'Sakit', '2025-10-06', '2025-10-08', 'sakit', 'uploads/surat_sakit/1759769935_Request for Quotation.pdf', 'Diterima', '2025-10-06 16:58:55', '2025-10-07 07:47:58'),
+(3, 'YPD021', 'Yovan', 'SDM', 'Staf SDM', 'karyawan', 'Sakit', '2025-10-07', '2025-10-09', 'nono ya', 'uploads/surat_sakit/1759816970_ChatGPT Image 5 Okt 2025, 00.02.09.png', 'Ditolak', '2025-10-07 06:02:50', '2025-10-07 08:04:59'),
+(4, 'YPD011', 'Lala Marcella', 'Keuangan', 'Staf Keuangan', 'karyawan', 'Tahunan', '2025-12-28', '2026-01-04', 'mau holiday', NULL, 'Diterima', '2025-10-07 06:07:58', '2025-10-07 08:28:27'),
+(5, 'YPD014', 'Cici', 'Keuangan', 'Staf Keuangan', 'karyawan', 'Lustrum', '2025-10-17', '2025-10-17', 'Mau ke luar kota', NULL, 'Diterima', '2025-10-07 06:11:46', '2025-10-07 08:27:27'),
+(6, 'YPD010', 'Adrian', 'Training', 'Staf Training', 'karyawan', 'Lustrum', '2025-10-15', '2025-10-15', 'Pergi 1 hari', NULL, 'Diterima', '2025-10-07 06:48:59', '2025-10-07 08:51:02'),
+(7, 'YPD015', 'Leonardo', 'Training', 'Staf Training', 'karyawan', 'Tahunan', '2025-11-10', '2025-11-17', 'pergi holiday ke LN hehe', NULL, 'Diterima', '2025-10-07 06:49:55', '2025-10-07 08:50:45'),
+(8, 'YPD003', 'Ria', 'Training', 'Penanggung Jawab Training', 'penanggung jawab', 'Tahunan', '2025-10-09', '2025-10-09', 'sakit', NULL, 'Menunggu Persetujuan', '2025-10-07 07:57:10', NULL),
+(9, 'YPD020', 'Lyra', 'SDM', 'Staf SDM', 'karyawan', 'Tahunan', '2025-10-07', '2025-10-07', 'gaboleh, kerja', NULL, 'Ditolak', '2025-10-07 13:17:58', '2025-10-07 15:45:25'),
+(10, 'YPD021', 'Yovan', 'SDM', 'Staf SDM', 'karyawan', 'Tahunan', '2025-10-07', '2025-10-07', 'no no yovan', NULL, 'Ditolak', '2025-10-07 13:23:36', '2025-10-07 15:57:18'),
+(11, 'YPD007', 'Dian', 'SDM', 'Penanggung Jawab SDM', 'penanggung jawab', 'Tahunan', '2025-10-07', '2025-10-07', 'bobok', NULL, 'Menunggu Persetujuan', '2025-10-07 13:25:38', NULL),
+(12, 'YPD021', 'Yovan', 'SDM', 'Staf SDM', 'karyawan', 'Tahunan', '2025-10-29', '2025-10-29', 'tidur', NULL, 'Diterima', '2025-10-07 13:59:38', '2025-10-07 16:00:04'),
+(13, 'YPD014', 'Cici', 'Keuangan', 'Staf Keuangan', 'karyawan', 'Tahunan', '2025-10-07', '2025-10-07', 'wergth', NULL, 'Diterima', '2025-10-07 14:57:21', '2025-10-07 16:58:44'),
+(14, 'YPD018', 'Selena', 'Wisma', 'Staf Wisma', 'karyawan', 'DiluarTanggungan', '2025-10-16', '2025-10-17', 'Mau pergi ke luar kota', NULL, 'Menunggu Persetujuan', '2025-10-07 18:00:27', NULL),
+(15, 'YPD011', 'Lala Marcella', 'Keuangan', 'Staf Keuangan', 'karyawan', 'Ibadah', '2025-10-30', '2025-10-31', 'Ziarah', NULL, 'Menunggu Persetujuan', '2025-10-07 18:04:22', NULL);
+
+--
+-- Trigger `data_pengajuan_cuti`
+--
+DELIMITER $$
+CREATE TRIGGER `after_cuti_disetujui` AFTER UPDATE ON `data_pengajuan_cuti` FOR EACH ROW BEGIN
+    -- Hanya trigger ketika status berubah menjadi 'Diterima'
+    IF NEW.status = 'Diterima' AND OLD.status != 'Diterima' THEN
+        -- Panggil stored procedure untuk mengurangi sisa cuti
+        CALL KurangiSisaCuti(
+            NEW.kode_karyawan, 
+            NEW.jenis_cuti, 
+            NEW.tanggal_mulai, 
+            NEW.tanggal_akhir
+        );
+    END IF;
+END
+$$
+DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -157,12 +269,26 @@ CREATE TABLE `data_pengajuan_khl` (
 
 INSERT INTO `data_pengajuan_khl` (`id_khl`, `kode_karyawan`, `divisi`, `jabatan`, `role`, `proyek`, `tanggal_khl`, `jam_mulai_kerja`, `jam_akhir_kerja`, `tanggal_cuti_khl`, `jam_mulai_cuti_khl`, `jam_akhir_cuti_khl`, `status_khl`, `alasan_penolakan`, `created_at`) VALUES
 (1, 'YPD021', 'SDM', 'Staf SDM', 'karyawan', 'Projek Training SDM baru', '2025-10-06', '08:00:00', '18:00:00', '2025-10-28', '08:00:00', '17:00:00', 'disetujui', NULL, '2025-10-05 05:25:22'),
-(2, 'YPD007', 'SDM', 'Penanggung Jawab SDM', 'penanggung jawab', 'Projek Training SDM baru', '2025-10-06', '07:00:00', '19:00:00', '2025-10-30', '10:00:00', '18:00:00', 'disetujui', NULL, '2025-10-05 05:32:47'),
 (3, 'YPD021', 'SDM', 'Staf SDM', 'karyawan', 'Projek Training Karyawan Baru', '2025-10-08', '08:00:00', '17:00:00', '2025-10-22', '08:00:00', '17:00:00', 'ditolak', 'tidak boleh!!', '2025-10-05 05:56:20'),
 (4, 'YPD007', 'SDM', 'Penanggung Jawab SDM', 'penanggung jawab', 'Projek Training SDM baru', '2025-10-06', '10:00:00', '17:00:00', '2025-10-23', '09:00:00', '18:00:00', 'pending', NULL, '2025-10-05 06:10:51'),
 (5, 'YPD007', 'SDM', 'Penanggung Jawab SDM', 'penanggung jawab', 'Projek Training SDM baru oawkok', '2025-10-15', '10:00:00', '16:00:00', '2025-10-30', '08:00:00', '17:00:00', 'disetujui', '', '2025-10-05 06:27:52'),
 (6, 'YPD007', 'SDM', 'Penanggung Jawab SDM', 'penanggung jawab', 'projekan2', '2025-10-06', '09:00:00', '18:00:00', '2025-11-08', '08:00:00', '17:00:00', 'ditolak', 'Tidak Boleh', '2025-10-05 06:48:08'),
-(7, 'YPD001', 'Direksi', 'Direktur Utama', 'direktur', 'bandungan', '2025-11-06', '15:35:00', '16:35:00', '2025-11-06', '17:35:00', '18:35:00', 'disetujui', NULL, '2025-10-05 08:35:46');
+(7, 'YPD001', 'Direksi', 'Direktur Utama', 'direktur', 'bandungan', '2025-11-06', '15:35:00', '16:35:00', '2025-11-06', '17:35:00', '18:35:00', 'disetujui', NULL, '2025-10-05 08:35:46'),
+(8, 'YPD001', 'Direksi', '', 'direktur', 'bandungan', '2025-10-07', '00:11:00', '01:11:00', '2025-10-07', '03:11:00', '04:11:00', 'disetujui', NULL, '2025-10-05 17:11:49'),
+(9, 'YPD001', 'Direksi', '', 'direktur', 'bandungan', '2025-10-06', '00:18:00', '01:19:00', '2025-10-06', '03:19:00', '04:19:00', 'disetujui', NULL, '2025-10-05 17:19:13'),
+(10, 'YPD001', 'Direksi', '', 'direktur', 'bandungan', '2025-10-06', '00:22:00', '01:22:00', '2025-10-06', '02:22:00', '03:22:00', 'disetujui', NULL, '2025-10-05 17:22:19'),
+(11, 'YPD001', 'Direksi', '', 'direktur', 'Tugu Muda', '2025-10-06', '01:35:00', '02:35:00', '2025-10-06', '03:35:00', '04:36:00', 'disetujui', NULL, '2025-10-05 17:36:05'),
+(12, 'YPD001', 'Direksi', '', 'direktur', 'Tugu Muda', '2025-10-07', '00:37:00', '01:37:00', '2025-10-07', '02:37:00', '03:37:00', 'disetujui', NULL, '2025-10-05 17:37:58'),
+(13, 'YPD001', 'Direktsi', 'Direktur Utama', 'direktur', 'proyek baru', '2025-10-06', '01:04:00', '02:04:00', '2025-10-06', '04:04:00', '05:04:00', 'disetujui', NULL, '2025-10-05 18:04:55'),
+(14, 'YPD001', 'Direktsi', 'Direktur Utama', 'direktur', 'proyek baru', '2025-10-06', '01:04:00', '02:04:00', '2025-10-06', '04:04:00', '05:04:00', 'disetujui', NULL, '2025-10-05 18:05:33'),
+(15, 'YPD001', 'Direktsi', 'Direktur Utama', 'direktur', 'proyek desa', '2025-10-06', '01:23:00', '02:23:00', '2025-10-06', '03:23:00', '04:23:00', 'disetujui', NULL, '2025-10-05 18:23:32'),
+(19, 'YPD007', 'SDM', 'Penanggung Jawab SDM', 'penanggung jawab', 'projek baru', '2025-10-07', '09:00:00', '18:00:00', '2025-10-22', '08:00:00', '17:00:00', 'pending', NULL, '2025-10-07 13:29:49'),
+(20, 'YPD007', 'SDM', 'Penanggung Jawab SDM', 'penanggung jawab', 'projekprojek', '2025-10-28', '09:00:00', '17:00:00', '2025-10-29', '08:00:00', '16:00:00', 'pending', NULL, '2025-10-07 13:30:22'),
+(21, 'YPD007', 'SDM', 'Penanggung Jawab SDM', 'penanggung jawab', 'projek lagi', '2025-10-15', '08:00:00', '17:00:00', '2025-10-17', '09:00:00', '17:00:00', 'pending', NULL, '2025-10-07 13:42:16'),
+(22, 'YPD014', 'Keuangan', 'Staf Keuangan', 'karyawan', 'projeksekai', '2025-10-16', '09:00:00', '16:00:00', '2025-10-30', '08:00:00', '17:00:00', 'ditolak', 'no no', '2025-10-07 14:57:39'),
+(23, 'YPD019', 'Wisma', 'Staf Wisma', 'karyawan', 'Projek Training Karyawan Baru', '2025-10-08', '08:00:00', '18:00:00', '2025-10-20', '08:00:00', '17:00:00', 'pending', NULL, '2025-10-07 17:26:35'),
+(24, 'YPD018', 'Wisma', 'Staf Wisma', 'karyawan', 'Projek Training Karyawan Wisma', '2025-10-20', '08:00:00', '18:00:00', '2025-10-30', '08:00:00', '17:00:00', 'pending', NULL, '2025-10-07 17:45:24'),
+(25, 'YPD011', 'Keuangan', 'Staf Keuangan', 'karyawan', 'Projek Training Karyawan Keuangan', '2025-10-10', '08:00:00', '18:00:00', '2025-10-15', '08:00:00', '16:00:00', 'pending', NULL, '2025-10-07 18:05:06');
 
 -- --------------------------------------------------------
 
@@ -210,6 +336,8 @@ CREATE TABLE `pengajuan_cuti` (
   `kode_karyawan` varchar(11) NOT NULL,
   `nama_karyawan` varchar(100) NOT NULL,
   `divisi` varchar(100) NOT NULL,
+  `jabatan` varchar(50) NOT NULL,
+  `role` enum('karyawan','direktur','admin','penanggung jawab') NOT NULL,
   `jenis_cuti` varchar(50) NOT NULL,
   `tanggal_mulai` date NOT NULL,
   `tanggal_akhir` date NOT NULL,
@@ -223,12 +351,12 @@ CREATE TABLE `pengajuan_cuti` (
 -- Dumping data untuk tabel `pengajuan_cuti`
 --
 
-INSERT INTO `pengajuan_cuti` (`id`, `kode_karyawan`, `nama_karyawan`, `divisi`, `jenis_cuti`, `tanggal_mulai`, `tanggal_akhir`, `alasan`, `status`, `waktu_persetujuan`, `created_at`) VALUES
-(1, 'YPD001', 'Pico', 'Direksi', 'Tahunan', '2025-10-02', '2025-10-05', 'keluarga menikah', 'Menunggu Persetujuan', NULL, '2025-10-01 11:36:39'),
-(3, 'YPD101', 'Adrian', 'Training', 'Tahunan', '2025-09-29', '2025-10-02', 'Menjemput keluarga', 'Diterima', NULL, '2025-10-01 11:49:45'),
-(4, 'YPD003', 'Ria', 'Wisma', 'Tahunan', '2025-09-02', '2025-10-07', 'Liburan', 'Ditolak', NULL, '2025-10-01 11:08:46'),
-(6, 'YPD001', 'Pico', 'Direksi', 'Sakit', '2025-10-02', '2025-10-02', 'Sakit', '', NULL, '2025-10-01 11:23:08'),
-(7, 'YPD001', 'Pico', 'Direksi', 'Tahunan', '2025-10-04', '2025-10-04', 'Liburan', '', NULL, '2025-10-03 00:15:02');
+INSERT INTO `pengajuan_cuti` (`id`, `kode_karyawan`, `nama_karyawan`, `divisi`, `jabatan`, `role`, `jenis_cuti`, `tanggal_mulai`, `tanggal_akhir`, `alasan`, `status`, `waktu_persetujuan`, `created_at`) VALUES
+(1, 'YPD001', 'Pico', 'Direksi', '', 'karyawan', 'Tahunan', '2025-10-02', '2025-10-05', 'keluarga menikah', 'Menunggu Persetujuan', NULL, '2025-10-01 11:36:39'),
+(3, 'YPD101', 'Adrian', 'Training', '', 'karyawan', 'Tahunan', '2025-09-29', '2025-10-02', 'Menjemput keluarga', 'Diterima', NULL, '2025-10-01 11:49:45'),
+(4, 'YPD003', 'Ria', 'Wisma', '', 'karyawan', 'Tahunan', '2025-09-02', '2025-10-07', 'Liburan', 'Ditolak', NULL, '2025-10-01 11:08:46'),
+(6, 'YPD001', 'Pico', 'Direksi', '', 'karyawan', 'Sakit', '2025-10-02', '2025-10-02', 'Sakit', '', NULL, '2025-10-01 11:23:08'),
+(7, 'YPD001', 'Pico', 'Direksi', '', 'karyawan', 'Tahunan', '2025-10-04', '2025-10-04', 'Liburan', '', NULL, '2025-10-03 00:15:02');
 
 -- --------------------------------------------------------
 
@@ -422,7 +550,12 @@ INSERT INTO `pengumuman_pelamar` (`id`, `pelamar_id`, `tahap`, `pesan`, `tanggal
 (96, 17, 'Seleksi Administratif', 'Selamat! Anda lolos seleksi administratif. Tahap selanjutnya adalah wawancara.', '2025-10-05', '2025-10-05 12:55:53'),
 (97, 17, 'Seleksi Wawancara', 'Selamat! Anda lolos wawancara. Tahap selanjutnya adalah Psikotes dan Tes Kesehatan.', '2025-10-05', '2025-10-05 12:55:57'),
 (98, 17, 'Seleksi Psikotes & Kesehatan', 'Selamat! Anda lolos Psikotes. Tahap selanjutnya adalah Tes Kesehatan.', '2025-10-05', '2025-10-05 12:56:00'),
-(99, 17, 'Seleksi Kesehatan', 'Selamat! Anda telah lolos seluruh rangkaian seleksi dan dinyatakan DITERIMA.', '2025-10-05', '2025-10-05 12:56:02');
+(99, 17, 'Seleksi Kesehatan', 'Selamat! Anda telah lolos seluruh rangkaian seleksi dan dinyatakan DITERIMA.', '2025-10-05', '2025-10-05 12:56:02'),
+(100, 18, 'Menunggu Proses', 'Selamat! Lamaran Anda telah diterima dan masuk ke tahap seleksi administratif.', '2025-10-07', '2025-10-07 16:13:54'),
+(101, 18, 'Seleksi Administratif', 'Selamat! Anda lolos seleksi administratif. Tahap selanjutnya adalah wawancara.', '2025-10-07', '2025-10-07 16:14:14'),
+(102, 18, 'Seleksi Wawancara', 'Selamat! Anda lolos wawancara. Tahap selanjutnya adalah Psikotes.', '2025-10-07', '2025-10-07 16:29:57'),
+(103, 18, 'Seleksi Psikotes', 'Selamat! Anda telah lolos seluruh rangkaian seleksi dan dinyatakan DITERIMA.', '2025-10-07', '2025-10-07 16:30:13'),
+(104, 19, 'Menunggu Proses', 'Selamat! Lamaran Anda telah diterima dan masuk ke tahap seleksi administratif.', '2025-10-07', '2025-10-07 16:52:53');
 
 -- --------------------------------------------------------
 
@@ -497,7 +630,9 @@ INSERT INTO `riwayat_pelamar` (`id`, `pelamar_id`, `status_administratif`, `stat
 (48, 14, 'Lolos', 'Lolos', 'Lolos', NULL, 'Diterima', '2025-10-04 06:40:53'),
 (52, 15, 'Lolos', 'Lolos', 'Lolos', NULL, 'Diterima', '2025-10-04 06:43:12'),
 (56, 16, 'Lolos', 'Lolos', 'Lolos', NULL, 'Diterima', '2025-10-04 06:45:16'),
-(60, 17, 'Lolos', 'Lolos', 'Lolos', 'Lolos', 'Diterima', '2025-10-05 12:56:02');
+(60, 17, 'Lolos', 'Lolos', 'Lolos', 'Lolos', 'Diterima', '2025-10-05 12:56:02'),
+(65, 18, 'Lolos', 'Lolos', 'Lolos', NULL, 'Diterima', '2025-10-07 16:30:13'),
+(69, 19, 'Lolos', NULL, NULL, NULL, NULL, '2025-10-07 16:52:53');
 
 -- --------------------------------------------------------
 
@@ -552,7 +687,9 @@ INSERT INTO `users` (`id`, `nama_lengkap`, `email`, `password`, `created_at`) VA
 (23, '', 'kelra123@gmail.com', '$2y$10$1S4zteGUZunZI6u76KBfy.WiJlwvkjo27rGENid4lNZczI4sp9ZH.', '2025-10-04 06:39:17'),
 (24, '', 'lyra1234@gmail.com', '$2y$10$ZkBYzUzxv8iyHwiVeZ.AFueAtZ2G77t2NawMb32fGIaeblRdc/lQ6', '2025-10-04 06:41:43'),
 (25, '', 'yovan1234@gmail.com', '$2y$10$jz6l4OAxjH9p5WhfNikrfedgRwbJpN0zcOyhCGL3Zd7BwLG8SeuW2', '2025-10-04 06:43:43'),
-(26, '', 'feli1234@gmail.com', '$2y$10$ZJQMII7TnZNUG1wJ0yR6VOlFiCNKpmp6.ej3GKkJVm3pjoGd3JGla', '2025-10-05 12:53:53');
+(26, '', 'feli1234@gmail.com', '$2y$10$ZJQMII7TnZNUG1wJ0yR6VOlFiCNKpmp6.ej3GKkJVm3pjoGd3JGla', '2025-10-05 12:53:53'),
+(27, '', 'dicky1234@gmail.com', '$2y$10$YsBUAwgpvY8oE5L80C4LuO/fwsz0WtaJw7U.iNY4jt81l3m6pzhVW', '2025-10-07 16:11:06'),
+(28, '', 'nindya123@gmail.com', '$2y$10$Gx6RfcZR3qowXM54GSH4W.Y7YyiVaajscGYgTqEsp6Odidni8qI6m', '2025-10-07 16:50:23');
 
 --
 -- Indexes for dumped tables
@@ -571,6 +708,13 @@ ALTER TABLE `data_karyawan`
 --
 ALTER TABLE `data_pelamar`
   ADD PRIMARY KEY (`id`);
+
+--
+-- Indeks untuk tabel `data_pengajuan_cuti`
+--
+ALTER TABLE `data_pengajuan_cuti`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `kode_karyawan` (`kode_karyawan`);
 
 --
 -- Indeks untuk tabel `data_pengajuan_khl`
@@ -674,13 +818,19 @@ ALTER TABLE `data_karyawan`
 -- AUTO_INCREMENT untuk tabel `data_pelamar`
 --
 ALTER TABLE `data_pelamar`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+
+--
+-- AUTO_INCREMENT untuk tabel `data_pengajuan_cuti`
+--
+ALTER TABLE `data_pengajuan_cuti`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT untuk tabel `data_pengajuan_khl`
 --
 ALTER TABLE `data_pengajuan_khl`
-  MODIFY `id_khl` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id_khl` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
 -- AUTO_INCREMENT untuk tabel `lamaran`
@@ -722,7 +872,7 @@ ALTER TABLE `pengumuman`
 -- AUTO_INCREMENT untuk tabel `pengumuman_pelamar`
 --
 ALTER TABLE `pengumuman_pelamar`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=100;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=105;
 
 --
 -- AUTO_INCREMENT untuk tabel `pengumuman_umum`
@@ -740,7 +890,7 @@ ALTER TABLE `riwayat_cuti`
 -- AUTO_INCREMENT untuk tabel `riwayat_pelamar`
 --
 ALTER TABLE `riwayat_pelamar`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=65;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=70;
 
 --
 -- AUTO_INCREMENT untuk tabel `sisa_cuti`
@@ -752,11 +902,17 @@ ALTER TABLE `sisa_cuti`
 -- AUTO_INCREMENT untuk tabel `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
 -- Ketidakleluasaan untuk tabel pelimpahan (Dumped Tables)
 --
+
+--
+-- Ketidakleluasaan untuk tabel `data_pengajuan_cuti`
+--
+ALTER TABLE `data_pengajuan_cuti`
+  ADD CONSTRAINT `data_pengajuan_cuti_ibfk_1` FOREIGN KEY (`kode_karyawan`) REFERENCES `data_karyawan` (`kode_karyawan`);
 
 --
 -- Ketidakleluasaan untuk tabel `data_pengajuan_khl`

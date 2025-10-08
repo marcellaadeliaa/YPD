@@ -34,50 +34,66 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
     if ($action == 'lolos') {
         $next_stage = $_GET['next_stage'] ?? '';
 
+        // GANTI BLOK SWITCH LAMA ANDA DENGAN INI
         switch ($currentStatus) {
             case 'Menunggu Proses':
                 $newStatus = 'Seleksi Administratif';
-                $status_admin = 'Lolos';
+                $status_admin = 'Lolos'; // Tahap ini lolos
                 if (empty($custom_message)) $custom_message = "Selamat! Lamaran Anda telah diterima dan masuk ke tahap seleksi administratif.";
                 break;
                 
             case 'Seleksi Administratif':
                 $newStatus = 'Seleksi Wawancara';
-                $status_wawancara = 'Lolos';
+                $status_admin = 'Lolos'; // PERTAHANKAN: Tahap sebelumnya juga lolos
+                $status_wawancara = 'Lolos'; // Tahap ini lolos
                 if (empty($custom_message)) $custom_message = "Selamat! Anda lolos seleksi administratif. Tahap selanjutnya adalah wawancara.";
                 break;
                 
             case 'Seleksi Wawancara':
+                $status_admin = 'Lolos'; // PERTAHANKAN
+                $status_wawancara = 'Lolos'; // PERTAHANKAN
+
                 if ($next_stage == 'psikotes') {
                     $newStatus = 'Seleksi Psikotes';
-                    $status_psikotes = 'Lolos';
+                    $status_psikotes = 'Lolos'; // Tahap ini lolos
                     if (empty($custom_message)) $custom_message = "Selamat! Anda lolos wawancara. Tahap selanjutnya adalah Psikotes.";
                 } elseif ($next_stage == 'kesehatan') {
                     $newStatus = 'Seleksi Kesehatan';
-                    $status_kesehatan = 'Lolos';
+                    $status_kesehatan = 'Lolos'; // Tahap ini lolos
                     if (empty($custom_message)) $custom_message = "Selamat! Anda lolos wawancara. Tahap selanjutnya adalah Tes Kesehatan.";
                 } elseif ($next_stage == 'keduanya') {
                     $newStatus = 'Seleksi Psikotes & Kesehatan';
-                    $status_psikotes = 'Lolos';
+                    $status_psikotes = 'Lolos'; // Tahap ini lolos
                     if (empty($custom_message)) $custom_message = "Selamat! Anda lolos wawancara. Tahap selanjutnya adalah Psikotes dan Tes Kesehatan.";
                 }
                 break;
                 
             case 'Seleksi Psikotes':
                 $newStatus = 'Diterima';
-                $status_final = 'Diterima';
+                $status_admin = 'Lolos'; // PERTAHANKAN
+                $status_wawancara = 'Lolos'; // PERTAHANKAN
+                $status_psikotes = 'Lolos'; // PERTAHANKAN
+                $status_final = 'Diterima'; // Tahap ini lolos
                 if (empty($custom_message)) $custom_message = "Selamat! Anda telah lolos seluruh rangkaian seleksi dan dinyatakan DITERIMA.";
                 break;
                 
             case 'Seleksi Psikotes & Kesehatan':
                 $newStatus = 'Seleksi Kesehatan';
-                $status_kesehatan = 'Lolos';
+                $status_admin = 'Lolos'; // PERTAHANKAN
+                $status_wawancara = 'Lolos'; // PERTAHANKAN
+                $status_psikotes = 'Lolos'; // PERTAHANKAN
+                $status_kesehatan = 'Lolos'; // Tahap ini lolos
                 if (empty($custom_message)) $custom_message = "Selamat! Anda lolos Psikotes. Tahap selanjutnya adalah Tes Kesehatan.";
                 break;
                 
             case 'Seleksi Kesehatan':
                 $newStatus = 'Diterima';
-                $status_final = 'Diterima';
+                $status_admin = 'Lolos'; // PERTAHANKAN
+                $status_wawancara = 'Lolos'; // PERTAHANKAN
+                // Asumsi jika sampai sini, psikotes juga sudah lolos
+                $status_psikotes = 'Lolos';
+                $status_kesehatan = 'Lolos'; // PERTAHANKAN
+                $status_final = 'Diterima'; // Tahap ini lolos
                 if (empty($custom_message)) $custom_message = "Selamat! Anda telah lolos seluruh rangkaian seleksi dan dinyatakan DITERIMA.";
                 break;
         }

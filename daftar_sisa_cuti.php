@@ -1,89 +1,56 @@
 <?php
 session_start();
+require 'config.php'; // Menghubungkan ke database
 
-// --- DUMMY DATA SISA CUTI KARYAWAN ---
-$data_sisa_cuti = [
-    [
-        'id' => 1,
-        'kode_karyawan' => '11223344',
-        'nama_karyawan' => 'Xue',
-        'divisi' => 'Keuangan',
-        'cuti_tahunan' => 12,
-        'cuti_tahunan_terpakai' => 3,
-        'cuti_lustrum' => 5,
-        'cuti_lustrum_terpakai' => 1,
-        'cuti_tambahan' => 0,
-        'cuti_tambahan_terpakai' => 0,
-        'total_sisa_cuti' => 13
-    ],
-    [
-        'id' => 2,
-        'kode_karyawan' => '11223355',
-        'nama_karyawan' => 'Adel',
-        'divisi' => 'SDM',
-        'cuti_tahunan' => 12,
-        'cuti_tahunan_terpakai' => 8,
-        'cuti_lustrum' => 3,
-        'cuti_lustrum_terpakai' => 0,
-        'cuti_tambahan' => 2,
-        'cuti_tambahan_terpakai' => 1,
-        'total_sisa_cuti' => 8
-    ],
-    [
-        'id' => 3,
-        'kode_karyawan' => '11223366',
-        'nama_karyawan' => 'Budi Santoso',
-        'divisi' => 'Training',
-        'cuti_tahunan' => 12,
-        'cuti_tahunan_terpakai' => 12,
-        'cuti_lustrum' => 2,
-        'cuti_lustrum_terpakai' => 2,
-        'cuti_tambahan' => 0,
-        'cuti_tambahan_terpakai' => 0,
-        'total_sisa_cuti' => 0
-    ],
-    [
-        'id' => 4,
-        'kode_karyawan' => '11223377',
-        'nama_karyawan' => 'Siti Rahayu',
-        'divisi' => 'Konsultasi',
-        'cuti_tahunan' => 12,
-        'cuti_tahunan_terpakai' => 5,
-        'cuti_lustrum' => 7,
-        'cuti_lustrum_terpakai' => 2,
-        'cuti_tambahan' => 0,
-        'cuti_tambahan_terpakai' => 0,
-        'total_sisa_cuti' => 12
-    ],
-    [
-        'id' => 5,
-        'kode_karyawan' => '11223388',
-        'nama_karyawan' => 'Ahmad Fauzi',
-        'divisi' => 'Wisma',
-        'cuti_tahunan' => 12,
-        'cuti_tahunan_terpakai' => 2,
-        'cuti_lustrum' => 4,
-        'cuti_lustrum_terpakai' => 0,
-        'cuti_tambahan' => 5,
-        'cuti_tambahan_terpakai' => 3,
-        'total_sisa_cuti' => 16
-    ],
-];
+// --- Logika Keamanan: Pastikan hanya admin yang bisa mengakses ---
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+    header("Location: login_karyawan.php?error=unauthorized");
+    exit();
+}
 
-// Inisialisasi variabel filter
+// --- Logika untuk Memperbarui Sisa Cuti dari Modal ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['karyawan_id'])) {
+    $karyawan_id = $_POST['karyawan_id'];
+    $sisa_tahunan = (int)$_POST['sisa_cuti_tahunan'];
+    $sisa_lustrum = (int)$_POST['sisa_cuti_lustrum'];
+
+    // Query untuk update sisa cuti di database
+    $stmt_update = $conn->prepare("UPDATE data_karyawan SET sisa_cuti_tahunan = ?, sisa_cuti_lustrum = ? WHERE id_karyawan = ?");
+    $stmt_update->bind_param("iii", $sisa_tahunan, $sisa_lustrum, $karyawan_id);
+    
+    if ($stmt_update->execute()) {
+        $_SESSION['success_message'] = "Sisa cuti berhasil diperbarui!";
+    } else {
+        $_SESSION['error_message'] = "Gagal memperbarui sisa cuti.";
+    }
+    $stmt_update->close();
+    
+    // Redirect untuk menghindari resubmit form saat refresh
+    header("Location: daftar_sisa_cuti.php");
+    exit();
+}
+
+// --- Logika untuk Mengambil Data Karyawan ---
 $search_query = $_GET['search'] ?? '';
 
-// Filter data berdasarkan pencarian
-$filtered_data = $data_sisa_cuti;
+// Query dasar untuk mengambil data karyawan (termasuk role)
+$sql = "SELECT id_karyawan, kode_karyawan, nama_lengkap, divisi, role, sisa_cuti_tahunan, sisa_cuti_lustrum FROM data_karyawan";
+
+// Tambahkan filter pencarian jika ada
 if (!empty($search_query)) {
-    $search_lower = strtolower($search_query);
-    $filtered_data = array_filter($filtered_data, function($karyawan) use ($search_lower) {
-        return strpos(strtolower($karyawan['nama_karyawan']), $search_lower) !== false ||
-               strpos(strtolower($karyawan['kode_karyawan']), $search_lower) !== false ||
-               strpos(strtolower($karyawan['divisi']), $search_lower) !== false;
-    });
-    $filtered_data = array_values($filtered_data);
+    $search_term = "%" . $search_query . "%";
+    $sql .= " WHERE nama_lengkap LIKE ? OR kode_karyawan LIKE ? OR divisi LIKE ? OR role LIKE ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ssss", $search_term, $search_term, $search_term, $search_term);
+} else {
+    $stmt = $conn->prepare($sql);
 }
+
+$stmt->execute();
+$result = $stmt->get_result();
+$filtered_data = $result->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
+$conn->close();
 
 ?>
 <!DOCTYPE html>
@@ -109,9 +76,8 @@ if (!empty($search_query)) {
     h1 { text-align:left; font-size:28px; margin-bottom:10px; }
     p.admin-title { font-size: 16px; margin-top: 0; margin-bottom: 30px; font-weight: 400; opacity: 0.9; }
     .card { background:#fff; border-radius:20px; padding:30px 40px; box-shadow:0 2px 10px rgba(0,0,0,0.15); }
-    .page-title { font-size: 24px; font-weight: 600; text-align: center; margin-bottom: 30px; color: #1E105E; }
+    .page-title { font-size: 30px; font-weight: 600; text-align: center; margin-bottom: 30px; color: #1E105E; }
     
-    /* Filter Section */
     .filter-section { background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 25px; }
     .filter-row { display: flex; gap: 15px; align-items: end; flex-wrap: wrap; }
     .filter-group { display: flex; flex-direction: column; gap: 5px; }
@@ -125,15 +91,12 @@ if (!empty($search_query)) {
     .btn-cari:hover { background-color: #3a3162; }
     .btn-reset { background-color: #6c757d; }
     .btn-reset:hover { background-color: #545b62; }
-    .btn-tambah { background-color: #28a745; }
-    .btn-tambah:hover { background-color: #218838; }
     
     .data-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 20px; }
     .data-table th, .data-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
     .data-table th { background-color: #f8f9fa; font-weight: 600; color: #333; position: sticky; top: 0; }
     .data-table tbody tr:hover { background-color: #f1f1f1; }
     
-    /* Status styles */
     .sisa-banyak { color: #28a745; font-weight: 600; }
     .sisa-sedikit { color: #ffc107; font-weight: 600; }
     .sisa-habis { color: #dc3545; font-weight: 600; }
@@ -153,10 +116,7 @@ if (!empty($search_query)) {
     .btn-action { padding: 6px 12px; border: none; border-radius: 4px; font-size: 12px; font-weight: 600; color: #fff; cursor: pointer; }
     .btn-edit { background-color: #17a2b8; }
     .btn-edit:hover { background-color: #138496; }
-    .btn-tambah-cuti { background-color: #28a745; }
-    .btn-tambah-cuti:hover { background-color: #218838; }
     
-    /* Modal Styles */
     .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
     .modal-content { background-color: white; margin: 5% auto; padding: 30px; border-radius: 10px; width: 80%; max-width: 500px; }
     .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
@@ -165,7 +125,7 @@ if (!empty($search_query)) {
     .modal-title { font-size: 20px; font-weight: 600; margin-bottom: 20px; color: #1E105E; }
     .form-group { margin-bottom: 15px; }
     .form-group label { display: block; font-weight: 600; margin-bottom: 5px; color: #333; }
-    .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
+    .form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
     .form-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
     
     .info-box { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #4a3f81; }
@@ -178,6 +138,8 @@ if (!empty($search_query)) {
         .action-bar { flex-direction: column; }
         .btn { width: 100%; }
         .action-cell { flex-direction: column; }
+        .data-table { font-size: 12px; }
+        .data-table th, .data-table td { padding: 8px 10px; }
     }
 </style>
 </head>
@@ -224,26 +186,23 @@ if (!empty($search_query)) {
 </header>
 
 <main>
-    <h1>Welcome, Cell!</h1>
-    <p class="admin-title">Administrator</p>
-
     <div class="card">
         <h2 class="page-title">Daftar Sisa Cuti Karyawan</h2>
         
         <div class="info-box">
             <h4>📋 Informasi Kuota Cuti</h4>
-            <p><strong>Cuti Tahunan:</strong> 12 hari per tahun untuk semua karyawan</p>
-            <p><strong>Cuti Lustrum:</strong> Bervariasi per karyawan (dapat disesuaikan)</p>
-            <p><strong>Cuti Tambahan:</strong> Dapat diberikan oleh admin sesuai kebutuhan</p>
+            <p><strong>Cuti Tahunan:</strong> Kuota awal 12 hari per tahun (default).</p>
+            <p><strong>Cuti Lustrum:</strong> Kuota bervariasi per karyawan.</p>
+            <p>Untuk karyawan baru, belum mendapat jatah untuk cuti tahunan dan lustrum.</p>
+            <p>Anda dapat menyesuaikan sisa cuti karyawan melalui tombol "Edit Sisa Cuti".</p>
         </div>
         
-        <!-- Filter Section -->
         <div class="filter-section">
             <form method="GET" action="daftar_sisa_cuti.php">
                 <div class="filter-row">
                     <div class="filter-group search-group">
-                        <label for="search">Cari Karyawan (Nama/Kode/Divisi/Posisi)</label>
-                        <input type="text" id="search" name="search" placeholder="Cari berdasarkan nama, kode, atau divisi..." value="<?= htmlspecialchars($search_query) ?>">
+                        <label for="search">Cari Karyawan (Nama/Kode/Divisi/Role)</label>
+                        <input type="text" id="search" name="search" placeholder="Cari berdasarkan nama, kode, divisi, atau role..." value="<?= htmlspecialchars($search_query) ?>">
                     </div>
                 </div>
                 
@@ -254,7 +213,6 @@ if (!empty($search_query)) {
             </form>
         </div>
 
-        <!-- Info Filter Aktif -->
         <?php if (!empty($search_query)): ?>
             <div class="filter-info">
                 <strong>Filter Aktif:</strong> Pencarian: '<?= htmlspecialchars($search_query) ?>'
@@ -269,10 +227,10 @@ if (!empty($search_query)) {
                 <tr>
                     <th>No. Kode</th>
                     <th>Nama Karyawan</th>
-                    <th>Divisi/Posisi</th>
-                    <th>Cuti Tahunan</th>
-                    <th>Cuti Lustrum</th>
-                    <th>Cuti Tambahan</th>
+                    <th>Divisi</th>
+                    <th>Role</th>
+                    <th>Sisa Cuti Tahunan</th>
+                    <th>Sisa Cuti Lustrum</th>
                     <th>Total Sisa</th>
                     <th>Status</th>
                     <th>Aksi</th>
@@ -281,12 +239,8 @@ if (!empty($search_query)) {
             <tbody>
                 <?php if (!empty($filtered_data)): ?>
                     <?php foreach($filtered_data as $karyawan): 
-                        $sisa_tahunan = $karyawan['cuti_tahunan'] - $karyawan['cuti_tahunan_terpakai'];
-                        $sisa_lustrum = $karyawan['cuti_lustrum'] - $karyawan['cuti_lustrum_terpakai'];
-                        $sisa_tambahan = $karyawan['cuti_tambahan'] - $karyawan['cuti_tambahan_terpakai'];
-                        $total_sisa = $sisa_tahunan + $sisa_lustrum + $sisa_tambahan;
+                        $total_sisa = $karyawan['sisa_cuti_tahunan'] + $karyawan['sisa_cuti_lustrum'];
                         
-                        // Tentukan status
                         if ($total_sisa >= 8) {
                             $status_class = 'sisa-banyak';
                             $status_text = 'Banyak';
@@ -300,20 +254,11 @@ if (!empty($search_query)) {
                     ?>
                     <tr>
                         <td><?= htmlspecialchars($karyawan['kode_karyawan']) ?></td>
-                        <td><?= htmlspecialchars($karyawan['nama_karyawan']) ?></td>
+                        <td><?= htmlspecialchars($karyawan['nama_lengkap']) ?></td>
                         <td><?= htmlspecialchars($karyawan['divisi']) ?></td>
-                        <td>
-                            <small><?= $sisa_tahunan ?> / <?= $karyawan['cuti_tahunan'] ?></small><br>
-                            <progress value="<?= $karyawan['cuti_tahunan_terpakai'] ?>" max="<?= $karyawan['cuti_tahunan'] ?>" style="width: 80px; height: 8px;"></progress>
-                        </td>
-                        <td>
-                            <small><?= $sisa_lustrum ?> / <?= $karyawan['cuti_lustrum'] ?></small><br>
-                            <progress value="<?= $karyawan['cuti_lustrum_terpakai'] ?>" max="<?= $karyawan['cuti_lustrum'] ?>" style="width: 80px; height: 8px;"></progress>
-                        </td>
-                        <td>
-                            <small><?= $sisa_tambahan ?> / <?= $karyawan['cuti_tambahan'] ?></small><br>
-                            <progress value="<?= $karyawan['cuti_tambahan_terpakai'] ?>" max="<?= $karyawan['cuti_tambahan'] ?>" style="width: 80px; height: 8px;"></progress>
-                        </td>
+                        <td><?= htmlspecialchars(ucfirst($karyawan['role'])) ?></td>
+                        <td><?= htmlspecialchars($karyawan['sisa_cuti_tahunan']) ?> hari</td>
+                        <td><?= htmlspecialchars($karyawan['sisa_cuti_lustrum']) ?> hari</td>
                         <td>
                             <strong class="<?= $status_class ?>"><?= $total_sisa ?> hari</strong>
                         </td>
@@ -321,8 +266,7 @@ if (!empty($search_query)) {
                             <span class="<?= $status_class ?>"><?= $status_text ?></span>
                         </td>
                         <td class="action-cell">
-                            <button class="btn-action btn-edit" onclick="editCutiLustrum(<?= htmlspecialchars(json_encode($karyawan)) ?>)">Edit Lustrum</button>
-                            <button class="btn-action btn-tambah-cuti" onclick="tambahCutiTambahan(<?= htmlspecialchars(json_encode($karyawan)) ?>)">Tambah Cuti</button>
+                            <button class="btn-action btn-edit" onclick='editSisaCuti(<?= json_encode($karyawan) ?>)'>Edit Sisa Cuti</button>
                         </td>
                     </tr>
                     <?php endforeach; ?>
@@ -336,80 +280,33 @@ if (!empty($search_query)) {
     </div>
 </main>
 
-<!-- Modal Edit Cuti Lustrum -->
-<div id="editLustrumModal" class="modal">
+<div id="editCutiModal" class="modal">
     <div class="modal-content">
-        <span class="close">&times;</span>
-        <div class="modal-title">Edit Cuti Lustrum</div>
-        <form id="editLustrumForm">
+        <span class="close" onclick="closeModal('editCutiModal')">&times;</span>
+        <div class="modal-title">Edit Sisa Cuti</div>
+        <form id="editCutiForm" method="POST" action="daftar_sisa_cuti.php">
             <input type="hidden" id="editKaryawanId" name="karyawan_id">
             <div class="form-group">
                 <label for="editNamaKaryawan">Nama Karyawan</label>
-                <input type="text" id="editNamaKaryawan" readonly>
+                <input type="text" id="editNamaKaryawan" readonly style="background-color: #e9ecef;">
             </div>
             <div class="form-group">
-                <label for="editKodeKaryawan">Kode Karyawan</label>
-                <input type="text" id="editKodeKaryawan" readonly>
+                <label for="editCutiTahunan">Sisa Cuti Tahunan</label>
+                <input type="number" id="editCutiTahunan" name="sisa_cuti_tahunan" min="0" max="100" required>
             </div>
             <div class="form-group">
-                <label for="editCutiLustrum">Jumlah Cuti Lustrum</label>
-                <input type="number" id="editCutiLustrum" name="cuti_lustrum" min="0" max="30" required>
-            </div>
-            <div class="form-group">
-                <label for="editKeterangan">Keterangan (Opsional)</label>
-                <textarea id="editKeterangan" name="keterangan" rows="3" placeholder="Alasan penyesuaian cuti lustrum..."></textarea>
+                <label for="editCutiLustrum">Sisa Cuti Lustrum</label>
+                <input type="number" id="editCutiLustrum" name="sisa_cuti_lustrum" min="0" max="100" required>
             </div>
             <div class="form-actions">
-                <button type="button" class="btn btn-reset" onclick="closeModal('editLustrumModal')">Batal</button>
+                <button type="button" class="btn btn-reset" onclick="closeModal('editCutiModal')">Batal</button>
                 <button type="submit" class="btn btn-cari">Simpan Perubahan</button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- Modal Tambah Cuti Tambahan -->
-<div id="tambahCutiModal" class="modal">
-    <div class="modal-content">
-        <span class="close">&times;</span>
-        <div class="modal-title">Tambah Cuti Tambahan</div>
-        <form id="tambahCutiForm">
-            <input type="hidden" id="tambahKaryawanId" name="karyawan_id">
-            <div class="form-group">
-                <label for="tambahNamaKaryawan">Nama Karyawan</label>
-                <input type="text" id="tambahNamaKaryawan" readonly>
-            </div>
-            <div class="form-group">
-                <label for="tambahKodeKaryawan">Kode Karyawan</label>
-                <input type="text" id="tambahKodeKaryawan" readonly>
-            </div>
-            <div class="form-group">
-                <label for="tambahJumlahCuti">Jumlah Cuti Tambahan</label>
-                <input type="number" id="tambahJumlahCuti" name="jumlah_cuti" min="1" max="30" required>
-            </div>
-            <div class="form-group">
-                <label for="tambahAlasan">Alasan Penambahan</label>
-                <select id="tambahAlasan" name="alasan" required>
-                    <option value="">Pilih Alasan</option>
-                    <option value="Kebutuhan Khusus">Kebutuhan Khusus</option>
-                    <option value="Penghargaan Kinerja">Penghargaan Kinerja</option>
-                    <option value="Keadaan Darurat">Keadaan Darurat</option>
-                    <option value="Lainnya">Lainnya</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="tambahKeterangan">Keterangan Tambahan</label>
-                <textarea id="tambahKeterangan" name="keterangan" rows="3" placeholder="Jelaskan alasan penambahan cuti..."></textarea>
-            </div>
-            <div class="form-actions">
-                <button type="button" class="btn btn-reset" onclick="closeModal('tambahCutiModal')">Batal</button>
-                <button type="submit" class="btn btn-tambah">Tambah Cuti</button>
-            </div>
-        </form>
-    </div>
-</div>
-
 <script>
-    // Modal functionality
     function openModal(modalId) {
         document.getElementById(modalId).style.display = 'block';
     }
@@ -418,58 +315,19 @@ if (!empty($search_query)) {
         document.getElementById(modalId).style.display = 'none';
     }
     
-    // Close modals when clicking X
-    document.querySelectorAll('.close').forEach(closeBtn => {
-        closeBtn.onclick = function() {
-            this.closest('.modal').style.display = 'none';
-        }
-    });
-    
-    // Close modals when clicking outside
     window.onclick = function(event) {
         if (event.target.classList.contains('modal')) {
             event.target.style.display = 'none';
         }
     }
     
-    // Edit Cuti Lustrum
-    function editCutiLustrum(karyawan) {
-        document.getElementById('editKaryawanId').value = karyawan.id;
-        document.getElementById('editNamaKaryawan').value = karyawan.nama_karyawan;
-        document.getElementById('editKodeKaryawan').value = karyawan.kode_karyawan;
-        document.getElementById('editCutiLustrum').value = karyawan.cuti_lustrum;
-        document.getElementById('editKeterangan').value = '';
-        openModal('editLustrumModal');
+    function editSisaCuti(karyawan) {
+        document.getElementById('editKaryawanId').value = karyawan.id_karyawan;
+        document.getElementById('editNamaKaryawan').value = karyawan.nama_lengkap;
+        document.getElementById('editCutiTahunan').value = karyawan.sisa_cuti_tahunan;
+        document.getElementById('editCutiLustrum').value = karyawan.sisa_cuti_lustrum;
+        openModal('editCutiModal');
     }
-    
-    // Tambah Cuti Tambahan
-    function tambahCutiTambahan(karyawan) {
-        document.getElementById('tambahKaryawanId').value = karyawan.id;
-        document.getElementById('tambahNamaKaryawan').value = karyawan.nama_karyawan;
-        document.getElementById('tambahKodeKaryawan').value = karyawan.kode_karyawan;
-        document.getElementById('tambahJumlahCuti').value = 1;
-        document.getElementById('tambahAlasan').value = '';
-        document.getElementById('tambahKeterangan').value = '';
-        openModal('tambahCutiModal');
-    }
-    
-    // Form submissions (simulasi)
-    document.getElementById('editLustrumForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-        alert('Cuti lustrum berhasil diperbarui!\n\nKaryawan: ' + document.getElementById('editNamaKaryawan').value +
-              '\nCuti Lustrum Baru: ' + document.getElementById('editCutiLustrum').value + ' hari');
-        closeModal('editLustrumModal');
-    });
-    
-    document.getElementById('tambahCutiForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-        alert('Cuti tambahan berhasil ditambahkan!\n\nKaryawan: ' + document.getElementById('tambahNamaKaryawan').value +
-              '\nJumlah Cuti: ' + document.getElementById('tambahJumlahCuti').value + ' hari' +
-              '\nAlasan: ' + document.getElementById('tambahAlasan').value);
-        closeModal('tambahCutiModal');
-    });
 </script>
 
 </body>

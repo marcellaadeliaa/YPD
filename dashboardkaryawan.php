@@ -51,8 +51,9 @@ $tanggal_khl = "-";
 $jenis_khl = "-";
 $status_khl = null;
 
-// Query untuk mendapatkan pengajuan cuti terakhir - PERBAIKAN DI SINI
-$sql_cuti = "SELECT * FROM pengajuan_cuti WHERE kode_karyawan = ? ORDER BY created_at DESC LIMIT 1";
+// --- MODIFIKASI DI SINI ---
+// Query untuk mendapatkan pengajuan cuti terakhir dari tabel 'data_pengajuan_cuti'
+$sql_cuti = "SELECT * FROM data_pengajuan_cuti WHERE kode_karyawan = ? ORDER BY created_at DESC LIMIT 1";
 $stmt_cuti = mysqli_prepare($conn, $sql_cuti);
 
 if ($stmt_cuti) {
@@ -60,12 +61,19 @@ if ($stmt_cuti) {
     mysqli_stmt_execute($stmt_cuti);
     $result_cuti = mysqli_stmt_get_result($stmt_cuti);
     if ($cuti = $result_cuti->fetch_assoc()) {
-        $tanggal_cuti = date('d/m/Y', strtotime($cuti['tanggal_mulai'])) . " - " . date('d/m/Y', strtotime($cuti['tanggal_akhir'])); // Perbaiki field name
+        // Menampilkan rentang tanggal jika tanggal akhir berbeda, atau satu tanggal jika sama
+        if ($cuti['tanggal_mulai'] == $cuti['tanggal_akhir']) {
+            $tanggal_cuti = date('d/m/Y', strtotime($cuti['tanggal_mulai']));
+        } else {
+            $tanggal_cuti = date('d/m/Y', strtotime($cuti['tanggal_mulai'])) . " - " . date('d/m/Y', strtotime($cuti['tanggal_akhir']));
+        }
         $jenis_cuti = $cuti['jenis_cuti'];
         $status_cuti = $cuti['status'];
     }
     mysqli_stmt_close($stmt_cuti);
 }
+// --- AKHIR MODIFIKASI ---
+
 
 // Query untuk mendapatkan pengajuan KHL terakhir
 $sql_khl = "SELECT * FROM data_pengajuan_khl WHERE kode_karyawan = ? ORDER BY created_at DESC LIMIT 1";
@@ -189,7 +197,7 @@ h1 {text-align:center;font-size:26px;margin-bottom:30px;}
   font-weight:600;
   font-size:14px;
 }
-.status-approve {
+.status-approve, .status-Diterima {
   display:inline-block;
   background:#28a745;
   color:#fff;
@@ -198,7 +206,7 @@ h1 {text-align:center;font-size:26px;margin-bottom:30px;}
   font-weight:600;
   font-size:14px;
 }
-.status-pending {
+.status-pending, .status-Menunggu-Persetujuan {
   display:inline-block;
   background:#f0ad4e;
   color:#fff;
@@ -207,7 +215,7 @@ h1 {text-align:center;font-size:26px;margin-bottom:30px;}
   font-weight:600;
   font-size:14px;
 }
-.status-rejected {
+.status-rejected, .status-Ditolak {
   display:inline-block;
   background:#dc3545;
   color:#fff;
@@ -345,10 +353,11 @@ h1 {text-align:center;font-size:26px;margin-bottom:30px;}
     
     <?php if ($status_cuti): ?>
       <div style="margin-top: 15px;">
-        <span class="
-          <?= $status_cuti == 'Diterima' ? 'status-approve' : 
-             ($status_cuti == 'Ditolak' ? 'status-rejected' : 'status-pending') ?>
-        ">
+        <?php
+            // Mengganti spasi dengan strip agar cocok dengan nama class di CSS
+            $status_class = str_replace(' ', '-', $status_cuti);
+        ?>
+        <span class="status-<?= htmlspecialchars($status_class) ?>">
           <?= htmlspecialchars($status_cuti) ?>
         </span>
       </div>

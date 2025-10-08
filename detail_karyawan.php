@@ -2,6 +2,11 @@
 session_start();
 require_once 'config.php';
 
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+    header("Location: login_karyawan.php?error=unauthorized");
+    exit();
+}
+
 // Data karyawan berdasarkan ID
 $karyawan_id = $_GET['id'] ?? '';
 
