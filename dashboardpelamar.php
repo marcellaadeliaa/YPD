@@ -447,7 +447,7 @@ if ($status == 'Diterima') {
             <h4>🎉 Selamat!</h4>
             <p><strong>Anda dinyatakan lolos sebagai karyawan Yayasan Purba Danarta.</strong></p>
             <p>Kami akan segera menghubungi Anda untuk proses selanjutnya. Silakan klik link di bawah ini untuk mengakses dashboard karyawan:</p>
-            <a href="login_karyawan.php" class="link-karyawan">Akses Dashboard Karyawan</a>
+            <a href="dashboardlogin.php" class="link-karyawan">Akses Dashboard Karyawan, pilih Login sebagai Karyawan</a>
           </div>
         <?php elseif ($status == 'Tidak Lolos'): ?>
           <p>Terima kasih telah berpartisipasi dalam proses seleksi di Yayasan Purba Danarta. Mohon maaf, saat ini Anda belum dapat melanjutkan ke tahap berikutnya. Kami menghargai waktu dan usaha yang telah Anda berikan.</p>
