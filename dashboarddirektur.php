@@ -3,13 +3,16 @@
 
 session_start();
 require 'config.php';
+
+// Validasi session dan role
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'direktur') {
     // Jika tidak ada session atau role bukan direktur, tendang ke halaman login
     header("Location: login_karyawan.php?error=unauthorized");
     exit(); // Penting: Hentikan eksekusi skrip
 }
-// Data Direktur (Sebaiknya diambil dari session)
-$nama_direktur = "Pico"; 
+
+// Data Direktur (diambil dari session)
+$nama_direktur = $_SESSION['user']['nama_lengkap'] ?? "Direktur";
 $jabatan = "Direktur";
 
 // ============================
@@ -248,10 +251,10 @@ main {
     </div> 
     <nav> 
         <ul> 
-            <li><a href="dashboard_direktur.php">Beranda</a></li> 
+            <li><a href="dashboarddirektur.php">Beranda</a></li> 
             <li><a href="#">Cuti ▾</a> 
                 <ul> 
-                    <li><a href="persetujuan_cuti_direktur.php">Persetujuan Cuti</a></li> 
+                    <li><a href="persetujuan_cuti_karyawan.php">Persetujuan Cuti</a></li> 
                     <li><a href="riwayat_cuti_direktur.php">Riwayat Semua Cuti</a></li> 
                     <li><a href="riwayat_cuti_pribadi_direktur.php">Riwayat Cuti Pribadi</a></li> 
                     <li><a href="kalender_cuti_direktur.php">Kalender Cuti</a></li>
@@ -300,7 +303,7 @@ main {
     <div class="card">
         <h3>Cuti Menunggu Persetujuan</h3>
         <p class="pending-count"><?= $cuti_menunggu ?></p>
-        <a href="persetujuan_cuti_direktur.php" class="btn">Lihat Rincian</a>
+        <a href="persetujuan_cuti_.php" class="btn">Lihat Rincian</a>
     </div>
     <div class="card">
         <h3>KHL Menunggu Persetujuan</h3>
