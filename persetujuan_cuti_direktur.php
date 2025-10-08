@@ -1,341 +1,690 @@
 <?php
-// FILE: persetujuan_cuti_direktur.php
-// ===========================================
-// BAGIAN 1: KONEKSI DATABASE
-// ===========================================
 session_start();
+require 'config.php';
 
-$server = "localhost";
-$username = "root";
-$password = "";
-$database = "ypd_ibd";
-
-$conn = mysqli_connect($server, $username, $password, $database);
-if (!$conn) {
-    die("Koneksi ke database gagal: " . mysqli_connect_error());
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'direktur') {
+    header("Location: login_direktur.php");
+    exit();
 }
 
-// ===========================================
-// BAGIAN 2: PEMROSESAN AKSI (Setujui / Tolak)
-// ===========================================
-if (isset($_GET['id']) && isset($_GET['action'])) {
-    $cuti_id = (int)$_GET['id'];
-    $action = $_GET['action'];
-    $new_status = '';
+$user = $_SESSION['user'];
+$nama_direktur = $user['nama_lengkap'];
 
-    if ($action === 'approve') {
-        $new_status = 'Diterima';
-    } elseif ($action === 'reject') {
-        $new_status = 'Ditolak';
-    }
+// Cek jika ada parameter message dari redirect
+if (isset($_GET['message']) && isset($_GET['message_type'])) {
+    $message = $_GET['message'];
+    $message_type = $_GET['message_type'];
+}
 
-    if (!empty($new_status)) {
-        $stmt = mysqli_prepare($conn, "UPDATE pengajuan_cuti SET status = ?, waktu_persetujuan = NOW() WHERE id = ?");
-        mysqli_stmt_bind_param($stmt, "si", $new_status, $cuti_id);
-        if (mysqli_stmt_execute($stmt)) {
-            header("Location: persetujuan_cuti_direktur.php");
-            exit();
+// Proses persetujuan/tolak cuti
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if (isset($_POST['action']) && isset($_POST['id_cuti'])) {
+        $id_cuti = $_POST['id_cuti'];
+        $action = $_POST['action'];
+        $alasan_penolakan = isset($_POST['alasan_penolakan']) ? trim($_POST['alasan_penolakan']) : '';
+        
+        // Validasi apakah cuti tersebut bukan dari direktur
+        $check_query = "SELECT * FROM data_pengajuan_cuti WHERE id = ? AND role != 'direktur'";
+        $check_stmt = $conn->prepare($check_query);
+        $check_stmt->bind_param("i", $id_cuti);
+        $check_stmt->execute();
+        $check_result = $check_stmt->get_result();
+        
+        if ($check_result->num_rows > 0) {
+            $cuti_data = $check_result->fetch_assoc();
+            
+            // Jika menolak, validasi alasan penolakan
+            if ($action == 'reject' && empty($alasan_penolakan)) {
+                $message = "Harap berikan alasan penolakan";
+                $message_type = "error";
+            } else {
+                if ($action == 'approve') {
+                    // Update status cuti - disetujui
+                    $new_status = 'Disetujui';
+                    
+                    $update_query = "UPDATE data_pengajuan_cuti SET status = ?, alasan_penolakan = ? WHERE id = ?";
+                    $update_stmt = $conn->prepare($update_query);
+                    
+                    $update_stmt->bind_param("ssi", $new_status, $alasan_penolakan, $id_cuti);
+                    
+                    if ($update_stmt->execute()) {
+                        header("Location: persetujuan_cuti_direktur.php?message=Cuti berhasil disetujui&message_type=success");
+                        exit();
+                    } else {
+                        $message = "Gagal memperbarui status cuti";
+                        $message_type = "error";
+                    }
+                    
+                    $update_stmt->close();
+                } else {
+                    // Untuk reject
+                    $new_status = 'Ditolak';
+                    
+                    $update_query = "UPDATE data_pengajuan_cuti SET status = ?, alasan_penolakan = ? WHERE id = ?";
+                    $update_stmt = $conn->prepare($update_query);
+                    
+                    $update_stmt->bind_param("ssi", $new_status, $alasan_penolakan, $id_cuti);
+                    
+                    if ($update_stmt->execute()) {
+                        header("Location: persetujuan_cuti_direktur.php?message=Cuti berhasil ditolak&message_type=success");
+                        exit();
+                    } else {
+                        $message = "Gagal memperbarui status cuti";
+                        $message_type = "error";
+                    }
+                    
+                    $update_stmt->close();
+                }
+            }
         } else {
-            echo "<script>alert('Gagal memproses aksi: " . mysqli_error($conn) . "');</script>";
+            $message = "Cuti dari direktur tidak memerlukan persetujuan - langsung diterima";
+            $message_type = "error";
         }
-        mysqli_stmt_close($stmt);
+        
+        $check_stmt->close();
     }
 }
 
-// ===========================================
-// BAGIAN 3: AMBIL DATA CUTI + FILTER PENCARIAN
-// ===========================================
-$filter = "";
-if (isset($_GET['cari']) && !empty($_GET['cari'])) {
-    $keyword = mysqli_real_escape_string($conn, $_GET['cari']);
-    $filter = "WHERE nama_karyawan LIKE '%$keyword%' 
-               OR divisi LIKE '%$keyword%' 
-               OR jenis_cuti LIKE '%$keyword%'";
-}
-
-$sql = "
-    SELECT 
-        id, nama_karyawan, divisi, jenis_cuti, tanggal_mulai, tanggal_akhir, alasan, status, waktu_persetujuan
-    FROM 
-        pengajuan_cuti
-    $filter
-    ORDER BY 
-        CASE 
-            WHEN status NOT IN ('Diterima', 'Ditolak') THEN 1
-            ELSE 2
-        END,
-        id DESC
-";
-
-$result = mysqli_query($conn, $sql);
-if (!$result) {
-    die("Query Gagal: " . mysqli_error($conn));
-}
+// Ambil data cuti yang menunggu persetujuan (kecuali dari direktur)
+// Order by id DESC untuk menampilkan yang terbaru pertama
+$query = "SELECT * FROM data_pengajuan_cuti WHERE role != 'direktur' AND status = 'Menunggu Persetujuan' ORDER BY id DESC";
+$stmt = $conn->prepare($query);
+$stmt->execute();
+$result = $stmt->get_result();
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Persetujuan Cuti | Yayasan Purba Danarta</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Persetujuan Cuti - Direktur</title>
     <style>
-        :root {
-            --primary-color: #1E105E;
-            --secondary-color: #8897AE;
-            --accent-color: #4a3f81;
-            --card-bg: #FFFFFF;
-            --text-color-light: #fff;
-            --text-color-dark: #2e1f4f;
-            --shadow-light: rgba(0,0,0,0.15);
-            --success-bg: #d4edda;
-            --success-text: #155724;
-            --danger-bg: #f8d7da;
-            --danger-text: #721c24;
-            --pending-bg: #fff3cd;
-            --pending-text: #856404;
+        :root { 
+            --primary-color: #1E105E; 
+            --secondary-color: #8897AE; 
+            --accent-color: #4a3f81; 
+            --card-bg: #FFFFFF; 
+            --text-color-light: #fff; 
+            --text-color-dark: #2e1f4f; 
+            --shadow-light: rgba(0,0,0,0.15); 
         }
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(180deg, var(--primary-color) 0%, #a29bb8 100%);
-            min-height: 100vh;
+        
+        body { 
+            margin: 0; 
+            font-family: 'Segoe UI', sans-serif; 
+            background: linear-gradient(180deg, var(--primary-color) 0%, #a29bb8 100%); 
+            min-height: 100vh; 
+            color: var(--text-color-light); 
+            padding-bottom: 40px; 
         }
-        header {
+        
+        header { 
+            background: var(--card-bg); 
+            padding: 20px 40px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            box-shadow: 0 4px 15px var(--shadow-light); 
+        }
+        
+        .logo { 
+            display: flex; 
+            align-items: center; 
+            gap: 16px; 
+            font-weight: 500; 
+            font-size: 20px; 
+            color: var(--text-color-dark); 
+        }
+        
+        .logo img { 
+            width: 50px; 
+            height: 50px; 
+            object-fit: contain; 
+            border-radius: 50%; 
+        }
+        
+        nav ul { 
+            list-style: none; 
+            margin: 0; 
+            padding: 0; 
+            display: flex; 
+            gap: 30px; 
+        }
+        
+        nav li { 
+            position: relative; 
+        }
+        
+        nav a { 
+            text-decoration: none; 
+            color: var(--text-color-dark); 
+            font-weight: 600; 
+            padding: 8px 4px; 
+            display: block; 
+        }
+        
+        nav li ul { 
+            display: none; 
+            position: absolute; 
+            top: 100%; 
+            left: 0; 
+            background: var(--card-bg); 
+            padding: 10px 0; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px var(--shadow-light); 
+            min-width: 200px; 
+            z-index: 999; 
+        }
+        
+        nav li:hover > ul { 
+            display: block; 
+        }
+        
+        nav li ul li a { 
+            color: var(--text-color-dark); 
+            font-weight: 400; 
+            white-space: nowrap; 
+            padding: 5px 20px; 
+        }
+        
+        main { 
+            max-width: 1400px; 
+            margin: 40px auto; 
+            padding: 0 20px; 
+        }
+        
+        .heading-section h1 { 
+            font-size: 2.5rem; 
+            margin: 0; 
+            color: #fff;
+        }
+        
+        .heading-section p { 
+            font-size: 1.1rem; 
+            margin-top: 5px; 
+            opacity: 0.9; 
+            margin-bottom: 30px; 
+            color: #fff;
+        }
+        
+        .container {
             background: var(--card-bg);
-            padding: 20px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid var(--accent-color);
-            flex-wrap: wrap;
-            box-shadow: 0 4px 15px var(--shadow-light);
-        }
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            font-weight: 500;
-            font-size: 20px;
             color: var(--text-color-dark);
-        }
-        .logo img {
-            width: 50px;
-            height: 50px;
-            object-fit: contain;
-            border-radius: 50%;
-        }
-        nav ul {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            gap: 30px;
-        }
-        nav li { position: relative; }
-        nav a {
-            text-decoration: none;
-            color: var(--text-color-dark);
-            font-weight: 600;
-            padding: 8px 4px;
-            display: block;
-            transition: color 0.3s ease;
-        }
-        nav a:hover { color: var(--accent-color); }
-        nav li ul {
-            display: none;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            background: var(--card-bg);
-            padding: 10px 0;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px var(--shadow-light);
-            min-width: 200px;
-            z-index: 999;
-        }
-        nav li:hover > ul { display: block; }
-        nav li ul li { padding: 5px 20px; }
-        nav li ul li a { color: var(--text-color-dark); font-weight: 400; }
-
-        main { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
-        .card {
-            background: var(--card-bg);
             border-radius: 20px;
-            padding: 30px 40px;
+            padding: 30px;
             box-shadow: 0 5px 20px var(--shadow-light);
+            margin-top: 20px;
         }
-        h2 { color: var(--primary-color); margin-top: 0; }
-        .data-table {
+        
+        .message {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+        
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
+            margin-top: 20px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px var(--shadow-light);
         }
-        .data-table th, .data-table td {
-            padding: 12px 15px;
-            border-bottom: 1px solid #ddd;
+        
+        th, td {
+            padding: 15px;
             text-align: left;
+            border-bottom: 1px solid #e0e0e0;
         }
-        .data-table th { background: #f8f9fa; font-weight: 600; }
-        .status-badge {
-            padding: 5px 12px;
+        
+        th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+        }
+        
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .status-pending {
+            color: #ff9800;
+            font-weight: bold;
+            background-color: #fff3cd;
+            padding: 5px 10px;
             border-radius: 15px;
-            font-size: 12px;
-            font-weight: bold;
+            font-size: 0.85rem;
         }
-        .status-menunggu { background: var(--pending-bg); color: var(--pending-text); }
-        .status-diterima { background: var(--success-bg); color: var(--success-text); }
-        .status-ditolak { background: var(--danger-bg); color: var(--danger-text); }
-        .action-buttons { display: flex; gap: 10px; align-items: center; }
-        .btn-action {
-            color: #fff;
-            padding: 8px 15px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 14px;
-        }
-        .btn-success { background-color: var(--success-text); }
-        .btn-danger { background-color: var(--danger-text); }
-        .action-icon { font-size: 24px; font-weight: bold; }
-        .icon-success { color: var(--success-text); }
-        .icon-danger { color: var(--danger-text); }
-
-        /* Search bar */
-        .search-bar {
-            margin-bottom: 20px;
+        
+        .action-buttons {
             display: flex;
-            gap: 10px;
+            gap: 8px;
         }
-        .search-bar input {
-            flex: 1;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            font-size: 14px;
-        }
-        .search-bar button, .search-bar a {
-            padding: 10px 20px;
+        
+        .btn {
+            padding: 8px 16px;
             border: none;
-            border-radius: 8px;
-            font-weight: bold;
+            border-radius: 6px;
             cursor: pointer;
             text-decoration: none;
-            font-size: 14px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
         }
-        .search-bar button { background: var(--accent-color); color: white; }
-        .search-bar a { background: #777; color: white; }
+        
+        .btn-approve {
+            background-color: #4caf50;
+            color: white;
+        }
+        
+        .btn-reject {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 1.1rem;
+        }
+        
+        .info-divisi {
+            background-color: #e7f3ff;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196F3;
+            color: var(--text-color-dark);
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            padding: 10px 20px;
+            background: #f0f0f0;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        .back-link:hover {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+        }
+        
+        .role-badge {
+            background: #e9ecef;
+            color: #495057;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .role-karyawan {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .role-penanggung-jawab {
+            background: #cce7ff;
+            color: #004085;
+        }
+        
+        .cuti-details {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 5px 0;
+            font-size: 0.85rem;
+        }
+        
+        .cuti-details strong {
+            color: var(--primary-color);
+        }
+
+        .time-info {
+            background: #e7f3ff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin: 5px 0;
+            font-size: 0.8rem;
+            border-left: 3px solid #2196F3;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 30px;
+            border-radius: 12px;
+            width: 500px;
+            max-width: 90%;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+        
+        .modal-header {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            color: var(--text-color-dark);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-color-dark);
+        }
+        
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        
+        .btn-cancel {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .btn-submit {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .jenis-cuti-info {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .file-info {
+            background: #fff3cd;
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin: 5px 0;
+            font-size: 0.8rem;
+            border-left: 3px solid #ffc107;
+        }
+
+        .file-link {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .file-link:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
 <header>
-    <div class="logo"> 
-        <img src="image/namayayasan.png" alt="Logo Yayasan"> 
-        <span>Yayasan Purba Danarta</span> 
-    </div> 
-    <nav> 
-        <ul> 
-            <li><a href="dashboarddirektur.php">Beranda</a></li> 
-            <li><a href="#">Cuti ▾</a> 
-                <ul> 
-                    <li><a href="persetujuan_cuti_direktur.php">Persetujuan Cuti</a></li> 
-                    <li><a href="riwayat_cuti_direktur.php">Riwayat Cuti</a></li> 
-                </ul> 
-            </li> 
-            <li><a href="#">KHL ▾</a> 
-                <ul> 
-                    <li><a href="persetujuan_khl_direktur.php">Persetujuan KHL</a></li> 
-                    <li><a href="riwayat_khl_direktur.php">Riwayat KHL</a></li> 
-                </ul> 
-            </li> 
-            <li><a href="#">Karyawan ▾</a> 
-                <ul> 
-                    <li><a href="data_karyawan_direktur.php">Data Karyawan</a></li> 
-                </ul> 
-            </li> 
-            <li><a href="#">Pelamar ▾</a> 
-                <ul> 
-                    <li><a href="riwayat_pelamar.php">Riwayat Pelamar</a></li> 
-                </ul> 
+    <div class="logo"><img src="image/namayayasan.png" alt="Logo"><span>Yayasan Purba Danarta</span></div>
+    <nav>
+        <ul>
+            <li><a href="dashboard_direktur.php">Beranda</a></li>
+            <li><a href="#">Cuti ▾</a>
+                <ul>
+                    <li><a href="persetujuan_cuti_direktur.php">Persetujuan Cuti</a></li>
+                    <li><a href="riwayat_cuti_direktur.php">Riwayat Semua Cuti</a></li>
+                    <li><a href="riwayat_cuti_pribadi_direktur.php">Riwayat Cuti Pribadi</a></li>
+                    <li><a href="kalender_cuti_direktur.php">Kalender Cuti</a></li>
+                </ul>
             </li>
-            <li><a href="#">Profil ▾</a> 
-                <ul> 
-                    <li><a href="profil_direktur.php">Profil Saya</a></li> 
-                    <li><a href="logout2.php">Logout</a></li> 
-                </ul> 
-            </li> 
-        </ul> 
+            <li><a href="#">KHL ▾</a>
+                <ul>
+                    <li><a href="persetujuan_khl_direktur.php">Persetujuan KHL</a></li>
+                    <li><a href="riwayat_khl_direktur.php">Riwayat Semua KHL</a></li>
+                    <li><a href="riwayat_khl_pribadi_direktur.php">Riwayat KHL Pribadi</a></li>
+                    <li><a href="kalender_khl_direktur.php">Kalender KHL</a></li>
+                </ul>
+            </li>
+            <li><a href="#">Karyawan ▾</a>
+                <ul>
+                    <li><a href="data_karyawan_direktur.php">Data Karyawan</a></li>
+                </ul>
+            </li>
+            <li><a href="#">Pelamar ▾</a>
+                <ul>
+                    <li><a href="riwayat_pelamar.php">Riwayat Pelamar</a></li>
+                    </ul>
+            </li>
+            <li><a href="#">Profil ▾</a>
+                <ul>
+                    <li><a href="profil_direktur.php">Profil Saya</a></li>
+                    <li><a href="logout2.php">Logout</a></li>
+                </ul>
+            </li>
+        </ul>
     </nav>
 </header>
 
 <main>
-    <div class="card">
-        <h2>Daftar Pengajuan Cuti</h2>
-        <p>Tinjau, setujui, atau tolak pengajuan cuti yang masuk.</p>
-
-        <!-- Form Pencarian -->
-        <form method="GET" action="persetujuan_cuti_direktur.php" class="search-bar">
-            <input type="text" name="cari" placeholder="Cari nama, divisi, atau jenis cuti..." 
-                   value="<?= isset($_GET['cari']) ? htmlspecialchars($_GET['cari']) : '' ?>">
-            <button type="submit">Cari</button>
-            <a href="persetujuan_cuti_direktur.php">Reset</a>
-        </form>
-
-        <!-- Tabel Data -->
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nama Karyawan</th>
-                    <th>Divisi</th>
-                    <th>Jenis Cuti</th>
-                    <th>Tgl Mulai</th>
-                    <th>Tgl Selesai</th>
-                    <th>Status</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (mysqli_num_rows($result) > 0): ?>
-                    <?php while ($cuti = mysqli_fetch_assoc($result)): ?>
+    <div class="heading-section">
+        <h1>Persetujuan Cuti Karyawan</h1>
+        <p>Kelola pengajuan cuti dari semua karyawan</p>
+    </div>
+    
+    <div class="container">
+        <div class="info-divisi">
+            <strong>Role:</strong> Direktur | 
+            <strong>Nama:</strong> <?php echo htmlspecialchars($nama_direktur); ?>
+            <div style="color: #666; font-size: 0.9rem; margin-top: 5px;">
+                💡 Info: Cuti dari direktur langsung diterima tanpa perlu persetujuan
+            </div>
+        </div>
+        
+        <?php if (isset($message)): ?>
+            <div class="message <?php echo $message_type; ?>">
+                <?php echo htmlspecialchars($message); ?>
+            </div>
+        <?php endif; ?>
+        
+        <?php if ($result->num_rows > 0): ?>
+            <table>
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>Kode Karyawan</th>
+                        <th>Nama Karyawan</th>
+                        <th>Divisi</th>
+                        <th>Role</th>
+                        <th>Jenis Cuti</th>
+                        <th>Periode Cuti</th>
+                        <th>Alasan</th>
+                        <th>Status</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php $no = 1; ?>
+                    <?php while ($row = $result->fetch_assoc()): ?>
                         <tr>
-                            <td><?= htmlspecialchars($cuti['id']) ?></td>
-                            <td><?= htmlspecialchars($cuti['nama_karyawan']) ?></td>
-                            <td><?= htmlspecialchars($cuti['divisi']) ?></td>
-                            <td><?= htmlspecialchars($cuti['jenis_cuti']) ?></td>
-                            <td><?= date('d-m-Y', strtotime($cuti['tanggal_mulai'])) ?></td>
-                            <td><?= date('d-m-Y', strtotime($cuti['tanggal_akhir'])) ?></td>
+                            <td><?php echo $no++; ?></td>
+                            <td><?php echo htmlspecialchars($row['kode_karyawan']); ?></td>
                             <td>
-                                <?php
-                                $status = trim($cuti['status']);
-                                if ($status == 'Diterima') {
-                                    echo '<span class="status-badge status-diterima">Diterima</span>';
-                                } elseif ($status == 'Ditolak') {
-                                    echo '<span class="status-badge status-ditolak">Ditolak</span>';
-                                } else {
-                                    echo '<span class="status-badge status-menunggu">Menunggu Persetujuan</span>';
-                                }
-                                ?>
+                                <div class="jenis-cuti-info"><?php echo htmlspecialchars($row['nama_karyawan']); ?></div>
+                                <div class="cuti-details">
+                                    <strong>Jabatan:</strong> <?php echo htmlspecialchars($row['jabatan']); ?>
+                                </div>
                             </td>
-                            <td class="action-buttons">
-                                <?php
-                                if ($status == 'Diterima') {
-                                    echo '<span class="action-icon icon-success" title="Telah Disetujui">✓</span>';
-                                } elseif ($status == 'Ditolak') {
-                                    echo '<span class="action-icon icon-danger" title="Telah Ditolak">✗</span>';
-                                } else {
-                                    echo '<a href="?id='.$cuti['id'].'&action=approve" class="btn-action btn-success" onclick="return confirm(\'Anda yakin ingin MENYETUJUI cuti ini?\');">Setujui</a>';
-                                    echo '<a href="?id='.$cuti['id'].'&action=reject" class="btn-action btn-danger" onclick="return confirm(\'Anda yakin ingin MENOLAK cuti ini?\');">Tolak</a>';
-                                }
-                                ?>
+                            <td><?php echo htmlspecialchars($row['divisi']); ?></td>
+                            <td>
+                                <span class="role-badge role-<?php echo str_replace(' ', '-', $row['role']); ?>">
+                                    <?php echo htmlspecialchars(ucfirst($row['role'])); ?>
+                                </span>
+                            </td>
+                            <td>
+                                <div class="jenis-cuti-info"><?php echo htmlspecialchars($row['jenis_cuti']); ?></div>
+                                <?php if (!empty($row['file_surat_dokter'])): ?>
+                                    <div class="file-info">
+                                        <strong>File:</strong> 
+                                        <a href="<?php echo htmlspecialchars($row['file_surat_dokter']); ?>" class="file-link" target="_blank">Lihat Surat Dokter</a>
+                                    </div>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <div class="time-info">
+                                    <strong>Mulai:</strong> <?php echo date('d/m/Y', strtotime($row['tanggal_mulai'])); ?><br>
+                                    <strong>Selesai:</strong> <?php echo date('d/m/Y', strtotime($row['tanggal_akhir'])); ?><br>
+                                    <strong>Total:</strong> 
+                                    <?php 
+                                        $start = new DateTime($row['tanggal_mulai']);
+                                        $end = new DateTime($row['tanggal_akhir']);
+                                        $interval = $start->diff($end);
+                                        echo ($interval->days + 1) . ' hari';
+                                    ?>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="cuti-details">
+                                    <?php echo nl2br(htmlspecialchars($row['alasan'])); ?>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="status-pending"><?php echo htmlspecialchars($row['status']); ?></span>
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <form method="POST" style="display: inline;">
+                                        <input type="hidden" name="id_cuti" value="<?php echo $row['id']; ?>">
+                                        <input type="hidden" name="action" value="approve">
+                                        <button type="submit" class="btn btn-approve" onclick="return confirm('Setujui cuti ini?')">Setujui</button>
+                                    </form>
+                                    <button type="button" class="btn btn-reject" onclick="openRejectModal(<?php echo $row['id']; ?>)">Tolak</button>
+                                </div>
                             </td>
                         </tr>
                     <?php endwhile; ?>
-                <?php else: ?>
-                    <tr><td colspan="8" style="text-align:center; padding:20px;">Tidak ada data pengajuan cuti.</td></tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        <?php else: ?>
+            <div class="no-data">
+                <p>Tidak ada pengajuan cuti yang menunggu persetujuan saat ini.</p>
+                <p><small>Semua pengajuan cuti telah diproses. <a href="riwayat_cuti_direktur.php" style="color: var(--primary-color);">Lihat riwayat cuti</a></small></p>
+            </div>
+        <?php endif; ?>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="riwayat_cuti_direktur.php" class="back-link">📋 Lihat Riwayat Semua Cuti</a>
+            <a href="dashboard_direktur.php" class="back-link">← Kembali ke Dashboard</a>
+        </div>
     </div>
 </main>
-<?php mysqli_close($conn); ?>
+
+<!-- Modal untuk penolakan -->
+<div id="rejectModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Alasan Penolakan Cuti</h3>
+        </div>
+        <form method="POST" id="rejectForm">
+            <input type="hidden" name="id_cuti" id="modalCutiId">
+            <input type="hidden" name="action" value="reject">
+            <div class="form-group">
+                <label for="alasan_penolakan">Berikan alasan penolakan:</label>
+                <textarea name="alasan_penolakan" id="alasan_penolakan" placeholder="Masukkan alasan penolakan cuti..." required></textarea>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-cancel" onclick="closeRejectModal()">Batal</button>
+                <button type="submit" class="btn btn-submit">Tolak Cuti</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openRejectModal(cutiId) {
+        document.getElementById('modalCutiId').value = cutiId;
+        document.getElementById('rejectModal').style.display = 'block';
+    }
+    
+    function closeRejectModal() {
+        document.getElementById('rejectModal').style.display = 'none';
+        document.getElementById('alasan_penolakan').value = '';
+    }
+    
+    // Tutup modal ketika klik di luar modal
+    window.onclick = function(event) {
+        const modal = document.getElementById('rejectModal');
+        if (event.target === modal) {
+            closeRejectModal();
+        }
+    }
+    
+    // Validasi form penolakan
+    document.getElementById('rejectForm').addEventListener('submit', function(e) {
+        const alasan = document.getElementById('alasan_penolakan').value.trim();
+        if (!alasan) {
+            e.preventDefault();
+            alert('Harap berikan alasan penolakan');
+            return false;
+        }
+        return confirm('Apakah Anda yakin ingin menolak cuti ini?');
+    });
+</script>
 </body>
 </html>
+
+<?php
+// Tutup koneksi
+$stmt->close();
+$conn->close();
+?>

@@ -6,9 +6,8 @@ require 'config.php';
 
 // Validasi session dan role
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'direktur') {
-    // Jika tidak ada session atau role bukan direktur, tendang ke halaman login
     header("Location: login_karyawan.php?error=unauthorized");
-    exit(); // Penting: Hentikan eksekusi skrip
+    exit();
 }
 
 // Data Direktur (diambil dari session)
@@ -18,14 +17,14 @@ $jabatan = "Direktur";
 // ============================
 // 1. Hitung jumlah cuti yang menunggu persetujuan
 // ============================
-$query_cuti_menunggu = "SELECT COUNT(id) AS total FROM pengajuan_cuti WHERE status = 'Menunggu Persetujuan'";
+$query_cuti_menunggu = "SELECT COUNT(id) AS total FROM data_pengajuan_cuti WHERE status = 'Menunggu persetujuan'";
 $result_cuti_menunggu = $conn->query($query_cuti_menunggu);
 $cuti_menunggu = $result_cuti_menunggu->fetch_assoc()['total'] ?? 0;
 
 // ============================
 // 2. Hitung jumlah KHL yang menunggu persetujuan
 // ============================
-$query_khl_menunggu = "SELECT COUNT(id) AS total FROM pengajuan_khl WHERE status = 'Menunggu Persetujuan'";
+$query_khl_menunggu = "SELECT COUNT(id_khl) AS total FROM data_pengajuan_khl WHERE status_khl = 'pending'";
 $result_khl_menunggu = $conn->query($query_khl_menunggu);
 $khl_menunggu = $result_khl_menunggu->fetch_assoc()['total'] ?? 0;
 
@@ -37,14 +36,36 @@ $result_total_karyawan = $conn->query($query_total_karyawan);
 $total_semua_karyawan = $result_total_karyawan->fetch_assoc()['total'] ?? 0;
 
 // ============================
-// 4. Ambil 5 pengajuan terbaru
+// 4. Ambil 5 pengajuan terbaru - QUERY YANG DIPERBAIKI DENGAN JOIN
 // ============================
 $query_latest = "
-    (SELECT 'Cuti' AS jenis, nama_karyawan, divisi, created_at FROM pengajuan_cuti)
+    (SELECT 
+        'Cuti' AS jenis, 
+        nama_karyawan, 
+        divisi, 
+        tanggal_mulai AS tanggal,
+        created_at
+     FROM data_pengajuan_cuti 
+     ORDER BY created_at DESC 
+     LIMIT 5)
+    
     UNION ALL
-    (SELECT 'KHL' AS jenis, nama_karyawan, divisi, created_at FROM pengajuan_khl)
-    ORDER BY created_at DESC LIMIT 5
+    
+    (SELECT 
+        'KHL' AS jenis, 
+        dk.nama_lengkap AS nama_karyawan,
+        dpk.divisi, 
+        dpk.tanggal_khl AS tanggal,
+        dpk.created_at
+     FROM data_pengajuan_khl dpk
+     JOIN data_karyawan dk ON dpk.kode_karyawan = dk.kode_karyawan
+     ORDER BY dpk.created_at DESC 
+     LIMIT 5)
+     
+    ORDER BY created_at DESC 
+    LIMIT 5
 ";
+
 $result_latest = $conn->query($query_latest);
 $latest_requests = [];
 if ($result_latest) {
@@ -234,6 +255,17 @@ main {
 .calendar-mini .day.today { background: var(--primary-color); color: white; font-weight: 600; }
 .calendar-mini .day.other-month { color: #ccc; }
 
+/* Status badges */
+.status-badge { 
+    padding: 4px 8px; 
+    border-radius: 12px; 
+    font-size: 0.8rem; 
+    font-weight: 600; 
+}
+.status-pending { background: #fff3cd; color: #856404; }
+.status-approved { background: #d4edda; color: #155724; }
+.status-rejected { background: #f8d7da; color: #721c24; }
+
 @media(max-width:768px){ 
     header{ flex-direction: column; align-items: flex-start;} 
     nav ul{ flex-direction: column; gap: 10px; width: 100%; margin-top: 15px;} 
@@ -254,7 +286,7 @@ main {
             <li><a href="dashboarddirektur.php">Beranda</a></li> 
             <li><a href="#">Cuti ▾</a> 
                 <ul> 
-                    <li><a href="persetujuan_cuti_karyawan.php">Persetujuan Cuti</a></li> 
+                    <li><a href="persetujuan_cuti_direktur.php">Persetujuan Cuti</a></li> 
                     <li><a href="riwayat_cuti_direktur.php">Riwayat Semua Cuti</a></li> 
                     <li><a href="riwayat_cuti_pribadi_direktur.php">Riwayat Cuti Pribadi</a></li> 
                     <li><a href="kalender_cuti_direktur.php">Kalender Cuti</a></li>
@@ -294,8 +326,8 @@ main {
         <p><?= htmlspecialchars($jabatan) ?></p>
     </div>
     <div class="action-buttons">
-        <a href="pengajuan_cuti_direktur.php" class="btn-cuti-direktur">Pengajuan Cuti</a>
-        <a href="pengajuan_khl_direktur.php" class="btn-cuti-direktur">Pengajuan KHL</a>
+        <a href="pengajuancuti_direktur.php">Pengajuan Cuti</a>
+        <a href="pengajuankhl_direktur.php">Pengajuan KHL</a>
     </div>
 </div>
 
@@ -303,16 +335,25 @@ main {
     <div class="card">
         <h3>Cuti Menunggu Persetujuan</h3>
         <p class="pending-count"><?= $cuti_menunggu ?></p>
-        <a href="persetujuan_cuti_.php" class="btn">Lihat Rincian</a>
+        <p style="font-size: 14px; color: #666; margin-bottom: 15px;">
+            Pengajuan cuti yang perlu disetujui
+        </p>
+        <a href="persetujuan_cuti_direktur.php" class="btn">Lihat Rincian</a>
     </div>
     <div class="card">
         <h3>KHL Menunggu Persetujuan</h3>
         <p class="pending-count"><?= $khl_menunggu ?></p>
+        <p style="font-size: 14px; color: #666; margin-bottom: 15px;">
+            Pengajuan KHL yang perlu disetujui
+        </p>
         <a href="persetujuan_khl_direktur.php" class="btn">Lihat Rincian</a>
     </div>
     <div class="card">
         <h3>Seluruh Data Karyawan</h3>
         <p class="pending-count"><?= $total_semua_karyawan ?></p>
+        <p style="font-size: 14px; color: #666; margin-bottom: 15px;">
+            Total karyawan aktif di perusahaan
+        </p>
         <a href="data_karyawan_direktur.php" class="btn">Lihat Rincian</a>
     </div>
     <div class="card">
@@ -330,29 +371,35 @@ main {
 </div>
 
 <div class="card">
-    <h3>5 Pengajuan Terbaru</h3>
+    <h3>Pengajuan Terbaru</h3>
     <table class="data-table">
         <thead>
             <tr>
                 <th>Jenis</th>
                 <th>Nama Karyawan</th>
                 <th>Divisi</th>
-                <th>Tanggal Pengajuan</th>
+                <th>Tanggal</th>
             </tr>
         </thead>
         <tbody>
             <?php if (!empty($latest_requests)): ?>
                 <?php foreach($latest_requests as $row): ?>
                     <tr>
-                        <td><?= htmlspecialchars($row['jenis']) ?></td>
+                        <td>
+                            <span class="status-badge <?= $row['jenis'] == 'Cuti' ? 'status-pending' : 'status-approved' ?>">
+                                <?= htmlspecialchars($row['jenis']) ?>
+                            </span>
+                        </td>
                         <td><?= htmlspecialchars($row['nama_karyawan']) ?></td>
                         <td><?= htmlspecialchars($row['divisi']) ?></td>
-                        <td><?= date('d M Y, H:i', strtotime($row['created_at'])) ?></td>
+                        <td><?= date('d M Y', strtotime($row['tanggal'])) ?></td>
                     </tr>
                 <?php endforeach; ?>
             <?php else: ?>
                 <tr>
-                    <td colspan="4">Tidak ada pengajuan terbaru.</td>
+                    <td colspan="4" style="text-align: center; color: #666;">
+                        Tidak ada pengajuan terbaru.
+                    </td>
                 </tr>
             <?php endif; ?>
         </tbody>

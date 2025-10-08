@@ -8,20 +8,23 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'direktur') {
     exit();
 }
 
-// Ambil data KHL yang disetujui
+// Ambil semua data cuti yang sudah disetujui
 $query = "
-    SELECT kode_karyawan, divisi, jabatan, role, proyek, tanggal_khl, 
-           jam_mulai_kerja, jam_akhir_kerja, status_khl, alasan_penolakan
-    FROM data_pengajuan_khl
-    WHERE status_khl = 'disetujui'
+    SELECT nama_karyawan, divisi, jabatan, role, jenis_cuti, tanggal_mulai, tanggal_akhir, alasan 
+    FROM data_pengajuan_cuti 
+    WHERE status = 'diterima'
 ";
 $result = $conn->query($query);
 
-$khlData = [];
+$cutiData = [];
 if ($result && $result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
-        $tanggal = $row['tanggal_khl'];
-        $khlData[$tanggal][] = $row;
+        $tanggalMulai = new DateTime($row['tanggal_mulai']);
+        $tanggalAkhir = new DateTime($row['tanggal_akhir']);
+        while ($tanggalMulai <= $tanggalAkhir) {
+            $cutiData[$tanggalMulai->format('Y-m-d')][] = $row;
+            $tanggalMulai->modify('+1 day');
+        }
     }
 }
 
@@ -47,7 +50,7 @@ function monthName($month) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kalender KHL Direktur</title>
+<title>Kalender Cuti Direktur</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
     body {
@@ -174,7 +177,7 @@ function monthName($month) {
         color: #1E105E;
     }
 
-    .khl-count {
+    .cuti-count {
         background: #d1c4e9;
         color: #1E105E;
         border-radius: 20px;
@@ -203,7 +206,7 @@ function monthName($month) {
         border-radius: 16px;
         padding: 25px;
         width: 90%;
-        max-width: 700px;
+        max-width: 600px;
         box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         position: relative;
         animation: fadeIn 0.3s ease;
@@ -279,8 +282,9 @@ function monthName($month) {
         </ul>
     </nav>
 </header>
+
 <main>
-    <h1>Kalender KHL Seluruh Karyawan</h1>
+    <h1>Kalender Cuti Seluruh Karyawan</h1>
 
     <div class="calendar-card">
         <div class="month-nav">
@@ -295,12 +299,12 @@ function monthName($month) {
             for ($day = 1; $day <= $daysInMonth; $day++):
                 $date = "$year-" . str_pad($month, 2, '0', STR_PAD_LEFT) . "-" . str_pad($day, 2, '0', STR_PAD_LEFT);
                 $isToday = $date === $today ? 'today' : '';
-                $count = isset($khlData[$date]) ? count($khlData[$date]) : 0;
+                $count = isset($cutiData[$date]) ? count($cutiData[$date]) : 0;
             ?>
             <div class="day <?= $isToday ?>" onclick="showDetail('<?= $date ?>')">
                 <div class="day-number"><?= $day ?></div>
                 <?php if ($count > 0): ?>
-                    <div class="khl-count"><?= $count ?> KHL</div>
+                    <div class="cuti-count"><?= $count ?> cuti</div>
                 <?php endif; ?>
             </div>
             <?php endfor; ?>
@@ -309,34 +313,34 @@ function monthName($month) {
 </main>
 
 <!-- Modal -->
-<div class="modal" id="khlModal">
+<div class="modal" id="cutiModal">
     <div class="modal-content">
         <span class="close-btn" onclick="closeModal()">&times;</span>
-        <h3>Detail KHL</h3>
-        <div id="khlList"></div>
+        <h3>Detail Cuti</h3>
+        <div id="cutiList"></div>
     </div>
 </div>
 
 <script>
-const khlData = <?= json_encode($khlData) ?>;
+const cutiData = <?= json_encode($cutiData) ?>;
 
 function showDetail(date) {
-    const modal = document.getElementById('khlModal');
-    const list = document.getElementById('khlList');
-    const data = khlData[date];
+    const modal = document.getElementById('cutiModal');
+    const list = document.getElementById('cutiList');
+    const data = cutiData[date];
 
     if (!data) {
-        list.innerHTML = "<p>Tidak ada data KHL pada tanggal ini.</p>";
+        list.innerHTML = "<p>Tidak ada karyawan cuti pada tanggal ini.</p>";
     } else {
         let html = `<table>
-                        <tr><th>Kode Karyawan</th><th>Divisi</th><th>Jabatan</th><th>Proyek</th><th>Jam Kerja</th></tr>`;
+                        <tr><th>Nama</th><th>Divisi</th><th>Jabatan</th><th>Jenis Cuti</th><th>Alasan</th></tr>`;
         data.forEach(d => {
             html += `<tr>
-                        <td>${d.kode_karyawan}</td>
+                        <td>${d.nama_karyawan}</td>
                         <td>${d.divisi}</td>
                         <td>${d.jabatan}</td>
-                        <td>${d.proyek}</td>
-                        <td>${d.jam_mulai_kerja} - ${d.jam_akhir_kerja}</td>
+                        <td>${d.jenis_cuti}</td>
+                        <td>${d.alasan}</td>
                      </tr>`;
         });
         html += `</table>`;
@@ -346,11 +350,11 @@ function showDetail(date) {
 }
 
 function closeModal() {
-    document.getElementById('khlModal').style.display = "none";
+    document.getElementById('cutiModal').style.display = "none";
 }
 
 window.onclick = function(e) {
-    if (e.target == document.getElementById('khlModal')) closeModal();
+    if (e.target == document.getElementById('cutiModal')) closeModal();
 }
 </script>
 

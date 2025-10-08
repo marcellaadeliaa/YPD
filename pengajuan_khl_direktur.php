@@ -1,311 +1,511 @@
 <?php
 session_start();
-require 'config.php';
+require_once 'config.php';
 
-// Simulasi user direksi (untuk keperluan development)
-// Dalam produksi, bagian ini harus diganti dengan sistem login yang sesungguhnya
-$_SESSION['user'] = [
-    'role' => 'direktur',
-    'nama_lengkap' => 'Pico',
-    'kode_karyawan' => 'YPD001'
-];
+// Cek apakah user sudah login sebagai direktur
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'direktur') {
+    header("Location: login_direktur.php");
+    exit();
+}
 
+// Ambil data dari session
 $user = $_SESSION['user'];
-$nama_direktur = $user['nama_lengkap'];
+$nik = $user['kode_karyawan'];
+$nama_lengkap = $user['nama_lengkap'];
+$divisi = $user['divisi'];
+$jabatan = $user['jabatan'];
+$role = $user['role'];
 
-// Ambil pesan notifikasi
-$success = isset($_SESSION['success']) ? $_SESSION['success'] : '';
-$error = isset($_SESSION['error']) ? $_SESSION['error'] : '';
-unset($_SESSION['success']);
-unset($_SESSION['error']);
+// Jika ada data yang kosong, ambil dari database
+if (empty($divisi) || empty($jabatan)) {
+    $query_karyawan = "SELECT divisi, jabatan FROM data_karyawan WHERE kode_karyawan = ?";
+    $stmt = mysqli_prepare($conn, $query_karyawan);
+    mysqli_stmt_bind_param($stmt, "s", $nik);
+    mysqli_stmt_execute($stmt);
+    $result_karyawan = mysqli_stmt_get_result($stmt);
+    $karyawan_detail = mysqli_fetch_assoc($result_karyawan);
+    
+    if ($karyawan_detail) {
+        $divisi = $karyawan_detail['divisi'];
+        $jabatan = $karyawan_detail['jabatan'];
+        // Update session
+        $_SESSION['user']['divisi'] = $divisi;
+        $_SESSION['user']['jabatan'] = $jabatan;
+    }
+    mysqli_stmt_close($stmt);
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <title>Pengajuan KHL Direktur</title>
-  <style>
-      :root { 
-          --primary-color: #1E105E; 
-          --secondary-color: #8897AE;
-          --accent-color: #4a3f81; 
-          --card-bg: #FFFFFF; 
-          --text-color-light: #fff; 
-          --text-color-dark: #2e1f4f; 
-          --shadow-light: rgba(0,0,0,0.15); 
-      }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengajuan KHL - Direktur</title>
+    <style>
+        :root { 
+            --primary-color: #1E105E; 
+            --secondary-color: #8897AE; 
+            --accent-color: #4a3f81; 
+            --card-bg: #FFFFFF; 
+            --text-color-light: #fff; 
+            --text-color-dark: #2e1f4f; 
+            --shadow-light: rgba(0,0,0,0.15); 
+        }
+        
+        body { 
+            margin: 0; 
+            font-family: 'Segoe UI', sans-serif; 
+            background: linear-gradient(180deg, var(--primary-color) 0%, #a29bb8 100%); 
+            min-height: 100vh; 
+            color: var(--text-color-light); 
+            padding-bottom: 40px; 
+        }
+        
+        header { 
+            background: var(--card-bg); 
+            padding: 20px 40px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            box-shadow: 0 4px 15px var(--shadow-light); 
+        }
+        
+        .logo { 
+            display: flex; 
+            align-items: center; 
+            gap: 16px; 
+            font-weight: 500; 
+            font-size: 20px; 
+            color: var(--text-color-dark); 
+        }
+        
+        .logo img { 
+            width: 50px; 
+            height: 50px; 
+            object-fit: contain; 
+            border-radius: 50%; 
+        }
+        
+        nav ul { 
+            list-style: none; 
+            margin: 0; 
+            padding: 0; 
+            display: flex; 
+            gap: 30px; 
+        }
+        
+        nav li { 
+            position: relative; 
+        }
+        
+        nav a { 
+            text-decoration: none; 
+            color: var(--text-color-dark); 
+            font-weight: 600; 
+            padding: 8px 4px; 
+            display: block; 
+        }
+        
+        nav li ul { 
+            display: none; 
+            position: absolute; 
+            top: 100%; 
+            left: 0; 
+            background: var(--card-bg); 
+            padding: 10px 0; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px var(--shadow-light); 
+            min-width: 200px; 
+            z-index: 999; 
+        }
+        
+        nav li:hover > ul { 
+            display: block; 
+        }
+        
+        nav li ul li a { 
+            color: var(--text-color-dark); 
+            font-weight: 400; 
+            white-space: nowrap; 
+            padding: 5px 20px; 
+        }
+        
+        main { 
+            max-width: 1200px; 
+            margin: 40px auto; 
+            padding: 0 20px; 
+        }
+        
+        .heading-section h1 { 
+            font-size: 2.5rem; 
+            margin: 0; 
+            color: #fff;
+        }
+        
+        .heading-section p { 
+            font-size: 1.1rem; 
+            margin-top: 5px; 
+            opacity: 0.9; 
+            margin-bottom: 30px; 
+            color: #fff;
+        }
+        
+        .form-container {
+            background: var(--card-bg);
+            color: var(--text-color-dark);
+            border-radius: 20px;
+            padding: 30px 40px;
+            box-shadow: 0 5px 20px var(--shadow-light);
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            text-align: center;
+            font-size: 22px;
+            color: #2e1f4f;
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            font-weight: 600;
+            margin: 16px 0 6px;
+            color: #222;
+        }
+        
+        input[type="text"],
+        input[type="date"],
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            box-sizing: border-box;
+        }
+        
+        button {
+            display: block;
+            margin-top: 25px;
+            padding: 12px;
+            background-color: #4a3f81;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            width: 100%;
+        }
+        
+        button:hover {
+            background-color: #3a3162;
+        }
+        
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #c3e6cb;
+            text-align: center;
+        }
+        
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #f5c6cb;
+            text-align: center;
+        }
+        
+        .user-info {
+            background-color: #f0f0f0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #4a3f81;
+        }
+        
+        .user-info p {
+            margin: 8px 0;
+            font-size: 14px;
+            color: #333;
+        }
+        
+        .user-info strong {
+            color: #4a3f81;
+        }
 
-      body { 
-          margin: 0; 
-          font-family: 'Segoe UI', sans-serif; 
-          background: linear-gradient(180deg, var(--primary-color) 0%, var(--secondary-color) 100%); 
-          min-height: 100vh; 
-          display: flex;
-          flex-direction: column;
-      }
+        .info-message {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #bee5eb;
+            text-align: center;
+        }
 
-      header { 
-          background: var(--card-bg); 
-          padding: 20px 40px; 
-          display: flex; 
-          justify-content: space-between; 
-          align-items: center; 
-          box-shadow: 0 4px 15px var(--shadow-light); 
-      }
-      .logo { display: flex; align-items: center; gap: 16px; font-weight: 500; font-size: 20px; color: var(--text-color-dark); }
-      .logo img { width: 50px; height: 50px; object-fit: contain; }
-      nav ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 30px; }
-      nav li { position: relative; }
-      nav a { text-decoration: none; color: var(--text-color-dark); font-weight: 600; padding: 8px 4px; display: block; }
-      nav li ul { display: none; position: absolute; top: 100%; left: 0; background: var(--card-bg); padding: 10px 0; border-radius: 8px; box-shadow: 0 2px 10px var(--shadow-light); min-width: 200px; z-index: 999; }
-      nav li:hover > ul { display: block; }
-      nav li ul li a { color: var(--text-color-dark); font-weight: 400; padding: 5px 20px; white-space: nowrap; }
+        .form-note {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border: 1px solid #ffeaa7;
+            font-size: 14px;
+        }
 
-      main {
-          padding: 40px 20px;
-          display: flex;
-          justify-content: center;
-          align-items: flex-start;
-          flex-grow: 1;
-      }
-      .form-container {
-          background: var(--card-bg);
-          color: var(--text-color-dark);
-          padding: 40px;
-          border-radius: 20px;
-          box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-          width: 100%;
-          max-width: 600px;
-      }
-      .form-container h2 {
-          text-align: center;
-          margin-top: 0;
-          margin-bottom: 10px;
-          color: var(--primary-color);
-      }
-      .form-container p {
-          text-align: center;
-          margin-bottom: 30px;
-          color: #666;
-      }
-      .form-container label {
-          display: block;
-          margin-bottom: 8px;
-          font-weight: 600;
-      }
-      .form-container input,
-      .form-container select {
-          width: 100%;
-          padding: 12px;
-          margin-bottom: 20px;
-          border-radius: 8px;
-          border: 1px solid #ccc;
-          box-sizing: border-box;
-          font-size: 16px;
-      }
-      .form-container button {
-          width: 100%;
-          padding: 15px;
-          background: var(--accent-color);
-          color: white;
-          border: none;
-          border-radius: 8px;
-          cursor: pointer;
-          font-size: 16px;
-          font-weight: 600;
-      }
-      .form-container button:hover {
-          background: #352d5c;
-      }
-      
-      /* Notifikasi */
-      .notification {
-          padding: 15px;
-          margin-bottom: 20px;
-          border-radius: 8px;
-          font-weight: 500;
-          text-align: center;
-      }
-      
-      .success {
-          background-color: #d4edda;
-          color: #155724;
-          border: 1px solid #c3e6cb;
-      }
-      
-      .error {
-          background-color: #f8d7da;
-          color: #721c24;
-          border: 1px solid #f5c6cb;
-      }
-      
-      .info-box {
-          background: #e7f3ff;
-          padding: 15px;
-          border-radius: 10px;
-          margin-bottom: 20px;
-          border-left: 4px solid #2196F3;
-          color: var(--text-color-dark);
-      }
-      
-      .small-text {
-          font-size: 0.85rem;
-          color: #666;
-          margin-top: -15px;
-          margin-bottom: 20px;
-          display: block;
-      }
-  </style>
+        .required::after {
+            content: " *";
+            color: #dc3545;
+        }
+        
+        .auto-approved-badge {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            text-align: center;
+            margin: 15px 0;
+            font-size: 16px;
+        }
+        
+        .time-container {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .time-container select {
+            flex: 1;
+        }
+        
+        small {
+            display: block;
+            margin-top: 5px;
+            color: #666;
+            font-size: 12px;
+        }
+    </style>
 </head>
 <body>
-<header>
-    <div class="logo"> 
-        <img src="image/namayayasan.png" alt="Logo Yayasan"> 
-        <span>Yayasan Purba Danarta</span> 
-    </div> 
-    <nav> 
-        <ul> 
-            <li><a href="dashboarddirektur.php">Beranda</a></li> 
-            <li><a href="#">Cuti ▾</a> 
-                <ul> 
-                    <li><a href="persetujuan_cuti_direktur.php">Persetujuan Cuti</a></li> 
-                    <li><a href="riwayat_cuti_direktur.php">Riwayat Cuti</a></li> 
-                </ul> 
-            </li> 
-            <li><a href="#">KHL ▾</a> 
-                <ul> 
-                    <li><a href="persetujuan_khl_direktur.php">Persetujuan KHL</a></li> 
-                    <li><a href="riwayat_khl_direktur.php">Riwayat KHL</a></li> 
-                </ul> 
-            </li> 
-            <li><a href="#">Karyawan ▾</a> 
-                <ul> 
-                    <li><a href="data_karyawan_direktur.php">Data Karyawan</a></li> 
-                </ul> 
-            </li> 
-            <li><a href="#">Pelamar ▾</a> 
-                <ul> 
-                    <li><a href="riwayat_pelamar.php">Riwayat Pelamar</a></li> 
-                </ul> 
+   <header>
+    <div class="logo"><img src="image/namayayasan.png" alt="Logo"><span>Yayasan Purba Danarta</span></div>
+    <nav>
+        <ul>
+            <li><a href="dashboarddirektur.php">Beranda</a></li>
+            <li><a href="#">Cuti ▾</a>
+                <ul>
+                    <li><a href="persetujuan_cuti_direktur.php">Persetujuan Cuti</a></li>
+                    <li><a href="riwayat_cuti_direktur.php">Riwayat Semua Cuti</a></li>
+                    <li><a href="riwayat_cuti_pribadi_direktur.php">Riwayat Cuti Pribadi</a></li>
+                    <li><a href="kalender_cuti_direktur.php">Kalender Cuti</a></li>
+                </ul>
             </li>
-            <li><a href="#">Profil ▾</a> 
-                <ul> 
-                    <li><a href="profil_direktur.php">Profil Saya</a></li> 
-                    <li><a href="logout2.php">Logout</a></li> 
-                </ul> 
-            </li> 
-        </ul> 
+            <li><a href="#">KHL ▾</a>
+                <ul>
+                    <li><a href="persetujuan_khl_direktur.php">Persetujuan KHL</a></li>
+                    <li><a href="riwayat_khl_direktur.php">Riwayat Semua KHL</a></li>
+                    <li><a href="riwayat_khl_pribadi_direktur.php">Riwayat KHL Pribadi</a></li>
+                    <li><a href="kalender_khl_direktur.php">Kalender KHL</a></li>
+                </ul>
+            </li>
+            <li><a href="#">Karyawan ▾</a>
+                <ul>
+                    <li><a href="data_karyawan_direktur.php">Data Karyawan</a></li>
+                </ul>
+            </li>
+            <li><a href="#">Pelamar ▾</a>
+                <ul>
+                    <li><a href="riwayat_pelamar.php">Riwayat Pelamar</a></li>
+                    </ul>
+            </li>
+            <li><a href="#">Profil ▾</a>
+                <ul>
+                    <li><a href="profil_direktur.php">Profil Saya</a></li>
+                    <li><a href="logout2.php">Logout</a></li>
+                </ul>
+            </li>
+        </ul>
     </nav>
 </header>
-
-<main>
-    <div class="form-container">
-        <h2>Formulir Pengajuan KHL Direktur</h2>
-        <p>Silakan isi detail pengajuan kerja harian lepas.</p>
-        
-        <!-- Info Box -->
-        <div class="info-box">
-            <strong>Informasi:</strong> Pengajuan KHL oleh Direktur akan langsung disetujui dan masuk ke riwayat.
+    <main>
+        <div class="heading-section">
+            <h1>Pengajuan Kerja Hari Libur (KHL) Pribadi</h1>
+            <p>Formulir ini digunakan untuk mengajukan KHL atas nama Anda sendiri.</p>
         </div>
-        
-        <!-- Notifikasi -->
-        <?php if (!empty($success)): ?>
-            <div class="notification success"><?php echo htmlspecialchars($success); ?></div>
-        <?php endif; ?>
-        
-        <?php if (!empty($error)): ?>
-            <div class="notification error"><?php echo htmlspecialchars($error); ?></div>
-        <?php endif; ?>
 
-        <form action="proses_pengajuan_khl.php" method="POST">
-            <label for="kode_karyawan">Kode Karyawan</label>
-            <input type="text" id="kode_karyawan" name="kode_karyawan" placeholder="Contoh: YPD001" required>
-            <span class="small-text">Masukkan kode karyawan yang valid (contoh: YPD001, YPD013, dll)</span>
-
-            <label for="proyek">Proyek</label>
-            <input type="text" name="proyek" id="proyek" placeholder="Contoh: Proyek Sistem Baru" required>
-
-            <label for="tanggal_mulai">Tanggal Mulai KHL</label>
-            <input type="date" name="tanggal_mulai" id="tanggal_mulai" required>
-
-            <label for="tanggal_akhir">Tanggal Akhir KHL (Opsional)</label>
-            <input type="date" name="tanggal_akhir" id="tanggal_akhir">
-            <span class="small-text">*Jika tidak diisi, akan menggunakan tanggal mulai</span>
-
-            <label for="jam_mulai_normal">Jam Mulai Kerja (Normal)</label>
-            <input type="time" name="jam_mulai_normal" id="jam_mulai_normal" required>
-
-            <label for="jam_akhir_normal">Jam Akhir Kerja (Normal)</label>
-            <input type="time" name="jam_akhir_normal" id="jam_akhir_normal" required>
-
-            <label for="jam_mulai_libur">Jam Mulai Libur / Cuti Parsial</label>
-            <input type="time" name="jam_mulai_libur" id="jam_mulai_libur">
-
-            <label for="jam_akhir_libur">Jam Akhir Libur / Cuti Parsial</label>
-            <input type="time" name="jam_akhir_libur" id="jam_akhir_libur">
-
-            <button type="submit">Ajukan KHL</button>
-        </form>
-        
-        <div style="text-align: center; margin-top: 20px;">
-            <a href="riwayat_khl_direktur.php" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">
-                📋 Lihat Riwayat KHL
-            </a>
-        </div>
-    </div>
-</main>
-
-<script>
-    // Set tanggal minimum ke hari ini
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('tanggal_mulai').min = today;
-    document.getElementById('tanggal_akhir').min = today;
-    
-    // Validasi form sebelum submit
-    document.querySelector('form').addEventListener('submit', function(e) {
-        const kodeKaryawan = document.getElementById('kode_karyawan').value.trim();
-        const tanggalMulai = document.getElementById('tanggal_mulai').value;
-        const tanggalAkhir = document.getElementById('tanggal_akhir').value;
-        const jamMulaiNormal = document.getElementById('jam_mulai_normal').value;
-        const jamAkhirNormal = document.getElementById('jam_akhir_normal').value;
-        
-        // Validasi kode karyawan
-        if (!kodeKaryawan) {
-            e.preventDefault();
-            alert('Harap isi kode karyawan');
-            document.getElementById('kode_karyawan').focus();
-            return false;
-        }
-        
-        // Validasi format kode karyawan (opsional)
-        if (!kodeKaryawan.match(/^YPD\d{3}$/i)) {
-            if (!confirm('Format kode karyawan mungkin tidak sesuai. Kode biasanya berupa "YPD" diikuti 3 angka (contoh: YPD001). Lanjutkan?')) {
-                e.preventDefault();
-                document.getElementById('kode_karyawan').focus();
-                return false;
+        <div class="form-container">
+            <h2>Pengajuan KHL - Direktur</h2>
+            
+            <?php
+            if (isset($_GET['status'])) {
+                if ($_GET['status'] == 'success') {
+                    $success_message = isset($_GET['message']) ? 
+                        htmlspecialchars($_GET['message']) : 'Pengajuan KHL berhasil dikirim!';
+                    echo '<div class="success-message">' . $success_message . '</div>';
+                } elseif ($_GET['status'] == 'error') {
+                    $error_message = isset($_GET['message']) ? 
+                        htmlspecialchars($_GET['message']) : 'Terjadi kesalahan. Silakan coba lagi.';
+                    echo '<div class="error-message">' . $error_message . '</div>';
+                } elseif ($_GET['status'] == 'info') {
+                    $info_message = isset($_GET['message']) ? 
+                        htmlspecialchars($_GET['message']) : 'Informasi';
+                    echo '<div class="info-message">' . $info_message . '</div>';
+                }
             }
-        }
-        
-        if (!tanggalMulai) {
-            e.preventDefault();
-            alert('Harap isi tanggal mulai KHL');
-            return false;
-        }
-        
-        if (!jamMulaiNormal || !jamAkhirNormal) {
-            e.preventDefault();
-            alert('Harap isi jam mulai dan jam akhir kerja');
-            return false;
-        }
-        
-        if (tanggalAkhir && new Date(tanggalAkhir) < new Date(tanggalMulai)) {
-            e.preventDefault();
-            alert('Tanggal akhir tidak boleh sebelum tanggal mulai');
-            return false;
-        }
-        
-        return confirm('Apakah Anda yakin ingin mengajukan KHL ini? Pengajuan akan langsung disetujui.');
-    });
-</script>
+            ?>
+
+           
+
+            <div class="user-info">
+                <p><strong>Kode Karyawan:</strong> <?php echo htmlspecialchars($nik); ?></p>
+                <p><strong>Nama:</strong> <?php echo htmlspecialchars($nama_lengkap); ?></p>
+                <p><strong>Divisi:</strong> <?php echo htmlspecialchars($divisi); ?></p>
+                <p><strong>Jabatan:</strong> <?php echo htmlspecialchars($jabatan); ?></p>
+                <p><strong>Role:</strong> <?php echo htmlspecialchars(ucfirst(str_replace('_', ' ', $role))); ?></p>
+            </div>
+
+           
+            
+            <form method="post" action="prosespengajuan_khldirektur.php" id="formKHL">
+
+                <label>No. Kode Karyawan</label>
+                <input type="text" name="nik" value="<?php echo htmlspecialchars($nik); ?>" readonly>
+
+                <label>Nama Karyawan</label>
+                <input type="text" value="<?php echo htmlspecialchars($nama_lengkap); ?>" readonly>
+
+                <label>Divisi</label>
+                <input type="text" value="<?php echo htmlspecialchars($divisi); ?>" readonly>
+
+                <label class="required">Proyek</label>
+                <input type="text" name="proyek" placeholder="Masukkan nama proyek" required>
+                <small>Contoh: Maintenance Server, Implementasi Sistem Baru, dll.</small>
+
+                <label class="required">Tanggal KHL</label>
+                <input type="date" name="tanggal_khl" id="tanggal_khl" min="<?php echo date('Y-m-d'); ?>" required>
+                <small>Tanggal saat Anda akan bekerja di hari libur</small>
+
+                <div class="time-container">
+                    <div style="flex: 1;">
+                        <label class="required">Jam Mulai Kerja</label>
+                        <select name="jam_mulai_kerja" required>
+                            <option value="">Pilih Jam Mulai</option>
+                            <option value="08:00">08:00</option>
+                            <option value="09:00">09:00</option>
+                            <option value="10:00">10:00</option>
+                            <option value="11:00">11:00</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1;">
+                        <label class="required">Jam Akhir Kerja</label>
+                        <select name="jam_akhir_kerja" required>
+                            <option value="">Pilih Jam Akhir</option>
+                            <option value="16:00">16:00</option>
+                            <option value="17:00">17:00</option>
+                            <option value="18:00">18:00</option>
+                            <option value="19:00">19:00</option>
+                        </select>
+                    </div>
+                </div>
+
+                <label class="required">Tanggal Cuti KHL</label>
+                <input type="date" name="tanggal_cuti_khl" id="tanggal_cuti_khl" min="<?php echo date('Y-m-d'); ?>" required>
+                <small>Tanggal pengganti cuti yang akan diambil</small>
+
+                <div class="time-container">
+                    <div style="flex: 1;">
+                        <label class="required">Jam Mulai Cuti KHL</label>
+                        <select name="jam_mulai_cuti_khl" required>
+                            <option value="">Pilih Jam Mulai</option>
+                            <option value="08:00">08:00</option>
+                            <option value="09:00">09:00</option>
+                            <option value="10:00">10:00</option>
+                        </select>
+                    </div>
+                    <div style="flex: 1;">
+                        <label class="required">Jam Akhir Cuti KHL</label>
+                        <select name="jam_akhir_cuti_khl" required>
+                            <option value="">Pilih Jam Akhir</option>
+                            <option value="16:00">16:00</option>
+                            <option value="17:00">17:00</option>
+                            <option value="18:00">18:00</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit">Ajukan KHL (Auto Approved)</button>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        document.getElementById('formKHL').addEventListener('submit', function(e) {
+            const tanggalKHL = document.getElementById('tanggal_khl').value;
+            const tanggalCutiKHL = document.getElementById('tanggal_cuti_khl').value;
+            const jamMulaiKerja = document.querySelector('select[name="jam_mulai_kerja"]').value;
+            const jamAkhirKerja = document.querySelector('select[name="jam_akhir_kerja"]').value;
+            const jamMulaiCuti = document.querySelector('select[name="jam_mulai_cuti_khl"]').value;
+            const jamAkhirCuti = document.querySelector('select[name="jam_akhir_cuti_khl"]').value;
+            
+            // Validasi tanggal
+            if (tanggalKHL && tanggalCutiKHL && tanggalKHL >= tanggalCutiKHL) {
+                e.preventDefault();
+                alert('Tanggal Cuti KHL harus setelah Tanggal KHL');
+                return;
+            }
+            
+            // Validasi jam kerja
+            if (jamMulaiKerja && jamAkhirKerja && jamMulaiKerja >= jamAkhirKerja) {
+                e.preventDefault();
+                alert('Jam mulai kerja harus lebih awal dari jam akhir kerja');
+                return;
+            }
+            
+            // Validasi jam cuti
+            if (jamMulaiCuti && jamAkhirCuti && jamMulaiCuti >= jamAkhirCuti) {
+                e.preventDefault();
+                alert('Jam mulai cuti harus lebih awal dari jam akhir cuti');
+                return;
+            }
+            
+            // Konfirmasi pengajuan
+            if (!confirm('Apakah Anda yakin ingin mengajukan KHL? Pengajuan akan otomatis disetujui.')) {
+                e.preventDefault();
+            }
+        });
+
+        // Set minimum date untuk tanggal cuti berdasarkan tanggal KHL
+        document.getElementById('tanggal_khl').addEventListener('change', function() {
+            const tanggalKHL = this.value;
+            const tanggalCutiInput = document.getElementById('tanggal_cuti_khl');
+            
+            if (tanggalKHL) {
+                // Set minimum tanggal cuti adalah hari setelah tanggal KHL
+                const minDate = new Date(tanggalKHL);
+                minDate.setDate(minDate.getDate() + 1);
+                const minDateString = minDate.toISOString().split('T')[0];
+                tanggalCutiInput.min = minDateString;
+                
+                // Jika tanggal cuti sudah diisi tapi tidak valid, reset
+                if (tanggalCutiInput.value && tanggalCutiInput.value <= tanggalKHL) {
+                    tanggalCutiInput.value = '';
+                }
+            }
+        });
+    </script>
+
+    <?php
+    // Tutup koneksi database
+    if(isset($conn)) {
+        mysqli_close($conn);
+    }
+    ?>
 </body>
 </html>
