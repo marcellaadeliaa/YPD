@@ -2,20 +2,17 @@
 session_start();
 require_once 'config.php';
 
-// Cek apakah user sudah login
-if (!isset($_SESSION['user'])) {
-    header("Location: login_karyawan.php");
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'karyawan') {
+    header("Location: login_karyawan.php?error=unauthorized");
     exit();
 }
 
-// Ambil data dari session
 $user = $_SESSION['user'];
 $nik = $user['kode_karyawan'];
 $nama_lengkap = $user['nama_lengkap'];
 $divisi = $user['divisi'];
 $jabatan = $user['jabatan'];
 
-// Jika ada data yang kosong, ambil dari database
 if (empty($divisi) || empty($jabatan)) {
     $query_karyawan = "SELECT divisi, jabatan FROM data_karyawan WHERE kode_karyawan = ?";
     $stmt = mysqli_prepare($conn, $query_karyawan);
@@ -27,7 +24,6 @@ if (empty($divisi) || empty($jabatan)) {
     if ($karyawan_detail) {
         $divisi = $karyawan_detail['divisi'];
         $jabatan = $karyawan_detail['jabatan'];
-        // Update session
         $_SESSION['user']['divisi'] = $divisi;
         $_SESSION['user']['jabatan'] = $jabatan;
     }
@@ -206,8 +202,7 @@ if (empty($divisi) || empty($jabatan)) {
 <main>
   <div class="form-container">
     <h2>Pengajuan KHL</h2>
-    
-    <!-- Tampilkan pesan sukses/error jika ada -->
+  
     <?php
     if (isset($_GET['status'])) {
         if ($_GET['status'] == 'success') {
@@ -226,7 +221,6 @@ if (empty($divisi) || empty($jabatan)) {
     }
     ?>
 
-    <!-- Info Pengguna -->
     <div class="user-info">
       <p><strong>Kode Karyawan:</strong> <?php echo htmlspecialchars($nik); ?></p>
       <p><strong>Nama:</strong> <?php echo htmlspecialchars($nama_lengkap); ?></p>
@@ -291,7 +285,6 @@ if (empty($divisi) || empty($jabatan)) {
 </main>
 
 <?php
-// Tutup koneksi database
 mysqli_close($conn);
 ?>
 </body>

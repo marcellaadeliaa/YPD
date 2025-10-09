@@ -2,7 +2,6 @@
 session_start();
 require 'config.php';
 
-// Pastikan user sudah login
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit;
@@ -10,26 +9,22 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 
-// [PERBAIKAN] Mengambil data langsung dari tabel data_pelamar
 $query = $conn->prepare("SELECT * FROM data_pelamar WHERE user_id = ?");
 $query->bind_param("i", $user_id);
 $query->execute();
 $result = $query->get_result();
 $lamaran = $result->fetch_assoc();
 
-// Jika user login tapi belum pernah mengisi form, arahkan ke form pendaftaran
 if (!$lamaran) {
     header("Location: formpelamar.php");
     exit;
 }
 
-// [PERBAIKAN] Menggunakan kolom yang benar dari tabel data_pelamar
 $tanggal_lahir = $lamaran['tanggal_lahir'] ? date('d F Y', strtotime($lamaran['tanggal_lahir'])) : '';
 $tanggal_lamaran = $lamaran['created_at'] ? date('d F Y, H:i', strtotime($lamaran['created_at'])) : '';
 
-// [PERBAIKAN] Logika untuk menentukan warna status badge
 $status_lamaran = $lamaran['status'];
-$status_class = 'status-pending'; // Default untuk 'Menunggu Proses', 'Seleksi ...', dll.
+$status_class = 'status-pending'; 
 if ($status_lamaran == 'Diterima') {
     $status_class = 'status-approve';
 } elseif ($status_lamaran == 'Tidak Lolos') {
@@ -43,7 +38,6 @@ if ($status_lamaran == 'Diterima') {
   <meta charset="UTF-8">
   <title>Detail Lamaran - Yayasan Purba Danarta</title>
   <style>
-    /* CSS Anda tidak perlu diubah */
     body { margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg,#1E105E 0%,#8897AE 100%); min-height:100vh; color:#fff; }
     header { background:rgba(255,255,255,1); padding:20px 40px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #34377c; }
     .logo { display:flex; align-items:center; gap:16px; font-weight:500; font-size:20px; color:#2e1f4f; }

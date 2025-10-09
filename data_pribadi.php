@@ -2,13 +2,11 @@
 session_start();
 require_once 'config.php';
 
-// Cek apakah user sudah login
-if (!isset($_SESSION['user_id']) && !isset($_SESSION['user'])) {
-    header("Location: login_karyawan.php");
-    exit;
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'karyawan') {
+    header("Location: login_karyawan.php?error=unauthorized");
+    exit();
 }
 
-// Tentukan user_id berdasarkan session yang ada
 if (isset($_SESSION['user_id'])) {
     $user_id = $_SESSION['user_id'];
 } elseif (isset($_SESSION['user']['id_karyawan'])) {
@@ -18,7 +16,6 @@ if (isset($_SESSION['user_id'])) {
     exit;
 }
 
-// Ambil data karyawan dari database
 $sql = "SELECT * FROM data_karyawan WHERE id_karyawan = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $user_id);
@@ -26,7 +23,6 @@ $stmt->execute();
 $result = $stmt->get_result();
 $karyawan = $result->fetch_assoc();
 
-// Jika data tidak ditemukan, redirect ke login
 if (!$karyawan) {
     header("Location: login_karyawan.php");
     exit;
@@ -34,12 +30,10 @@ if (!$karyawan) {
 
 $stmt->close();
 
-// Proses update no telepon
 $success_message = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_telepon'])) {
     $no_telp_baru = $_POST['no_telp'] ?? '';
     
-    // Validasi no telepon
     if (!empty($no_telp_baru)) {
         $update_sql = "UPDATE data_karyawan SET no_telp = ? WHERE id_karyawan = ?";
         $update_stmt = $conn->prepare($update_sql);
@@ -47,7 +41,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_telepon'])) {
         
         if ($update_stmt->execute()) {
             $success_message = "Nomor telepon berhasil diupdate!";
-            // Update data di session dan variabel
             $karyawan['no_telp'] = $no_telp_baru;
             if (isset($_SESSION['user'])) {
                 $_SESSION['user']['no_telp'] = $no_telp_baru;
@@ -66,7 +59,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_telepon'])) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Data Pribadi</title>
 <style>
-/* ===== Global ===== */
 body{
   margin:0;
   font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
@@ -76,7 +68,6 @@ body{
   flex-direction:column;
   color:#2e1f4f;
 }
-/* ===== Header/Navbar ===== */
 header{
   background:#fff;
   padding:20px 40px;
@@ -98,7 +89,6 @@ nav li ul{
 nav li:hover ul{display:block;}
 nav li ul li{padding:5px 20px;}
 nav li ul li a{color:#333;font-weight:400;}
-/* ===== Main ===== */
 main{
   flex:1;
   display:flex;
@@ -208,7 +198,6 @@ h2{
   color: #6c757d;
   cursor: not-allowed;
 }
-/* Responsive */
 @media(max-width:768px){
   header{flex-direction:column;align-items:flex-start;}
   nav ul{flex-direction:column;gap:10px;}

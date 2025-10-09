@@ -9,8 +9,8 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root{
-          --bg-top: #24104a;      /* ungu gelap */
-          --bg-bottom: #8690a6;   /* abu kebiruan lembut */
+          --bg-top: #24104a;      
+          --bg-bottom: #8690a6;   
           --card-top: rgba(47,18,76,0.95);
           --card-bottom: rgba(54,35,93,0.95);
           --pill-bg: rgba(255,255,255,0.18);
@@ -29,7 +29,6 @@
           -moz-osx-font-smoothing: grayscale;
         }
 
-        /* Layout login yang lebih seimbang */
         .login-wrapper{
           width: 100%;
           max-width: 500px;
@@ -56,7 +55,6 @@
           overflow: hidden;
         }
 
-        /* Efek dekoratif yang lebih proporsional */
         .login-card::after{
           content: "";
           position: absolute;
@@ -82,7 +80,6 @@
           text-align: center;
         }
 
-        /* Header yang lebih seimbang */
         .login-header {
           margin-bottom: 10px;
         }
@@ -113,7 +110,6 @@
           max-width: 380px;
         }
 
-        /* Container opsi login yang lebih rapi */
         .button-container{
           display: flex;
           flex-direction: column;
@@ -191,7 +187,6 @@
           background: rgba(255,255,255,0.08);
         }
 
-        /* Responsif dengan tata letak yang tetap bagus */
         @media (max-width: 600px){
           body{ 
             padding: 25px; 

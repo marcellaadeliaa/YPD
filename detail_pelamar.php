@@ -2,14 +2,17 @@
 session_start();
 require 'config.php';
 
-// Pastikan ID ada di URL
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+    header("Location: login_karyawan.php?error=unauthorized");
+    exit();
+}
+
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     die("ID Pelamar tidak valid.");
 }
 
 $id = $_GET['id'];
 
-// Ambil data pelamar dari database
 $stmt = $conn->prepare("SELECT * FROM data_pelamar WHERE id = ?");
 $stmt->bind_param("i", $id);
 $stmt->execute();
@@ -28,7 +31,6 @@ $pelamar = $result->fetch_assoc();
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Detail Pelamar</title>
 <style>
-    /* Gaya CSS Anda tetap sama */
     body { margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg,#1E105E 0%,#8897AE 100%); min-height:100vh; color:#333; }
     header { background:rgba(255,255,255,1); padding:20px 40px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #34377c; }
     .logo { display:flex; align-items:center; gap:16px; font-weight:500; font-size:20px; color:#2e1f4f; }

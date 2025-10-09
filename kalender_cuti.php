@@ -163,8 +163,7 @@ $conn->close();
     p.admin-title { font-size: 16px; margin-top: 0; margin-bottom: 30px; font-weight: 400; opacity: 0.9; }
     .card { background:#fff; border-radius:20px; padding:30px 40px; box-shadow:0 2px 10px rgba(0,0,0,0.15); }
     .page-title { font-size: 30px; font-weight: 600; text-align: center; margin-bottom: 30px; color: #1E105E; }
-    
-    /* Filter Section */
+
     .filter-section { background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #e0e0e0; }
     .filter-row { display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; }
     .filter-group { display: flex; flex-direction: column; gap: 5px; }
@@ -178,8 +177,7 @@ $conn->close();
     .btn-cari:hover { background-color: #3a3162; }
     .btn-reset { background-color: #6c757d; }
     .btn-reset:hover { background-color: #545b62; }
-    
-    /* Calendar Styles */
+
     .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px; }
     .calendar-nav { display: flex; gap: 10px; align-items: center; }
     .calendar-title { font-size: 24px; font-weight: 600; color: #1E105E; }
@@ -222,8 +220,7 @@ $conn->close();
     .legend-item { display: flex; align-items: center; gap: 8px; font-size: 14px; }
     .legend-color { width: 20px; height: 20px; border-radius: 4px; }
     .legend-cuti { background: #ff6b6b; }
-    
-    /* Modal Styles */
+
     .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
     .modal-content { background-color: white; margin: 5% auto; padding: 20px; border-radius: 10px; width: 80%; max-width: 600px; }
     .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
@@ -286,8 +283,7 @@ $conn->close();
 <main>
     <div class="card">
         <h2 class="page-title">Kalender Cuti Pegawai</h2>
-        
-        <!-- Filter Section -->
+      
         <div class="filter-section">
             <form method="GET" action="">
                 <div class="filter-row">
@@ -339,7 +335,6 @@ $conn->close();
         </div>
 
         <div class="calendar">
-            <!-- Day Headers -->
             <div class="calendar-day-header">Senin</div>
             <div class="calendar-day-header">Selasa</div>
             <div class="calendar-day-header">Rabu</div>
@@ -347,13 +342,11 @@ $conn->close();
             <div class="calendar-day-header">Jumat</div>
             <div class="calendar-day-header">Sabtu</div>
             <div class="calendar-day-header">Minggu</div>
-            
-            <!-- Empty days for first week -->
+
             <?php for ($i = 0; $i < $first_day_of_week; $i++): ?>
                 <div class="calendar-day other-month"></div>
             <?php endfor; ?>
-            
-            <!-- Days of the month -->
+
             <?php for ($day = 1; $day <= $days_in_month; $day++): ?>
                 <?php
                 $current_date = date('Y-m-d', mktime(0, 0, 0, $month, $day, $year));
@@ -391,8 +384,7 @@ $conn->close();
                 <span>Hari Ini</span>
             </div>
         </div>
-        
-        <!-- Summary -->
+
         <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px; text-align: center;">
             <strong>Summary <?= $month_names[$month] ?> <?= $selected_year ?>:</strong>
             <?php
@@ -408,25 +400,21 @@ $conn->close();
     </div>
 </main>
 
-<!-- Modal for CUTI details -->
 <div id="cutiModal" class="modal">
     <div class="modal-content">
         <span class="close">&times;</span>
         <div class="modal-title" id="modalTitle">Detail Cuti</div>
         <div class="karyawan-list" id="karyawanList">
-            <!-- Content will be populated by JavaScript -->
         </div>
     </div>
 </div>
 
 <script>
-    // Modal functionality
     const modal = document.getElementById('cutiModal');
     const closeBtn = document.querySelector('.close');
     const modalTitle = document.getElementById('modalTitle');
     const karyawanList = document.getElementById('karyawanList');
-    
-    // Data CUTI from PHP (converted to JavaScript object)
+
     const cutiData = <?= json_encode($cuti_by_date) ?>;
     const monthNames = <?= json_encode($month_names) ?>;
     
@@ -448,7 +436,6 @@ $conn->close();
         if (cutiOnDate.length === 0) {
             html = '<p>Tidak ada karyawan yang cuti pada tanggal ini.</p>';
         } else {
-            // Remove duplicates (same employee might appear multiple times in range)
             const uniqueCuti = [];
             const seenEmployees = new Set();
             

@@ -2,19 +2,16 @@
 session_start();
 require_once 'config.php';
 
-// Cek apakah user sudah login
-if (!isset($_SESSION['user'])) {
-    header("Location: login_karyawan.php");
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'karyawan') {
+    header("Location: login_karyawan.php?error=unauthorized");
     exit();
 }
 
-// Cek apakah form dikirim dengan method POST
 if ($_SERVER["REQUEST_METHOD"] != "POST") {
     header("Location: formkhlkaryawan.php?status=error&message=Metode request tidak valid");
     exit();
 }
 
-// Ambil data dari form
 $nik = $_POST['nik'];
 $proyek = $_POST['proyek'];
 $tanggal_khl = $_POST['tanggal_khl'];
@@ -24,7 +21,6 @@ $tanggal_cuti_khl = $_POST['tanggal_cuti_khl'];
 $jam_mulai_cuti_khl = $_POST['jam_mulai_cuti_khl'];
 $jam_akhir_cuti_khl = $_POST['jam_akhir_cuti_khl'];
 
-// Validasi data wajib
 if (empty($nik) || empty($proyek) || empty($tanggal_khl) || empty($jam_mulai_kerja) || 
     empty($jam_akhir_kerja) || empty($tanggal_cuti_khl) || empty($jam_mulai_cuti_khl) || 
     empty($jam_akhir_cuti_khl)) {
@@ -32,7 +28,6 @@ if (empty($nik) || empty($proyek) || empty($tanggal_khl) || empty($jam_mulai_ker
     exit();
 }
 
-// Ambil data karyawan untuk mendapatkan divisi, jabatan, dan role
 $query_karyawan = "SELECT nama_lengkap, divisi, jabatan, role FROM data_karyawan WHERE kode_karyawan = ?";
 $stmt_karyawan = mysqli_prepare($conn, $query_karyawan);
 mysqli_stmt_bind_param($stmt_karyawan, "s", $nik);
@@ -52,10 +47,8 @@ $role = $karyawan['role'];
 
 mysqli_stmt_close($stmt_karyawan);
 
-// Cek dan buat tabel jika belum ada
 $check_table = mysqli_query($conn, "SHOW TABLES LIKE 'data_pengajuan_khl'");
 if (mysqli_num_rows($check_table) == 0) {
-    // Tabel tidak ada, buat tabel dengan struktur yang lengkap
     $create_table = "CREATE TABLE `data_pengajuan_khl` (
         `id_khl` int(11) NOT NULL AUTO_INCREMENT,
         `kode_karyawan` varchar(20) NOT NULL,
@@ -79,7 +72,6 @@ if (mysqli_num_rows($check_table) == 0) {
         $status = "error";
     }
 } else {
-    // Periksa dan tambahkan kolom yang belum ada
     $columns_to_check = [
         'divisi' => "ALTER TABLE data_pengajuan_khl ADD COLUMN divisi VARCHAR(50) NOT NULL AFTER kode_karyawan",
         'jabatan' => "ALTER TABLE data_pengajuan_khl ADD COLUMN jabatan VARCHAR(50) NOT NULL AFTER divisi",
@@ -99,9 +91,7 @@ if (mysqli_num_rows($check_table) == 0) {
     }
 }
 
-// Jika tidak ada error sebelumnya, lakukan insert data
 if (!isset($status)) {
-    // Insert data dengan informasi lengkap
     $sql = "INSERT INTO data_pengajuan_khl 
             (kode_karyawan, divisi, jabatan, role, proyek, tanggal_khl, jam_mulai_kerja, jam_akhir_kerja, 
              tanggal_cuti_khl, jam_mulai_cuti_khl, jam_akhir_cuti_khl, status_khl) 

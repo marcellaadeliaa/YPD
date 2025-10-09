@@ -6,7 +6,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = $_POST['password'];
     $confirm  = $_POST['confirm'];
 
-    // Validasi password
     if (strlen($password) < 8 || !preg_match('/[0-9]/', $password) || !preg_match('/[A-Za-z]/', $password)) {
         $error = "Password minimal 8 karakter dan harus mengandung huruf & angka.";
     } elseif ($password !== $confirm) {
@@ -32,28 +31,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="antialiased">
-  <!-- Background -->
   <div class="fixed inset-0 -z-10">
     <div class="absolute inset-0 bg-[url('image/gedungyayasan.png')] bg-center bg-cover"></div>
     <div class="absolute inset-0 bg-black/40"></div>
   </div>
 
-  <!-- Container -->
   <main class="min-h-screen flex items-center justify-center p-6">
     <section class="w-full max-w-[500px]">
       <div class="mx-auto bg-[#1E105E]/95 rounded-2xl shadow-2xl p-10 md:p-12">
-        <!-- Header -->
         <header class="text-center mb-6">
           <h1 class="text-3xl md:text-4xl text-white font-bold">Daftar</h1>
           <p class="text-sm text-white/80 mt-2">Mari bergabung untuk pembangunan dan pengembangan masyarakat</p>
         </header>
 
-        <!-- Pesan error -->
         <?php if (!empty($error)): ?>
           <p class="text-red-400 text-sm mb-3"><?php echo $error; ?></p>
         <?php endif; ?>
 
-        <!-- Form -->
         <form method="POST" class="space-y-4">
           <div>
             <label for="email" class="block text-sm font-medium text-white/90 mb-2">Masukkan Email</label>
@@ -82,7 +76,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
           </div>
         </form>
 
-        <!-- Link login -->
         <p class="text-center text-sm text-white/80 mt-6">
           Sudah punya akun?
           <a href="login.php" class="text-blue-300 hover:underline">Login disini</a>

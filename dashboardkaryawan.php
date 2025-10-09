@@ -107,7 +107,6 @@ body {
   color:#fff;
 }
 
-/* ===== HEADER & NAV ===== */
 header {
   background:rgba(255,255,255,1);
   padding:20px 40px;
@@ -171,7 +170,6 @@ nav li ul li a {
   white-space:nowrap;
 }
 
-/* ===== MAIN CONTENT ===== */
 main {
   max-width:1000px;
   margin:40px auto;
@@ -243,7 +241,6 @@ h1 {text-align:center;font-size:26px;margin-bottom:30px;}
   color: #1E105E;
 }
 
-/* ===== Responsive ===== */
 @media(max-width:768px){
   header{flex-direction:column;align-items:flex-start;}
   nav ul{flex-direction:column;gap:10px;}

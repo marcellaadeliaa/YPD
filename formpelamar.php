@@ -2,28 +2,22 @@
 session_start();
 require 'config.php'; 
 
-// Cek apakah user sudah login
-if (!isset($_SESSION['user_id'])) {
-    echo "<script>alert('Silakan login terlebih dahulu!'); window.location.href='login.php';</script>";
+if (empty($_SESSION['user_id'])) {
+    echo "<script>alert('Sesi tidak valid atau Anda belum login. Silakan login kembali.'); window.location.href='login.php';</script>";
     exit;
 }
 
-//UNTUK MENCEGAH PENGISIAN FORM BERULANG
 $user_id = $_SESSION['user_id'];
 
-// Siapkan query untuk mengecek apakah user sudah pernah mendaftar
 $stmt = $conn->prepare("SELECT status FROM data_pelamar WHERE user_id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
 
 if ($result->num_rows > 0) {
-    // Jika data ditemukan, artinya user sudah pernah mendaftar.
     $data_pelamar = $result->fetch_assoc();
-    // TAMBAHKAN '??' UNTUK MEMBERI NILAI DEFAULT JIKA STATUS KOSONG
     $status_pelamar = htmlspecialchars($data_pelamar['status'] ?? 'Menunggu Proses');
 
-    //Tampilan pesan pemberitahuan dan hentikan script agar form tidak muncul.
     ?>
     <!DOCTYPE html>
     <html lang="id">
@@ -78,7 +72,9 @@ $stmt->close();
       margin: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: linear-gradient(180deg, #1E105E 0%, #8897AE 100%);
+      min-height: 100vh;
     }
+    
     header {
       background: #fff;
       padding: 20px 40px;
@@ -86,9 +82,92 @@ $stmt->close();
       justify-content: space-between;
       align-items: center;
       border-bottom: 2px solid #34377c;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
-    .logo { display: flex; align-items: center; gap: 16px; font-weight: 500; font-size: 20px; color: #2e1f4f; }
-    .logo img { width: 140px; height: 50px; object-fit: contain; }
+    
+    .logo { 
+      display: flex; 
+      align-items: center; 
+      gap: 16px; 
+      font-weight: 500; 
+      font-size: 20px; 
+      color: #2e1f4f; 
+    }
+    
+    .logo img { 
+      width: 140px; 
+      height: 50px; 
+      object-fit: contain; 
+    }
+    
+    nav ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      gap: 30px;
+      align-items: center;
+    }
+    
+    nav li {
+      position: relative;
+    }
+    
+    nav a {
+      text-decoration: none;
+      color: #333;
+      font-weight: 600;
+      padding: 8px 12px;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+    }
+    
+    nav a:hover {
+      background-color: #f0f0f0;
+    }
+    
+    nav li ul {
+      display: none;
+      position: absolute;
+      background: #fff;
+      padding: 10px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.15);
+      min-width: 150px;
+      z-index: 1000;
+      top: 100%;
+      right: 0;
+    }
+    
+    nav li:hover ul {
+      display: block;
+    }
+    
+    nav li ul li {
+      padding: 0;
+    }
+    
+    nav li ul li a {
+      color: #333;
+      font-weight: 400;
+      display: block;
+      padding: 8px 20px;
+      transition: background-color 0.3s ease;
+    }
+    
+    nav li ul li a:hover {
+      background-color: #f5f5f5;
+      color: #4a3f81;
+    }
+    
+    nav li ul li:last-child a {
+      color: #e74c3c;
+      font-weight: 600;
+    }
+    
+    nav li ul li:last-child a:hover {
+      background-color: #ffeaea;
+    }
 
     main {
       max-width: 960px;
@@ -108,10 +187,31 @@ $stmt->close();
       color: #2e1f4f;
     }
 
-    form { display: flex; gap: 40px; flex-wrap: nowrap; }
-    .form-left, .form-right { flex: 1; display: flex; flex-direction: column; gap: 15px; }
-    .form-group { display: flex; flex-direction: column; gap: 6px; }
-    label { font-weight: 600; font-size: 14px; color: #222; }
+    form { 
+      display: flex; 
+      gap: 40px; 
+      flex-wrap: nowrap; 
+    }
+    
+    .form-left, .form-right { 
+      flex: 1; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 15px; 
+    }
+    
+    .form-group { 
+      display: flex; 
+      flex-direction: column; 
+      gap: 6px; 
+    }
+    
+    label { 
+      font-weight: 600; 
+      font-size: 14px; 
+      color: #222; 
+    }
+    
     input, select {
       padding: 10px;
       border: 1px solid #ccc;
@@ -129,9 +229,30 @@ $stmt->close();
       font-weight: 700;
       cursor: pointer;
       font-size: 15px;
+      transition: background-color 0.3s;
     }
-    .submit-btn:hover { background-color: #3a3162; }
-    @media (max-width: 700px) { form { flex-direction: column; } }
+    
+    .submit-btn:hover { 
+      background-color: #3a3162; 
+    }
+    
+    @media (max-width: 700px) { 
+      form { 
+        flex-direction: column; 
+      } 
+      
+      header {
+        padding: 15px 20px;
+        flex-direction: column;
+        gap: 15px;
+      }
+      
+      nav ul {
+        gap: 15px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+    }
   </style>
 </head>
 <body>
@@ -140,6 +261,11 @@ $stmt->close();
       <img src="image/namayayasan.png" alt="Logo Yayasan">
       <span>Yayasan Purba Danarta</span>
     </div>
+    <nav>
+      <ul>
+        <li><a href="logout.php">Logout</a></li>
+      </ul>
+    </nav>
   </header>
 
   <main>

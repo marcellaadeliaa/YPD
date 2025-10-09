@@ -7,7 +7,6 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
     exit();
 }
 
-// AMBIL DATA ADMIN UNTUK WELCOME MESSAGE
 $nama_user = 'Admin';
 if (isset($_SESSION['user_id'])) {
     $user_id = $_SESSION['user_id'];
@@ -24,7 +23,6 @@ if (isset($_SESSION['user_id'])) {
     }
 }
 
-// AMBIL DATA KHL DARI DATABASE (hanya yang status disetujui)
 $query_khl = "SELECT 
                 dk.nama_lengkap,
                 dpk.* 
@@ -52,14 +50,11 @@ if ($result_khl && $result_khl->num_rows > 0) {
     }
 }
 
-// Get current month and year from URL parameters or use current date
 $month = isset($_GET['month']) ? (int)$_GET['month'] : date('n');
 $year = isset($_GET['year']) ? (int)$_GET['year'] : date('Y');
 
-// Filter by year range
 $selected_year = isset($_GET['filter_year']) ? (int)$_GET['filter_year'] : $year;
 
-// Navigation
 $prev_month = $month - 1;
 $prev_year = $year;
 $next_month = $month + 1;
@@ -75,19 +70,15 @@ if ($next_month > 12) {
     $next_year++;
 }
 
-// Get first day of the month
 $first_day = mktime(0, 0, 0, $month, 1, $year);
 $days_in_month = date('t', $first_day);
 $first_day_of_week = date('w', $first_day);
 
-// Adjust Sunday to be 0 instead of 7
 $first_day_of_week = $first_day_of_week == 0 ? 6 : $first_day_of_week - 1;
 
-// Group KHL by date for easy lookup
 $khl_by_date = [];
 foreach ($data_khl as $khl) {
     $khl_year = date('Y', strtotime($khl['tanggal_kerja']));
-    // Only include KHL for selected year
     if ($khl_year == $selected_year) {
         $date = $khl['tanggal_kerja'];
         if (!isset($khl_by_date[$date])) {
@@ -103,7 +94,6 @@ $month_names = [
     9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
 ];
 
-// Get available years from KHL data for filter dropdown
 $available_years = [];
 foreach ($data_khl as $khl) {
     $khl_year = date('Y', strtotime($khl['tanggal_kerja']));
@@ -111,7 +101,6 @@ foreach ($data_khl as $khl) {
         $available_years[] = $khl_year;
     }
 }
-// Sort years descending and add current year if no data exists
 rsort($available_years);
 if (empty($available_years)) {
     $available_years[] = date('Y');
@@ -266,8 +255,7 @@ $conn->close();
 <main>
     <div class="card">
         <h2 class="page-title">Kalender KHL Pegawai</h2>
-        
-        <!-- Filter Section -->
+
         <div class="filter-section">
             <form method="GET" action="">
                 <div class="filter-row">
@@ -319,7 +307,6 @@ $conn->close();
         </div>
 
         <div class="calendar">
-            <!-- Day Headers -->
             <div class="calendar-day-header">Senin</div>
             <div class="calendar-day-header">Selasa</div>
             <div class="calendar-day-header">Rabu</div>
@@ -327,13 +314,11 @@ $conn->close();
             <div class="calendar-day-header">Jumat</div>
             <div class="calendar-day-header">Sabtu</div>
             <div class="calendar-day-header">Minggu</div>
-            
-            <!-- Empty days for first week -->
+
             <?php for ($i = 0; $i < $first_day_of_week; $i++): ?>
                 <div class="calendar-day other-month"></div>
             <?php endfor; ?>
-            
-            <!-- Days of the month -->
+
             <?php for ($day = 1; $day <= $days_in_month; $day++): ?>
                 <?php
                 $current_date = date('Y-m-d', mktime(0, 0, 0, $month, $day, $year));
@@ -371,8 +356,7 @@ $conn->close();
                 <span>Hari Ini</span>
             </div>
         </div>
-        
-        <!-- Summary -->
+
         <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px; text-align: center;">
             <strong>Summary <?= $month_names[$month] ?> <?= $selected_year ?>:</strong>
             <?php
@@ -388,25 +372,21 @@ $conn->close();
     </div>
 </main>
 
-<!-- Modal for KHL details -->
 <div id="khlModal" class="modal">
     <div class="modal-content">
         <span class="close">&times;</span>
         <div class="modal-title" id="modalTitle">Detail KHL</div>
         <div class="karyawan-list" id="karyawanList">
-            <!-- Content will be populated by JavaScript -->
         </div>
     </div>
 </div>
 
 <script>
-    // Modal functionality
     const modal = document.getElementById('khlModal');
     const closeBtn = document.querySelector('.close');
     const modalTitle = document.getElementById('modalTitle');
     const karyawanList = document.getElementById('karyawanList');
-    
-    // Data KHL from PHP (converted to JavaScript object)
+
     const khlData = <?= json_encode($khl_by_date) ?>;
     const monthNames = <?= json_encode($month_names) ?>;
     

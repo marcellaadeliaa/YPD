@@ -36,30 +36,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="antialiased">
-  <!-- Background -->
   <div class="fixed inset-0 -z-10">
     <div class="absolute inset-0 bg-[url('image/gedungyayasan.png')] bg-center bg-cover"></div>
     <div class="absolute inset-0 bg-black/40"></div>
   </div>
 
-  <!-- Container -->
   <main class="min-h-screen flex items-center justify-center p-6 relative z-10">
     <section class="w-full max-w-[500px]">
       <div class="mx-auto bg-[#1E105E]/95 rounded-2xl shadow-2xl p-10 md:p-12">
-        <!-- Header -->
         <header class="text-center mb-6">
           <h1 class="text-3xl md:text-4xl text-white font-bold">Lupa Password</h1>
           <p class="text-sm text-white/80 mt-2">Masukkan email untuk reset password</p>
         </header>
 
-        <!-- Pesan error -->
         <?php if (!empty($error)): ?>
           <div class="bg-red-500/20 border border-red-500 rounded-lg p-4 mb-4">
             <p class="text-red-300 text-sm"><?= $error ?></p>
           </div>
         <?php endif; ?>
 
-        <!-- Form -->
         <form method="POST" class="space-y-4" autocomplete="off">
           <div>
             <label for="email" class="block text-sm font-medium text-white/90 mb-2">Email</label>
@@ -75,7 +70,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
           </div>
         </form>
 
-        <!-- Link kembali -->
         <p class="text-center text-sm text-white/80 mt-6">
           <a href="login.php" class="text-blue-300 hover:underline">Kembali ke Login</a>
         </p>

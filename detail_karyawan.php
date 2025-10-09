@@ -7,10 +7,8 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
     exit();
 }
 
-// Data karyawan berdasarkan ID
 $karyawan_id = $_GET['id'] ?? '';
 
-// Ambil data dari database
 $sql = "SELECT * FROM data_karyawan WHERE id_karyawan = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $karyawan_id);
@@ -18,7 +16,6 @@ $stmt->execute();
 $result = $stmt->get_result();
 $karyawan = $result->fetch_assoc();
 
-// Jika tidak ditemukan, redirect
 if (!$karyawan) {
     $_SESSION['error_message'] = "Data karyawan tidak ditemukan!";
     header("Location: data_karyawan.php");
@@ -36,7 +33,6 @@ $stmt->close();
     <title>Detail Karyawan</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* CSS sama seperti sebelumnya */
         body { margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg,#1E105E 0%,#8897AE 100%); min-height:100vh; color:#333; }
         header { background:rgba(255,255,255,1); padding:20px 40px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #34377c; }
         .logo { display:flex; align-items:center; gap:16px; font-weight:500; font-size:20px; color:#2e1f4f; }

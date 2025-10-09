@@ -7,7 +7,6 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
     exit();
 }
 
-// Ambil data karyawan dari database menggunakan MySQLi
 $sql = "SELECT id_karyawan, kode_karyawan, nama_lengkap, email, password, jabatan, divisi, role, no_telp, status_aktif, created_at 
         FROM data_karyawan 
         ORDER BY kode_karyawan";
@@ -29,7 +28,6 @@ if ($result->num_rows > 0) {
     <title>Data Karyawan</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* CSS Anda tetap sama */
         body { margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg,#1E105E 0%,#8897AE 100%); min-height:100vh; color:#333; }
         header { background:rgba(255,255,255,1); padding:20px 40px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #34377c; }
         .logo { display:flex; align-items:center; gap:16px; font-weight:500; font-size:20px; color:#2e1f4f; }
@@ -61,7 +59,6 @@ if ($result->num_rows > 0) {
         .status-diterima { color: #28a745; font-weight: bold; }
         .status-tidak-lolos { color: #d9534f; font-weight: bold; }
         
-        /* Tambahan untuk halaman data karyawan */
         .search-container {
             display: flex;
             gap: 10px;
@@ -235,7 +232,6 @@ if ($result->num_rows > 0) {
     <main>
         <div class="card">
             <h2 class="page-title">Data Karyawan</h2>
-            <!-- Pesan Sukses -->
             <?php if (isset($_SESSION['success_message'])): ?>
                 <div class="success-message">
                     <i class="fas fa-check-circle"></i> <?php echo $_SESSION['success_message']; ?>
@@ -303,7 +299,6 @@ if ($result->num_rows > 0) {
     </main>
 
     <script>
-        // Fungsi pencarian yang lebih canggih
         document.getElementById('searchButton').addEventListener('click', performSearch);
         document.getElementById('searchInput').addEventListener('keyup', function(event) {
             if (event.key === 'Enter') {
@@ -326,7 +321,6 @@ if ($result->num_rows > 0) {
                 }
             });
 
-            // Tampilkan pesan jika tidak ada hasil
             if (!found && searchTerm !== '') {
                 if (!document.getElementById('noResults')) {
                     const noResults = document.createElement('tr');
@@ -342,7 +336,6 @@ if ($result->num_rows > 0) {
             }
         }
 
-        // Fungsi untuk tombol aksi
         document.querySelectorAll('.action-btn').forEach(button => {
             button.addEventListener('click', function() {
                 const action = this.textContent;
@@ -351,20 +344,16 @@ if ($result->num_rows > 0) {
                 
                 if (action === 'Hapus') {
                     if (confirm(`Apakah Anda yakin ingin menghapus data karyawan ${employeeName}?`)) {
-                        // Redirect ke halaman hapus
                         window.location.href = `hapus_karyawan.php?id=${employeeId}`;
                     }
                 } else if (action === 'Lihat') {
-                    // Redirect ke halaman detail karyawan
                     window.location.href = `detail_karyawan.php?id=${employeeId}`;
                 } else if (action === 'Edit') {
-                    // Redirect ke halaman edit karyawan
                     window.location.href = `edit_karyawan.php?id=${employeeId}`;
                 }
             });
         });
         
-        // Reset pencarian ketika input dikosongkan
         document.getElementById('searchInput').addEventListener('input', function() {
             if (this.value === '') {
                 const tableRows = document.querySelectorAll('#tableBody tr');

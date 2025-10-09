@@ -2,16 +2,14 @@
 session_start();
 require 'config.php';
 
-// Pastikan user sudah login
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit;
 }
 
 $user_id = $_SESSION['user_id'];
-$nama_user = 'Pengguna'; // Default name
+$nama_user = 'Pengguna';
 
-// AMBIL DATA USER (nama_lengkap) dari tabel data_pelamar
 $queryUser = $conn->prepare("SELECT nama_lengkap, id FROM data_pelamar WHERE user_id = ?");
 if ($queryUser) {
     $queryUser->bind_param("i", $user_id);
@@ -26,7 +24,6 @@ if ($queryUser) {
     error_log("Error prepare: " . $conn->error);
 }
 
-// Cek apakah user sudah mengisi data pelamar
 $queryCheck = $conn->prepare("SELECT COUNT(*) as count FROM data_pelamar WHERE user_id = ?");
 $queryCheck->bind_param("i", $user_id);
 $queryCheck->execute();
@@ -39,7 +36,6 @@ if (!$hasData) {
     exit;
 }
 
-// AMBIL STATUS DARI data_pelamar
 $queryStatus = $conn->prepare("SELECT status FROM data_pelamar WHERE user_id = ?");
 $queryStatus->bind_param("i", $user_id);
 $queryStatus->execute();
@@ -47,7 +43,6 @@ $resultStatus = $queryStatus->get_result();
 $rowStatus = $resultStatus->fetch_assoc();
 $status = $rowStatus['status'] ?? 'Menunggu Proses';
 
-// AMBIL PENGUMUMAN SPESIFIK UNTUK PELAMAR INI (HANYA JIKA ADA)
 $pengumumanPelamar = null;
 if (isset($pelamar_id)) {
     $queryPengumumanPelamar = $conn->prepare("
@@ -65,37 +60,31 @@ if (isset($pelamar_id)) {
     }
 }
 
-// AMBIL PENGUMUMAN UMUM TERBARU
 $queryPengumumanUmum = $conn->query("SELECT judul, isi, tanggal FROM pengumuman_umum WHERE status = 'active' ORDER BY tanggal DESC, id DESC LIMIT 1");
 $pengumumanUmum = $queryPengumumanUmum ? $queryPengumumanUmum->fetch_assoc() : null;
 
-// LOGIKA PENENTUAN PENGUMUMAN YANG DITAMPILKAN
 $show_pengumuman = false;
 $judul_pengumuman = '';
 $isi_pengumuman = '';
 $tanggal_pengumuman = '';
 
 if ($pengumumanPelamar) {
-    // Jika ada pengumuman spesifik untuk pelamar ini
     $judul_pengumuman = "Update Status - " . ($pengumumanPelamar['tahap'] ?? '');
     $isi_pengumuman = $pengumumanPelamar['pesan'] ?? '';
     $tanggal_pengumuman = !empty($pengumumanPelamar['tanggal']) ? date('d/m/Y', strtotime($pengumumanPelamar['tanggal'])) : '';
     $show_pengumuman = true;
 } elseif ($pengumumanUmum && $status == 'Menunggu Proses') {
-    // Jika status masih Menunggu Proses, tampilkan pengumuman umum
     $judul_pengumuman = $pengumumanUmum['judul'] ?? 'Pengumuman';
     $isi_pengumuman = $pengumumanUmum['isi'] ?? '';
     $tanggal_pengumuman = !empty($pengumumanUmum['tanggal']) ? date('d/m/Y', strtotime($pengumumanUmum['tanggal'])) : '';
     $show_pengumuman = true;
 } else {
-    // Tidak ada pengumuman yang relevan
     $show_pengumuman = false;
     $judul_pengumuman = 'Tidak ada pengumuman';
     $isi_pengumuman = 'Belum ada pengumuman terbaru untuk Anda saat ini.';
     $tanggal_pengumuman = '';
 }
 
-// Tentukan class status untuk styling
 $status_class = 'status-pending';
 if ($status == 'Diterima') {
     $status_class = 'status-approve';
@@ -120,7 +109,6 @@ if ($status == 'Diterima') {
       color:#fff;
     }
 
-    /* ===== HEADER & NAV ===== */
     header {
       background:rgba(255,255,255,1);
       padding:20px 40px;
@@ -167,7 +155,6 @@ if ($status == 'Diterima') {
       color:#4a3f81;
     }
 
-    /* ===== DROPDOWN ===== */
     nav li ul {
       display:none;
       position:absolute;
@@ -192,7 +179,6 @@ if ($status == 'Diterima') {
       background:#f8f9fa;
     }
 
-    /* ===== MAIN CONTENT ===== */
     main {
       max-width:1000px;
       margin:40px auto;
@@ -372,7 +358,6 @@ if ($status == 'Diterima') {
       padding: 20px 0;
     }
 
-    /* ===== Responsive ===== */
     @media(max-width:768px){
       header{
         flex-direction:column;

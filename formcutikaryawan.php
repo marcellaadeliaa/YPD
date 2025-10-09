@@ -2,20 +2,17 @@
 session_start();
 require_once 'config.php';
 
-// Cek apakah user sudah login
-if (!isset($_SESSION['user'])) {
-    header("Location: login_karyawan.php");
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'karyawan') {
+    header("Location: login_karyawan.php?error=unauthorized");
     exit();
 }
 
-// Ambil data dari session
 $user = $_SESSION['user'];
 $nik = $user['kode_karyawan'];
 $nama_lengkap = $user['nama_lengkap'];
-$divisi = $user['divisi'] ?? ''; // Tambahkan fallback jika tidak ada di session
-$jabatan = $user['jabatan'] ?? ''; // Tambahkan fallback jika tidak ada di session
+$divisi = $user['divisi'] ?? ''; 
+$jabatan = $user['jabatan'] ?? ''; 
 
-// Ambil sisa cuti dari database
 $sisa_cuti_tahunan = 0;
 $sisa_cuti_lustrum = 0;
 
@@ -35,7 +32,6 @@ if($stmt_sisa) {
     mysqli_stmt_close($stmt_sisa);
 }
 
-// Jika ada data yang kosong di session, ambil dari database untuk melengkapi
 if (empty($divisi) || empty($jabatan)) {
     $query_karyawan = "SELECT divisi, jabatan FROM data_karyawan WHERE kode_karyawan = ?";
     $stmt = mysqli_prepare($conn, $query_karyawan);
@@ -49,7 +45,6 @@ if (empty($divisi) || empty($jabatan)) {
         if ($karyawan_detail) {
             $divisi = $karyawan_detail['divisi'];
             $jabatan = $karyawan_detail['jabatan'];
-            // Update session agar tidak perlu query lagi nanti
             $_SESSION['user']['divisi'] = $divisi;
             $_SESSION['user']['jabatan'] = $jabatan;
         }

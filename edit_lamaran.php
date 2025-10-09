@@ -2,7 +2,6 @@
 session_start();
 require 'config.php';
 
-// Pastikan user sudah login
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit;
@@ -12,9 +11,7 @@ $user_id = $_SESSION['user_id'];
 $error = '';
 $success = '';
 
-// Proses update data jika form disubmit
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // Ambil semua data dari form
     $namaLengkap = $_POST['namaLengkap'];
     $posisiDilamar = $_POST['posisiDilamar'];
     $jenisKelamin = $_POST['jenisKelamin'];
@@ -22,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $tanggalLahir = $_POST['tanggalLahir'];
     $nik = $_POST['nomorIndukKeluarga'];
     $alamatRumah = $_POST['alamatRumah'];
-    $alamatDomisili = $_POST['alamatDomisili']; // Data baru
+    $alamatDomisili = $_POST['alamatDomisili']; 
     $noTelp = $_POST['noTelp'];
     $email = $_POST['email'];
     $agama = $_POST['agama'];
@@ -30,7 +27,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $pendidikanTerakhir = $_POST['pendidikanTerakhir'];
 
     try {
-        // Query UPDATE yang sudah disesuaikan
         $sql = "UPDATE data_pelamar SET 
                     nama_lengkap = ?, posisi_dilamar = ?, jenis_kelamin = ?, 
                     tempat_lahir = ?, tanggal_lahir = ?, nik = ?, 
@@ -40,7 +36,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 WHERE user_id = ?";
         
         $stmt = $conn->prepare($sql);
-        // Sesuaikan bind_param: tambah 1 's' untuk alamat_domisili
         $stmt->bind_param(
             "sssssssssssssi",
             $namaLengkap, $posisiDilamar, $jenisKelamin, $tempatLahir, $tanggalLahir,
@@ -60,7 +55,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-// Ambil data terbaru pelamar untuk ditampilkan di form
 $query = $conn->prepare("SELECT * FROM data_pelamar WHERE user_id = ?");
 $query->bind_param("i", $user_id);
 $query->execute();
@@ -68,7 +62,6 @@ $result = $query->get_result();
 $data = $result->fetch_assoc();
 
 if (!$data) {
-    // Jika tidak ada data, mungkin user belum mengisi form pendaftaran
     echo "<script>alert('Anda belum mengisi data lamaran. Silakan isi terlebih dahulu.'); window.location.href='formpelamar.php';</script>";
     exit;
 }
@@ -81,7 +74,6 @@ $query->close();
   <meta charset="UTF-8">
   <title>Edit Profil - Yayasan Purba Danarta</title>
   <style>
-    /* CSS Anda tetap sama, tidak perlu diubah */
     body { margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg,#1E105E 0%,#8897AE 100%); min-height:100vh; color:#fff; }
     header { background:rgba(255,255,255,1); padding:20px 40px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #34377c; backdrop-filter:blur(5px); flex-wrap:wrap; }
     .logo { display:flex; align-items:center; gap:16px; font-weight:500; font-size:20px; color:#2e1f4f; }

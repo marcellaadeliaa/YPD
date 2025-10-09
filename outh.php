@@ -1,9 +1,8 @@
 <?php
 session_start();
-require 'config.php'; // Pastikan file koneksi di-include
+require 'config.php'; 
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // 1. Validasi input dasar
     if (empty($_POST['login_input']) || empty($_POST['password']) || empty($_POST['role'])) {
         header("Location: login_karyawan.php?error=missing");
         exit();
@@ -13,7 +12,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = $_POST['password'];
     $role = $_POST['role'];
 
-    // 2. Siapkan query untuk mengambil data pengguna
     $sql = "SELECT * FROM data_karyawan WHERE (kode_karyawan = ? OR nama_lengkap = ?) AND role = ? AND status_aktif = 'aktif'";
     
     $stmt = $conn->prepare($sql);
@@ -27,12 +25,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if ($result->num_rows === 1) {
         $db_user = $result->fetch_assoc();
-        
-        // 3. Verifikasi password (Ganti ini jika Anda sudah menggunakan password_hash)
-        if ($password === $db_user['password']) {
-            // Password cocok
 
-            // 4. Set variabel sesi secara eksplisit dan aman
+        if ($password === $db_user['password']) {
+
             $_SESSION['user'] = [
                 'id_karyawan'   => $db_user['id_karyawan'],
                 'kode_karyawan' => $db_user['kode_karyawan'],
@@ -42,21 +37,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 'email'         => $db_user['email'],
                 'jabatan'       => $db_user['jabatan']
             ];
-            
-            // 5. Arahkan ke dashboard
+
             header("Location: dashboard.php");
             exit();
         }
     }
 
-    // Jika sampai sini, berarti login gagal
     header("Location: login_karyawan.php?error=invalid");
     exit();
 
     $stmt->close();
     $conn->close();
 } else {
-    // Jika halaman diakses tanpa metode POST
     header("Location: login_karyawan.php");
     exit();
 }
