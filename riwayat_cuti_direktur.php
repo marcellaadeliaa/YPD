@@ -1,5 +1,4 @@
 <?php
-// FILE: riwayat_cuti_direktur.php
 
 session_start();
 require 'config.php';
@@ -12,28 +11,18 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'direktur') {
 $user = $_SESSION['user'];
 $nama_direktur = $user['nama_lengkap'];
 
-// Inisialisasi variabel filter
 $start_date = $_GET['start_date'] ?? ''; 
 $end_date = $_GET['end_date'] ?? '';
 $search_query = $_GET['search'] ?? '';
 $status_filter = $_GET['status'] ?? '';
 
-// ===========================================
-// BAGIAN 1: QUERY PENGAMBILAN DATA DARI DATABASE
-// ===========================================
-
-// Kumpulkan klausa WHERE untuk filter
 $where_clauses = []; 
-
-// 1. Filter Status
 if (!empty($status_filter)) {
     $where_clauses[] = "status = '" . mysqli_real_escape_string($conn, $status_filter) . "'";
 } else {
-    // Default: tampilkan semua status kecuali yang masih menunggu
     $where_clauses[] = "status != 'Menunggu Persetujuan'";
 }
 
-// 2. Filter Tanggal Mulai/Akhir Cuti
 if (!empty($start_date)) {
     $where_clauses[] = "tanggal_mulai >= '" . mysqli_real_escape_string($conn, $start_date) . "'";
 }
@@ -41,13 +30,11 @@ if (!empty($end_date)) {
     $where_clauses[] = "tanggal_akhir <= '" . mysqli_real_escape_string($conn, $end_date) . "'";
 }
 
-// 3. Filter Pencarian (Nama/Kode/Divisi)
 if (!empty($search_query)) {
     $search = mysqli_real_escape_string($conn, "%" . $search_query . "%");
     $where_clauses[] = "(nama_karyawan LIKE '$search' OR kode_karyawan LIKE '$search' OR divisi LIKE '$search')";
 }
 
-// Bangun string WHERE
 $where_sql = "";
 if (!empty($where_clauses)) {
     $where_sql = " WHERE " . implode(" AND ", $where_clauses);
@@ -92,7 +79,6 @@ $filtered_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Riwayat Cuti Pegawai - Direktur</title>
 <style>
-    /* CSS Styles */
     body { 
         margin:0; 
         font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
@@ -381,7 +367,7 @@ $filtered_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
             </li>
             <li><a href="#">Pelamar ▾</a>
                 <ul>
-                    <li><a href="riwayat_pelamar.php">Riwayat Pelamar</a></li>
+                    <li><a href="riwayat_pelamar_direktur.php">Riwayat Pelamar</a></li>
                 </ul>
             </li>
             <li><a href="#">Profil ▾</a>
@@ -525,7 +511,6 @@ $filtered_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
 </main>
 
 <script>
-    // Validasi tanggal: end date tidak boleh kurang dari start date
     document.addEventListener('DOMContentLoaded', function() {
         const startDate = document.getElementById('start_date');
         const endDate = document.getElementById('end_date');
@@ -542,7 +527,6 @@ $filtered_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
         startDate.addEventListener('change', validateDates);
         endDate.addEventListener('change', validateDates);
         
-        // Auto-expand alasan cell on hover
         const alasanCells = document.querySelectorAll('.alasan-cell');
         alasanCells.forEach(cell => {
             cell.addEventListener('mouseenter', function() {
@@ -567,6 +551,5 @@ $filtered_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
 </body>
 </html>
 <?php 
-// Tutup koneksi
 mysqli_close($conn); 
 ?>

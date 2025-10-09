@@ -1,43 +1,28 @@
 <?php
-// FILE: dashboarddirektur.php
 
 session_start();
 require 'config.php';
 
-// Validasi session dan role
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'direktur') {
     header("Location: login_karyawan.php?error=unauthorized");
     exit();
 }
 
-// Data Direktur (diambil dari session)
 $nama_direktur = $_SESSION['user']['nama_lengkap'] ?? "Direktur";
 $jabatan = "Direktur";
 
-// ============================
-// 1. Hitung jumlah cuti yang menunggu persetujuan
-// ============================
 $query_cuti_menunggu = "SELECT COUNT(id) AS total FROM data_pengajuan_cuti WHERE status = 'Menunggu persetujuan'";
 $result_cuti_menunggu = $conn->query($query_cuti_menunggu);
 $cuti_menunggu = $result_cuti_menunggu->fetch_assoc()['total'] ?? 0;
 
-// ============================
-// 2. Hitung jumlah KHL yang menunggu persetujuan
-// ============================
 $query_khl_menunggu = "SELECT COUNT(id_khl) AS total FROM data_pengajuan_khl WHERE status_khl = 'pending'";
 $result_khl_menunggu = $conn->query($query_khl_menunggu);
 $khl_menunggu = $result_khl_menunggu->fetch_assoc()['total'] ?? 0;
 
-// ============================
-// 3. Total semua karyawan
-// ============================
 $query_total_karyawan = "SELECT COUNT(kode_karyawan) AS total FROM data_karyawan";
 $result_total_karyawan = $conn->query($query_total_karyawan);
 $total_semua_karyawan = $result_total_karyawan->fetch_assoc()['total'] ?? 0;
 
-// ============================
-// 4. Ambil 5 pengajuan terbaru - QUERY YANG DIPERBAIKI DENGAN JOIN
-// ============================
 $query_latest = "
     (SELECT 
         'Cuti' AS jenis, 
@@ -245,7 +230,6 @@ main {
 .data-table th { background-color: #f8f9fa; font-weight: 600; }
 .data-table tbody tr:hover { background-color: #f1f1f1; }
 
-/* Calendar Styles */
 .calendar-icon { font-size: 3rem; text-align: center; margin: 20px 0; color: var(--primary-color); }
 .calendar-mini { background: #f8f9fa; border-radius: 10px; padding: 15px; margin: 15px 0; text-align: center; }
 .calendar-mini .month { font-weight: 600; color: var(--primary-color); margin-bottom: 10px; font-size: 1.1rem; }
@@ -255,7 +239,6 @@ main {
 .calendar-mini .day.today { background: var(--primary-color); color: white; font-weight: 600; }
 .calendar-mini .day.other-month { color: #ccc; }
 
-/* Status badges */
 .status-badge { 
     padding: 4px 8px; 
     border-radius: 12px; 
@@ -307,7 +290,7 @@ main {
             </li> 
             <li><a href="#">Pelamar ▾</a> 
                 <ul> 
-                    <li><a href="riwayat_pelamar.php">Riwayat Pelamar</a></li> 
+                    <li><a href="riwayat_pelamar_direktur.php">Riwayat Pelamar</a></li> 
                 </ul> 
             </li>
             <li><a href="#">Profil ▾</a> 
@@ -408,7 +391,6 @@ main {
 </main>
 
 <script>
-// Fungsi untuk membuat mini calendar
 function createMiniCalendar(containerId) {
     const now = new Date();
     const year = now.getFullYear();

@@ -2,16 +2,13 @@
 session_start();
 require_once 'config.php';
 
-// Cek apakah user sudah login dan perannya adalah direktur
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'direktur') {
     header("Location: login_direktur.php");
     exit;
 }
 
-// Ambil kode_karyawan dari session
 $kode_karyawan = $_SESSION['user']['kode_karyawan'];
 
-// Ambil data karyawan dari database
 $sql = "SELECT * FROM data_karyawan WHERE kode_karyawan = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("s", $kode_karyawan);
@@ -20,19 +17,15 @@ $result = $stmt->get_result();
 $karyawan = $result->fetch_assoc();
 $stmt->close();
 
-// Jika data tidak ditemukan, redirect ke login
 if (!$karyawan) {
     header("Location: login_direktur.php");
     exit;
 }
-
-// Proses update no telepon
 $success_message = '';
 $error_message = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_telepon'])) {
     $no_telp_baru = $_POST['no_telp'] ?? '';
     
-    // Validasi sederhana: pastikan tidak kosong dan numerik
     if (!empty($no_telp_baru) && is_numeric($no_telp_baru)) {
         $update_sql = "UPDATE data_karyawan SET no_telp = ? WHERE kode_karyawan = ?";
         $update_stmt = $conn->prepare($update_sql);
@@ -40,9 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_telepon'])) {
         
         if ($update_stmt->execute()) {
             $success_message = "Nomor telepon berhasil diupdate!";
-            // Update data di variabel lokal untuk ditampilkan langsung
             $karyawan['no_telp'] = $no_telp_baru;
-            // Update juga data di session jika perlu
             $_SESSION['user']['no_telp'] = $no_telp_baru;
         } else {
             $error_message = "Gagal mengupdate nomor telepon. Silakan coba lagi.";
@@ -86,7 +77,7 @@ $conn->close();
         padding-bottom: 40px;
     }
     
-    /* === PERBAIKAN HEADER DAN NAVIGASI DIMULAI DI SINI === */
+   
     header { 
         background: var(--card-bg); 
         padding: 20px 40px; 
@@ -117,7 +108,7 @@ $conn->close();
         margin: 0; 
         padding: 0; 
         display: flex; 
-        gap: 40px; /* Jarak antar tombol navigasi utama */
+        gap: 40px; 
     }
     
     nav li { 
@@ -138,7 +129,7 @@ $conn->close();
         top: 100%; 
         left: 0; 
         background: var(--card-bg); 
-        padding: 15px 0; /* Padding vertikal pada kotak dropdown */
+        padding: 15px 0;
         border-radius: 8px; 
         box-shadow: 0 2px 10px var(--shadow-light); 
         min-width: 220px; 
@@ -162,9 +153,8 @@ $conn->close();
         color: var(--text-color-dark); 
         font-weight: 400; 
         white-space: nowrap; 
-        padding: 10px 25px; /* Padding yang lebih lega */
+        padding: 10px 25px; 
     }
-    /* === AKHIR PERBAIKAN HEADER DAN NAVIGASI === */
     
     main {
         max-width: 1200px;
@@ -222,7 +212,6 @@ $conn->close();
     .error-message { background: var(--error-bg); color: var(--error-text); border-color: var(--error-border); }
 
     @media(max-width:768px) {
-        /* Tambahan responsive untuk header */
         header { 
             flex-direction: column; 
             padding: 15px 20px; 
@@ -245,7 +234,6 @@ $conn->close();
         nav li ul li a {
             padding: 8px 25px;
         }
-        /* Akhir responsive header */
         .info-grid { grid-template-columns: 1fr; }
     }
 </style>
@@ -283,7 +271,7 @@ $conn->close();
             </li>
             <li><a href="#">Pelamar ▾</a>
                 <ul>
-                    <li><a href="riwayat_pelamar.php">Riwayat Pelamar</a></li>
+                    <li><a href="riwayat_pelamar_direktur.php">Riwayat Pelamar</a></li>
                 </ul>
             </li>
             <li><a href="#">Profil ▾</a>

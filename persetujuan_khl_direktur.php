@@ -10,20 +10,17 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'direktur') {
 $user = $_SESSION['user'];
 $nama_direktur = $user['nama_lengkap'];
 
-// Pesan sukses/gagal
 if (isset($_GET['message']) && isset($_GET['message_type'])) {
     $message = $_GET['message'];
     $message_type = $_GET['message_type'];
 }
 
-// Proses persetujuan / penolakan KHL
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['action']) && isset($_POST['id_khl'])) {
         $id_khl = $_POST['id_khl'];
         $action = $_POST['action'];
         $alasan_penolakan = isset($_POST['alasan_penolakan']) ? trim($_POST['alasan_penolakan']) : '';
 
-        // Validasi data KHL (tidak boleh dari direktur)
         $check_query = "SELECT * FROM data_pengajuan_khl WHERE id_khl = ? AND role != 'direktur'";
         $check_stmt = $conn->prepare($check_query);
         $check_stmt->bind_param("i", $id_khl);
@@ -67,7 +64,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-// Ambil data KHL yang masih menunggu persetujuan
 $query = "SELECT * FROM data_pengajuan_khl WHERE role != 'direktur' AND status_khl = 'pending' ORDER BY id_khl DESC";
 $stmt = $conn->prepare($query);
 $stmt->execute();
@@ -83,10 +79,10 @@ $result = $stmt->get_result();
 <style>
     :root {
         --primary-color: #1E105E;
-        --secondary-color: #8897AE; /* Ditambahkan dari kode sebelumnya */
+        --secondary-color: #8897AE;
         --accent-color: #4a3f81;
         --card-bg: #fff;
-        --text-dark: #2e1f4f; /* Diperbarui sesuai standar */
+        --text-dark: #2e1f4f; 
         --text-light: #fff;
         --shadow-light: rgba(0,0,0,0.15);
     }
@@ -101,11 +97,10 @@ $result = $stmt->get_result();
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         background: linear-gradient(180deg, var(--primary-color) 0%, #a29bb8 100%);
         min-height: 100vh;
-        color: var(--text-dark); /* Diperbarui untuk konten utama */
-        padding-bottom: 40px; /* Ditambahkan agar footer tidak menempel */
+        color: var(--text-dark); 
+        padding-bottom: 40px; 
     }
 
-    /* === PERBAIKAN HEADER DAN NAVIGASI DIMULAI DI SINI === */
     header { 
         background: var(--card-bg); 
         padding: 20px 40px; 
@@ -136,7 +131,7 @@ $result = $stmt->get_result();
         margin: 0; 
         padding: 0; 
         display: flex; 
-        gap: 40px; /* PERBAIKAN: Menambah jarak antar tombol navigasi utama */
+        gap: 40px; 
     }
     
     nav li { 
@@ -157,10 +152,10 @@ $result = $stmt->get_result();
         top: 100%; 
         left: 0; 
         background: var(--card-bg); 
-        padding: 15px 0; /* Menambah padding vertikal pada kotak dropdown */
+        padding: 15px 0; 
         border-radius: 8px; 
         box-shadow: 0 2px 10px var(--shadow-light); 
-        min-width: 220px; /* Diperlebar */
+        min-width: 220px; 
         z-index: 999; 
     }
     
@@ -168,7 +163,6 @@ $result = $stmt->get_result();
         display: block; 
     }
     
-    /* PERBAIKAN: Jarak antar item di dalam dropdown */
     nav li ul li { 
         margin-bottom: 7px; 
         padding: 0; 
@@ -182,12 +176,9 @@ $result = $stmt->get_result();
         color: var(--text-dark); 
         font-weight: 400; 
         white-space: nowrap; 
-        padding: 10px 25px; /* Ditingkatkan untuk memberi ruang yang cukup */
+        padding: 10px 25px;
     }
 
-    /* === PERBAIKAN HEADER DAN NAVIGASI SELESAI DI SINI === */
-
-    /* MAIN CONTENT */
     main {
         max-width: 1300px;
         margin: 40px auto;
@@ -222,7 +213,6 @@ $result = $stmt->get_result();
         color: var(--primary-color);
     }
 
-    /* TABLE STYLING */
     table {
         width: 100%;
         border-collapse: collapse;
@@ -258,7 +248,6 @@ $result = $stmt->get_result();
         display: inline-block;
     }
 
-    /* BUTTON STYLING */
     .btn {
         padding: 8px 16px;
         border: none;
@@ -297,7 +286,6 @@ $result = $stmt->get_result();
         background: #545b62;
     }
 
-    /* MESSAGE STYLING */
     .message {
         padding: 15px 20px;
         border-radius: 8px;
@@ -327,7 +315,6 @@ $result = $stmt->get_result();
         margin-top: 20px;
     }
 
-    /* MODAL STYLING */
     .modal {
         display: none;
         position: fixed;
@@ -388,9 +375,7 @@ $result = $stmt->get_result();
         justify-content: flex-end;
     }
 
-    /* RESPONSIVE DESIGN */
     @media (max-width: 768px) {
-        /* Menggunakan style responsive dari kode sebelumnya */
         header { 
             flex-direction: column; 
             padding: 15px 20px; 
@@ -407,7 +392,7 @@ $result = $stmt->get_result();
             position: static; 
             box-shadow: none; 
             border: 1px solid #e0e0e0; 
-            padding: 5px 0; /* Disesuaikan agar lebih ringkas di mobile */
+            padding: 5px 0; 
         }
         
         nav li ul li a {
@@ -463,7 +448,7 @@ $result = $stmt->get_result();
             </li>
             <li><a href="#">Pelamar ▾</a>
                 <ul>
-                    <li><a href="riwayat_pelamar.php">Riwayat Pelamar</a></li>
+                    <li><a href="riwayat_pelamar_direktur.php">Riwayat Pelamar</a></li>
                 </ul>
             </li>
             <li><a href="#">Profil ▾</a>
@@ -569,7 +554,6 @@ function closeRejectModal() {
     document.getElementById('alasan_penolakan').value = '';
 }
 
-// Close modal when clicking outside
 window.onclick = function(e) {
     const modal = document.getElementById('rejectModal');
     if (e.target === modal) {
@@ -577,7 +561,6 @@ window.onclick = function(e) {
     }
 }
 
-// Form validation
 document.getElementById('rejectForm').addEventListener('submit', function(e) {
     const alasan = document.getElementById('alasan_penolakan').value.trim();
     if (!alasan) {
@@ -589,7 +572,6 @@ document.getElementById('rejectForm').addEventListener('submit', function(e) {
     return confirm('Apakah Anda yakin ingin menolak data KHL ini?');
 });
 
-// Close modal with ESC key
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeRejectModal();

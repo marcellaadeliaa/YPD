@@ -2,7 +2,6 @@
 session_start();
 require 'config.php';
 
-// 🔒 Batasi hanya untuk role direktur
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'direktur') {
     header("Location: login_karyawan.php");
     exit();
@@ -11,13 +10,11 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'direktur') {
 $user = $_SESSION['user'];
 $nama_direktur = $user['nama_lengkap'];
 
-// ====== FILTER ======
 $start_date = $_GET['start_date'] ?? '';
 $end_date = $_GET['end_date'] ?? '';
 $search_query = $_GET['search'] ?? '';
 $status_filter = $_GET['status'] ?? '';
 
-// ====== QUERY ======
 $query = "SELECT dk.nama_lengkap, dpk.* 
           FROM data_pengajuan_khl dpk
           JOIN data_karyawan dk ON dpk.kode_karyawan = dk.kode_karyawan
@@ -193,7 +190,7 @@ $conn->close();
             </li>
             <li><a href="#">Pelamar ▾</a>
                 <ul>
-                    <li><a href="riwayat_pelamar.php">Riwayat Pelamar</a></li>
+                    <li><a href="riwayat_pelamar_direktur.php">Riwayat Pelamar</a></li>
                     </ul>
             </li>
             <li><a href="#">Profil ▾</a>

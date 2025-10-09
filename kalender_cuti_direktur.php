@@ -2,13 +2,11 @@
 session_start();
 require_once 'config.php';
 
-// 🔒 Batasi hanya untuk direktur
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'direktur') {
     header("Location: login_karyawan.php?error=unauthorized");
     exit();
 }
 
-// Ambil semua data cuti yang sudah disetujui
 $query = "
     SELECT nama_karyawan, divisi, jabatan, role, jenis_cuti, tanggal_mulai, tanggal_akhir, alasan 
     FROM data_pengajuan_cuti 
@@ -21,8 +19,7 @@ if ($result && $result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
         $tanggalMulai = new DateTime($row['tanggal_mulai']);
         $tanggalAkhir = new DateTime($row['tanggal_akhir']);
-        
-        // Loop melalui setiap hari dari tanggal mulai hingga tanggal akhir
+    
         $currentDate = clone $tanggalMulai;
         while ($currentDate <= $tanggalAkhir) {
             $cutiData[$currentDate->format('Y-m-d')][] = $row;
@@ -30,12 +27,9 @@ if ($result && $result->num_rows > 0) {
         }
     }
 }
-
-// Ambil tanggal hari ini
 $month = isset($_GET['month']) ? (int)$_GET['month'] : date('n');
 $year = isset($_GET['year']) ? (int)$_GET['year'] : date('Y');
 $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $month, $year);
-// Mengatur hari pertama di bulan (1=Senin, 7=Minggu)
 $firstDayOfMonth = date('N', strtotime("$year-$month-01")); 
 $today = date('Y-m-d');
 
@@ -57,7 +51,7 @@ function monthName($month) {
 <title>Kalender Cuti Direktur</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-    /* CSS Variables */
+   
     :root { 
         --primary-color: #1E105E; 
         --secondary-color: #8897AE; 
@@ -76,8 +70,6 @@ function monthName($month) {
         min-height: 100vh;
         padding-bottom: 40px;
     }
-
-    /* === PERBAIKAN HEADER DAN NAVIGASI DIMULAI DI SINI === */
     header { 
         background: var(--card-bg); 
         padding: 20px 40px; 
@@ -108,7 +100,7 @@ function monthName($month) {
         margin: 0; 
         padding: 0; 
         display: flex; 
-        gap: 40px; /* Jarak antar tombol navigasi utama */
+        gap: 40px;
     }
     
     nav li { 
@@ -129,7 +121,7 @@ function monthName($month) {
         top: 100%; 
         left: 0; 
         background: var(--card-bg); 
-        padding: 15px 0; /* Padding vertikal pada kotak dropdown */
+        padding: 15px 0; 
         border-radius: 8px; 
         box-shadow: 0 2px 10px var(--shadow-light); 
         min-width: 220px; 
@@ -140,7 +132,6 @@ function monthName($month) {
         display: block; 
     }
     
-    /* Jarak antar item di dalam dropdown */
     nav li ul li { 
         margin-bottom: 7px; 
         padding: 0; 
@@ -154,9 +145,8 @@ function monthName($month) {
         color: var(--text-color-dark); 
         font-weight: 400; 
         white-space: nowrap; 
-        padding: 10px 25px; /* Padding yang lebih lega */
+        padding: 10px 25px; 
     }
-    /* === PERBAIKAN HEADER DAN NAVIGASI SELESAI DI SINI === */
 
     main {
         max-width: 1200px;
@@ -242,7 +232,7 @@ function monthName($month) {
         border: 2px solid var(--primary-color);
     }
 
-    /* Modal */
+    
     .modal {
         display: none;
         position: fixed;
@@ -292,7 +282,6 @@ function monthName($month) {
 
     th { background: #f8f9fa; }
 
-    /* Responsive adjustments */
     @media (max-width: 768px) {
         header { 
             flex-direction: column; 
@@ -362,7 +351,7 @@ function monthName($month) {
             </li>
             <li><a href="#">Pelamar ▾</a>
                 <ul>
-                    <li><a href="riwayat_pelamar.php">Riwayat Pelamar</a></li>
+                    <li><a href="riwayat_pelamar_direktur.php">Riwayat Pelamar</a></li>
                 </ul>
             </li>
             <li><a href="#">Profil ▾</a>
@@ -401,7 +390,7 @@ function monthName($month) {
             <div style="font-weight: 700; color: #dc3545; padding: 12px; background: #e0e0e0; border-radius: 10px;">Min</div>
             
             <?php
-            // Isi kolom kosong untuk menggeser hari pertama
+            
             for ($i = 1; $i < $firstDayOfMonth; $i++) echo "<div class='day' style='background: #f1f1f1; cursor: default;'></div>";
             
             for ($day = 1; $day <= $daysInMonth; $day++):

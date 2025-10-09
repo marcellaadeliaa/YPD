@@ -2,13 +2,11 @@
 session_start();
 require_once 'config.php';
 
-// 🔒 Batasi hanya untuk direktur
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'direktur') {
     header("Location: login_karyawan.php?error=unauthorized");
     exit();
 }
 
-// Ambil data KHL yang disetujui (QUERY DIKEMBALIKAN SEPERTI SEMULA, TANPA JOIN NAMA)
 $query = "
     SELECT kode_karyawan, divisi, jabatan, role, proyek, tanggal_khl, 
            jam_mulai_kerja, jam_akhir_kerja, status_khl, alasan_penolakan
@@ -25,11 +23,9 @@ if ($result && $result->num_rows > 0) {
     }
 }
 
-// Ambil tanggal hari ini
 $month = isset($_GET['month']) ? (int)$_GET['month'] : date('n');
 $year = isset($_GET['year']) ? (int)$_GET['year'] : date('Y');
 $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $month, $year);
-// Mengatur hari pertama di bulan (1=Senin, 7=Minggu)
 $firstDayOfMonth = date('N', strtotime("$year-$month-01")); 
 $today = date('Y-m-d');
 
@@ -51,7 +47,6 @@ function monthName($month) {
 <title>Kalender KHL Direktur</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-    /* CSS Variables */
     :root { 
         --primary-color: #1E105E; 
         --secondary-color: #8897AE; 
@@ -71,7 +66,6 @@ function monthName($month) {
         padding-bottom: 40px;
     }
 
-    /* === HEADER DAN NAVIGASI (DIBENARKAN) === */
     header { 
         background: var(--card-bg); 
         padding: 20px 40px; 
@@ -149,7 +143,7 @@ function monthName($month) {
         white-space: nowrap; 
         padding: 10px 25px; 
     }
-    /* === AKHIR HEADER DAN NAVIGASI === */
+  
 
     main {
         max-width: 1200px;
@@ -222,8 +216,8 @@ function monthName($month) {
     }
 
     .khl-count {
-        background: #e0f2f1; /* Warna hijau muda untuk KHL */
-        color: #00796B; /* Warna hijau tua untuk teks KHL */
+        background: #e0f2f1; 
+        color: #00796B; 
         border-radius: 20px;
         padding: 4px 10px;
         font-size: 13px;
@@ -236,11 +230,10 @@ function monthName($month) {
     }
     
     .has-khl {
-        background: #e0f2f1 !important; /* Latar belakang untuk hari dengan KHL */
+        background: #e0f2f1 !important; 
         border: 1px solid #00796B;
     }
 
-    /* Modal */
     .modal {
         display: none;
         position: fixed;
@@ -365,7 +358,7 @@ function monthName($month) {
             </li>
             <li><a href="#">Pelamar ▾</a>
                 <ul>
-                    <li><a href="riwayat_pelamar.php">Riwayat Pelamar</a></li>
+                    <li><a href="riwayat_pelamar_direktur.php">Riwayat Pelamar</a></li>
                 </ul>
             </li>
             <li><a href="#">Profil ▾</a>
@@ -404,7 +397,7 @@ function monthName($month) {
             <div style="font-weight: 700; color: #dc3545; padding: 12px; background: #e0e0e0; border-radius: 10px;">Min</div>
             
             <?php
-            // Isi kolom kosong untuk menggeser hari pertama
+
             for ($i = 1; $i < $firstDayOfMonth; $i++) echo "<div class='day' style='background: #f1f1f1; cursor: default;'></div>";
 
             for ($day = 1; $day <= $daysInMonth; $day++):
@@ -461,7 +454,6 @@ function showDetail(date) {
     if (!data || data.length === 0) {
         list.innerHTML = "<p style='text-align: center; color: #555; margin-top: 20px;'>Tidak ada data KHL pada tanggal ini.</p>";
     } else {
-        // Konten modal dikembalikan ke field yang tersedia di query awal
         let html = `<table>
                         <tr><th>Kode Karyawan</th><th>Divisi</th><th>Jabatan</th><th>Proyek</th><th>Jam Kerja</th></tr>`;
         data.forEach(d => {

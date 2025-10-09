@@ -2,13 +2,11 @@
 session_start();
 require_once 'config.php';
 
-// Cek apakah user sudah login sebagai direktur
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'direktur') {
     header("Location: login_direktur.php");
     exit();
 }
 
-// Ambil data dari session
 $user = $_SESSION['user'];
 $nik = $user['kode_karyawan'];
 $nama_lengkap = $user['nama_lengkap'];
@@ -16,7 +14,6 @@ $divisi = $user['divisi'];
 $jabatan = $user['jabatan'];
 $role = $user['role'];
 
-// Jika ada data yang kosong, ambil dari database
 if (empty($divisi) || empty($jabatan)) {
     $query_karyawan = "SELECT divisi, jabatan FROM data_karyawan WHERE kode_karyawan = ?";
     $stmt = mysqli_prepare($conn, $query_karyawan);
@@ -28,7 +25,7 @@ if (empty($divisi) || empty($jabatan)) {
     if ($karyawan_detail) {
         $divisi = $karyawan_detail['divisi'];
         $jabatan = $karyawan_detail['jabatan'];
-        // Update session
+    
         $_SESSION['user']['divisi'] = $divisi;
         $_SESSION['user']['jabatan'] = $jabatan;
     }
@@ -322,7 +319,7 @@ if (empty($divisi) || empty($jabatan)) {
             </li>
             <li><a href="#">Pelamar ▾</a>
                 <ul>
-                    <li><a href="riwayat_pelamar.php">Riwayat Pelamar</a></li>
+                    <li><a href="riwayat_pelamar_direktur.php">Riwayat Pelamar</a></li>
                     </ul>
             </li>
             <li><a href="#">Profil ▾</a>
@@ -454,46 +451,39 @@ if (empty($divisi) || empty($jabatan)) {
             const jamMulaiCuti = document.querySelector('select[name="jam_mulai_cuti_khl"]').value;
             const jamAkhirCuti = document.querySelector('select[name="jam_akhir_cuti_khl"]').value;
             
-            // Validasi tanggal
             if (tanggalKHL && tanggalCutiKHL && tanggalKHL >= tanggalCutiKHL) {
                 e.preventDefault();
                 alert('Tanggal Cuti KHL harus setelah Tanggal KHL');
                 return;
             }
             
-            // Validasi jam kerja
             if (jamMulaiKerja && jamAkhirKerja && jamMulaiKerja >= jamAkhirKerja) {
                 e.preventDefault();
                 alert('Jam mulai kerja harus lebih awal dari jam akhir kerja');
                 return;
             }
             
-            // Validasi jam cuti
             if (jamMulaiCuti && jamAkhirCuti && jamMulaiCuti >= jamAkhirCuti) {
                 e.preventDefault();
                 alert('Jam mulai cuti harus lebih awal dari jam akhir cuti');
                 return;
             }
             
-            // Konfirmasi pengajuan
             if (!confirm('Apakah Anda yakin ingin mengajukan KHL? Pengajuan akan otomatis disetujui.')) {
                 e.preventDefault();
             }
         });
 
-        // Set minimum date untuk tanggal cuti berdasarkan tanggal KHL
         document.getElementById('tanggal_khl').addEventListener('change', function() {
             const tanggalKHL = this.value;
             const tanggalCutiInput = document.getElementById('tanggal_cuti_khl');
             
             if (tanggalKHL) {
-                // Set minimum tanggal cuti adalah hari setelah tanggal KHL
                 const minDate = new Date(tanggalKHL);
                 minDate.setDate(minDate.getDate() + 1);
                 const minDateString = minDate.toISOString().split('T')[0];
                 tanggalCutiInput.min = minDateString;
                 
-                // Jika tanggal cuti sudah diisi tapi tidak valid, reset
                 if (tanggalCutiInput.value && tanggalCutiInput.value <= tanggalKHL) {
                     tanggalCutiInput.value = '';
                 }
@@ -502,7 +492,7 @@ if (empty($divisi) || empty($jabatan)) {
     </script>
 
     <?php
-    // Tutup koneksi database
+ 
     if(isset($conn)) {
         mysqli_close($conn);
     }

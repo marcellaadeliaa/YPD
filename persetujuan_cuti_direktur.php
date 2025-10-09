@@ -10,20 +10,17 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'direktur') {
 $user = $_SESSION['user'];
 $nama_direktur = $user['nama_lengkap'];
 
-// Cek jika ada parameter message dari redirect
 if (isset($_GET['message']) && isset($_GET['message_type'])) {
     $message = $_GET['message'];
     $message_type = $_GET['message_type'];
 }
 
-// Proses persetujuan/tolak cuti
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['action']) && isset($_POST['id_cuti'])) {
         $id_cuti = $_POST['id_cuti'];
         $action = $_POST['action'];
         $alasan_penolakan = isset($_POST['alasan_penolakan']) ? trim($_POST['alasan_penolakan']) : '';
         
-        // Validasi apakah cuti tersebut bukan dari direktur
         $check_query = "SELECT * FROM data_pengajuan_cuti WHERE id = ? AND role != 'direktur'";
         $check_stmt = $conn->prepare($check_query);
         $check_stmt->bind_param("i", $id_cuti);
@@ -33,13 +30,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($check_result->num_rows > 0) {
             $cuti_data = $check_result->fetch_assoc();
             
-            // Jika menolak, validasi alasan penolakan
             if ($action == 'reject' && empty($alasan_penolakan)) {
                 $message = "Harap berikan alasan penolakan";
                 $message_type = "error";
             } else {
                 if ($action == 'approve') {
-                    // Update status cuti - disetujui
                     $new_status = 'Disetujui';
                     
                     $update_query = "UPDATE data_pengajuan_cuti SET status = ?, alasan_penolakan = ? WHERE id = ?";
@@ -57,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     
                     $update_stmt->close();
                 } else {
-                    // Untuk reject
+
                     $new_status = 'Ditolak';
                     
                     $update_query = "UPDATE data_pengajuan_cuti SET status = ?, alasan_penolakan = ? WHERE id = ?";
@@ -85,8 +80,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-// Ambil data cuti yang menunggu persetujuan (kecuali dari direktur)
-// Order by id DESC untuk menampilkan yang terbaru pertama
 $query = "SELECT * FROM data_pengajuan_cuti WHERE role != 'direktur' AND status = 'Menunggu Persetujuan' ORDER BY id DESC";
 $stmt = $conn->prepare($query);
 $stmt->execute();
@@ -149,8 +142,7 @@ $result = $stmt->get_result();
             margin: 0; 
             padding: 0; 
             display: flex; 
-            /* PERBAIKAN: Menambah jarak antar tombol navigasi utama */
-            gap: 40px; /* Ditingkatkan dari 30px */
+            gap: 40px; 
         }
         
         nav li { 
@@ -171,11 +163,10 @@ $result = $stmt->get_result();
             top: 100%; 
             left: 0; 
             background: var(--card-bg); 
-            /* Menambah padding vertikal pada kotak dropdown secara keseluruhan */
             padding: 15px 0; 
             border-radius: 8px; 
             box-shadow: 0 2px 10px var(--shadow-light); 
-            min-width: 220px; /* Sedikit dilebarkan untuk memberi ruang horizontal */
+            min-width: 220px; 
             z-index: 999; 
         }
         
@@ -183,24 +174,20 @@ $result = $stmt->get_result();
             display: block; 
         }
         
-        /* PERBAIKAN: Jarak antar item di dalam dropdown */
         nav li ul li { 
-            /* Memberi jarak di bawah setiap item menu */
-            margin-bottom: 7px; /* Menambah jarak vertikal antar item */
-            /* Menghilangkan padding li agar padding hanya diatur pada <a> */
+            margin-bottom: 7px; 
             padding: 0; 
         }
 
         nav li ul li:last-child {
-            margin-bottom: 0; /* Menghilangkan margin bawah di item terakhir */
+            margin-bottom: 0; 
         }
         
         nav li ul li a { 
             color: var(--text-color-dark); 
             font-weight: 400; 
             white-space: nowrap; 
-            /* PERBAIKAN: Menambah padding untuk jarak atas/bawah/kiri/kanan yang lebih lega */
-            padding: 10px 25px; /* Ditingkatkan untuk memberi ruang yang cukup */
+            padding: 10px 25px; 
         }
         
         main { 
@@ -518,7 +505,7 @@ $result = $stmt->get_result();
             </li>
             <li><a href="#">Pelamar ▾</a>
                 <ul>
-                    <li><a href="riwayat_pelamar.php">Riwayat Pelamar</a></li>
+                    <li><a href="riwayat_pelamar_direktur.php">Riwayat Pelamar</a></li>
                     </ul>
             </li>
             <li><a href="#">Profil ▾</a>
@@ -604,7 +591,6 @@ $result = $stmt->get_result();
                                         $start = new DateTime($row['tanggal_mulai']);
                                         $end = new DateTime($row['tanggal_akhir']);
                                         $interval = $start->diff($end);
-                                        // Menghitung hari inklusif, jadi +1
                                         echo ($interval->days + 1) . ' hari';
                                     ?>
                                 </div>
@@ -676,7 +662,6 @@ $result = $stmt->get_result();
         document.getElementById('alasan_penolakan').value = '';
     }
     
-    // Tutup modal ketika klik di luar modal
     window.onclick = function(event) {
         const modal = document.getElementById('rejectModal');
         if (event.target === modal) {
@@ -684,7 +669,6 @@ $result = $stmt->get_result();
         }
     }
     
-    // Validasi form penolakan
     document.getElementById('rejectForm').addEventListener('submit', function(e) {
         const alasan = document.getElementById('alasan_penolakan').value.trim();
         if (!alasan) {
@@ -699,7 +683,6 @@ $result = $stmt->get_result();
 </html>
 
 <?php
-// Tutup koneksi
 $stmt->close();
 $conn->close();
 ?>

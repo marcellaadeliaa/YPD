@@ -2,19 +2,15 @@
 session_start();
 require_once 'config.php';
 
-// Inisialisasi variabel
 $display_data = false;
 $error_msg = '';
 
-// Cek apakah user sudah login sebagai direktur
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'direktur') {
     header("Location: login_direktur.php");
     exit();
 }
 
-// Hanya proses jika metode request adalah POST
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Ambil data dari session dan form
     $user = $_SESSION['user'];
     $kode_karyawan = $user['kode_karyawan'];
     $nama_karyawan = $user['nama_lengkap'];
@@ -30,13 +26,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $jam_mulai_cuti_khl = $_POST['jam_mulai_cuti_khl'] ?? '';
     $jam_akhir_cuti_khl = $_POST['jam_akhir_cuti_khl'] ?? '';
 
-    // Validasi data wajib
     if (empty($proyek) || empty($tanggal_khl) || empty($jam_mulai_kerja) || empty($jam_akhir_kerja) || 
         empty($tanggal_cuti_khl) || empty($jam_mulai_cuti_khl) || empty($jam_akhir_cuti_khl)) {
         $error_msg = "Semua field harus diisi.";
     }
 
-    // Validasi kode karyawan ada di database
     if (empty($error_msg)) {
         $check_karyawan = "SELECT kode_karyawan FROM data_karyawan WHERE kode_karyawan = ?";
         $stmt_check = mysqli_prepare($conn, $check_karyawan);
@@ -50,24 +44,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         mysqli_stmt_close($stmt_check);
     }
 
-    // Validasi tanggal
     if (empty($error_msg) && $tanggal_khl >= $tanggal_cuti_khl) {
         $error_msg = "Tanggal Cuti KHL harus setelah Tanggal KHL.";
     }
     
-    // Validasi jam kerja
     if (empty($error_msg) && $jam_mulai_kerja >= $jam_akhir_kerja) {
         $error_msg = "Jam mulai kerja harus lebih awal dari jam akhir kerja.";
     }
     
-    // Validasi jam cuti
     if (empty($error_msg) && $jam_mulai_cuti_khl >= $jam_akhir_cuti_khl) {
         $error_msg = "Jam mulai cuti harus lebih awal dari jam akhir cuti.";
     }
 
-    // Jika tidak ada error, lanjutkan proses ke database
     if (empty($error_msg)) {
-        // Untuk direktur, status langsung "Disetujui"
         $status_khl = "Disetujui";
         
         $query_insert = "INSERT INTO data_pengajuan_khl (
@@ -369,7 +358,7 @@ mysqli_close($conn);
             </li>
             <li><a href="#">Pelamar ▾</a>
                 <ul>
-                    <li><a href="riwayat_pelamar.php">Riwayat Pelamar</a></li>
+                    <li><a href="riwayat_pelamar_direktur.php">Riwayat Pelamar</a></li>
                     </ul>
             </li>
             <li><a href="#">Profil ▾</a>
