@@ -367,7 +367,7 @@ $filtered_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
     </div>
     <nav>
         <ul>
-            <li><a href="dashboard_direktur.php">Beranda</a></li>
+            <li><a href="dashboarddirektur.php">Beranda</a></li>
             <li><a href="#">Cuti ▾</a>
                 <ul>
                     <li><a href="persetujuan_cuti_karyawan.php">Persetujuan Cuti</a></li>
@@ -549,7 +549,7 @@ $filtered_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
         
         <div style="text-align: center; margin-top: 30px;">
             <a href="pengajuan_cuti_direktur.php" class="btn btn-cari" style="background-color: #28a745;">+ Ajukan Cuti Baru</a>
-            <a href="dashboard_direktur.php" class="btn btn-reset">← Kembali ke Dashboard</a>
+            <a href="dashboarddirektur.php" class="btn btn-reset">← Kembali ke Dashboard</a>
         </div>
     </div>
 </main>

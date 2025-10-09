@@ -8,7 +8,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'direktur') {
     exit();
 }
 
-// Ambil data KHL yang disetujui
+// Ambil data KHL yang disetujui (QUERY DIKEMBALIKAN SEPERTI SEMULA, TANPA JOIN NAMA)
 $query = "
     SELECT kode_karyawan, divisi, jabatan, role, proyek, tanggal_khl, 
            jam_mulai_kerja, jam_akhir_kerja, status_khl, alasan_penolakan
@@ -29,7 +29,8 @@ if ($result && $result->num_rows > 0) {
 $month = isset($_GET['month']) ? (int)$_GET['month'] : date('n');
 $year = isset($_GET['year']) ? (int)$_GET['year'] : date('Y');
 $daysInMonth = cal_days_in_month(CAL_GREGORIAN, $month, $year);
-$firstDayOfMonth = date('N', strtotime("$year-$month-01"));
+// Mengatur hari pertama di bulan (1=Senin, 7=Minggu)
+$firstDayOfMonth = date('N', strtotime("$year-$month-01")); 
 $today = date('Y-m-d');
 
 function monthName($month) {
@@ -50,64 +51,105 @@ function monthName($month) {
 <title>Kalender KHL Direktur</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
+    /* CSS Variables */
+    :root { 
+        --primary-color: #1E105E; 
+        --secondary-color: #8897AE; 
+        --accent-color: #4a3f81; 
+        --card-bg: #FFFFFF; 
+        --text-color-light: #fff; 
+        --text-color-dark: #2e1f4f; 
+        --shadow-light: rgba(0,0,0,0.15); 
+    }
+
     body {
         margin: 0;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background: linear-gradient(180deg, #1E105E 0%, #8897AE 100%);
+        background: linear-gradient(180deg, var(--primary-color) 0%, #a29bb8 100%);
         color: #333;
         min-height: 100vh;
+        padding-bottom: 40px;
     }
 
-    header {
-        background: #fff;
-        padding: 20px 40px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 2px solid #34377c;
+    /* === HEADER DAN NAVIGASI (DIBENARKAN) === */
+    header { 
+        background: var(--card-bg); 
+        padding: 20px 40px; 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        box-shadow: 0 4px 15px var(--shadow-light); 
+    }
+    
+    .logo { 
+        display: flex; 
+        align-items: center; 
+        gap: 16px; 
+        font-weight: 500; 
+        font-size: 20px; 
+        color: var(--text-color-dark); 
+    }
+    
+    .logo img { 
+        width: 50px; 
+        height: 50px; 
+        object-fit: contain; 
+        border-radius: 50%; 
+    }
+    
+    nav ul { 
+        list-style: none; 
+        margin: 0; 
+        padding: 0; 
+        display: flex; 
+        gap: 40px; 
+    }
+    
+    nav li { 
+        position: relative; 
+    }
+    
+    nav a { 
+        text-decoration: none; 
+        color: var(--text-color-dark); 
+        font-weight: 600; 
+        padding: 8px 4px; 
+        display: block; 
+    }
+    
+    nav li ul { 
+        display: none; 
+        position: absolute; 
+        top: 100%; 
+        left: 0; 
+        background: var(--card-bg); 
+        padding: 15px 0; 
+        border-radius: 8px; 
+        box-shadow: 0 2px 10px var(--shadow-light); 
+        min-width: 220px; 
+        z-index: 999; 
+    }
+    
+    nav li:hover > ul { 
+        display: block; 
+    }
+    
+    nav li ul li { 
+        margin-bottom: 7px; 
+        padding: 0; 
     }
 
-    .logo {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        font-weight: 500;
-        font-size: 20px;
-        color: #2e1f4f;
+    nav li ul li:last-child {
+        margin-bottom: 0; 
     }
-
-    .logo img {
-        width: 50px;
-        height: 50px;
-        object-fit: contain;
-        border-radius: 50%;
+    
+    nav li ul li a { 
+        color: var(--text-color-dark); 
+        font-weight: 400; 
+        white-space: nowrap; 
+        padding: 10px 25px; 
     }
-
-    nav ul {
-        list-style: none;
-        display: flex;
-        gap: 30px;
-        margin: 0;
-        padding: 0;
-    }
-
-    nav li { position: relative; }
-    nav a { text-decoration: none; color: #333; font-weight: 600; }
-
-    nav li ul {
-        display: none;
-        position: absolute;
-        top: 100%;
-        left: 0;
-        background: #fff;
-        padding: 10px 0;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0,0,0,.15);
-        min-width: 200px;
-    }
-
-    nav li:hover > ul { display: block; }
-    nav li ul li { padding: 5px 20px; }
+    /* === AKHIR HEADER DAN NAVIGASI === */
 
     main {
         max-width: 1200px;
@@ -115,10 +157,10 @@ function monthName($month) {
         padding: 0 20px;
     }
 
-    h1 { color: #fff; text-align: center; margin-bottom: 20px; }
+    h1 { color: var(--text-color-light); text-align: center; margin-bottom: 20px; }
 
     .calendar-card {
-        background: #fff;
+        background: var(--card-bg);
         border-radius: 20px;
         padding: 30px;
         box-shadow: 0 2px 10px rgba(0,0,0,0.15);
@@ -132,17 +174,22 @@ function monthName($month) {
     }
 
     .month-nav a {
-        background: #1E105E;
-        color: #fff;
+        background: var(--primary-color);
+        color: var(--text-color-light);
         padding: 8px 14px;
         border-radius: 8px;
         text-decoration: none;
+        transition: background 0.3s;
+    }
+    
+    .month-nav a:hover {
+        background: var(--accent-color);
     }
 
     .month-title {
         font-size: 22px;
         font-weight: 600;
-        color: #1E105E;
+        color: var(--primary-color);
     }
 
     .calendar {
@@ -171,12 +218,12 @@ function monthName($month) {
 
     .day-number {
         font-weight: 600;
-        color: #1E105E;
+        color: var(--primary-color);
     }
 
     .khl-count {
-        background: #d1c4e9;
-        color: #1E105E;
+        background: #e0f2f1; /* Warna hijau muda untuk KHL */
+        color: #00796B; /* Warna hijau tua untuk teks KHL */
         border-radius: 20px;
         padding: 4px 10px;
         font-size: 13px;
@@ -185,7 +232,12 @@ function monthName($month) {
     }
 
     .today {
-        border: 2px solid #1E105E;
+        border: 2px solid var(--primary-color);
+    }
+    
+    .has-khl {
+        background: #e0f2f1 !important; /* Latar belakang untuk hari dengan KHL */
+        border: 1px solid #00796B;
     }
 
     /* Modal */
@@ -196,10 +248,11 @@ function monthName($month) {
         background: rgba(0,0,0,0.6);
         justify-content: center;
         align-items: center;
+        z-index: 2000;
     }
 
     .modal-content {
-        background: #fff;
+        background: var(--card-bg);
         border-radius: 16px;
         padding: 25px;
         width: 90%;
@@ -229,18 +282,63 @@ function monthName($month) {
     }
 
     th, td {
-        padding: 8px;
+        padding: 10px;
         border-bottom: 1px solid #ddd;
         font-size: 14px;
+        text-align: left;
     }
 
     th { background: #f8f9fa; }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        header { 
+            flex-direction: column; 
+            padding: 15px 20px; 
+            gap: 15px; 
+        }
+    
+        nav ul { 
+            flex-direction: column; 
+            gap: 10px; 
+            width: 100%; 
+        }
+    
+        nav li ul { 
+            position: static; 
+            box-shadow: none; 
+            border: 1px solid #e0e0e0; 
+            padding: 5px 0; 
+        }
+        
+        nav li ul li a {
+            padding: 8px 25px;
+        }
+
+        .calendar {
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+        
+        .day {
+            min-height: 60px;
+            padding: 8px 4px;
+        }
+        
+        th, td {
+            padding: 6px;
+            font-size: 12px;
+        }
+    }
 </style>
 </head>
 <body>
 
 <header>
-    <div class="logo"><img src="image/namayayasan.png" alt="Logo"><span>Yayasan Purba Danarta</span></div>
+    <div class="logo">
+        <img src="image/namayayasan.png" alt="Logo Yayasan">
+        <span>Yayasan Purba Danarta</span>
+    </div>
     <nav>
         <ul>
             <li><a href="dashboarddirektur.php">Beranda</a></li>
@@ -268,7 +366,7 @@ function monthName($month) {
             <li><a href="#">Pelamar ▾</a>
                 <ul>
                     <li><a href="riwayat_pelamar.php">Riwayat Pelamar</a></li>
-                    </ul>
+                </ul>
             </li>
             <li><a href="#">Profil ▾</a>
                 <ul>
@@ -279,25 +377,45 @@ function monthName($month) {
         </ul>
     </nav>
 </header>
+
 <main>
     <h1>Kalender KHL Seluruh Karyawan</h1>
 
     <div class="calendar-card">
         <div class="month-nav">
-            <a href="?month=<?= $month == 1 ? 12 : $month - 1 ?>&year=<?= $month == 1 ? $year - 1 : $year ?>"><i class="fa fa-chevron-left"></i></a>
+            <?php 
+            $prevMonth = $month == 1 ? 12 : $month - 1;
+            $prevYear = $month == 1 ? $year - 1 : $year;
+            $nextMonth = $month == 12 ? 1 : $month + 1;
+            $nextYear = $month == 12 ? $year + 1 : $year;
+            ?>
+            <a href="?month=<?= $prevMonth ?>&year=<?= $prevYear ?>"><i class="fa fa-chevron-left"></i></a>
             <div class="month-title"><?= monthName($month) . ' ' . $year ?></div>
-            <a href="?month=<?= $month == 12 ? 1 : $month + 1 ?>&year=<?= $month == 12 ? $year + 1 : $year ?>"><i class="fa fa-chevron-right"></i></a>
+            <a href="?month=<?= $nextMonth ?>&year=<?= $nextYear ?>"><i class="fa fa-chevron-right"></i></a>
         </div>
 
         <div class="calendar">
+             <div style="font-weight: 700; color: #1E105E; padding: 12px; background: #e0e0e0; border-radius: 10px;">Sen</div>
+            <div style="font-weight: 700; color: #1E105E; padding: 12px; background: #e0e0e0; border-radius: 10px;">Sel</div>
+            <div style="font-weight: 700; color: #1E105E; padding: 12px; background: #e0e0e0; border-radius: 10px;">Rab</div>
+            <div style="font-weight: 700; color: #1E105E; padding: 12px; background: #e0e0e0; border-radius: 10px;">Kam</div>
+            <div style="font-weight: 700; color: #1E105E; padding: 12px; background: #e0e0e0; border-radius: 10px;">Jum</div>
+            <div style="font-weight: 700; color: #1E105E; padding: 12px; background: #e0e0e0; border-radius: 10px;">Sab</div>
+            <div style="font-weight: 700; color: #dc3545; padding: 12px; background: #e0e0e0; border-radius: 10px;">Min</div>
+            
             <?php
-            for ($i = 1; $i < $firstDayOfMonth; $i++) echo "<div></div>";
+            // Isi kolom kosong untuk menggeser hari pertama
+            for ($i = 1; $i < $firstDayOfMonth; $i++) echo "<div class='day' style='background: #f1f1f1; cursor: default;'></div>";
+
             for ($day = 1; $day <= $daysInMonth; $day++):
                 $date = "$year-" . str_pad($month, 2, '0', STR_PAD_LEFT) . "-" . str_pad($day, 2, '0', STR_PAD_LEFT);
                 $isToday = $date === $today ? 'today' : '';
                 $count = isset($khlData[$date]) ? count($khlData[$date]) : 0;
             ?>
-            <div class="day <?= $isToday ?>" onclick="showDetail('<?= $date ?>')">
+            <div 
+                class="day <?= $isToday ?> <?= $count > 0 ? 'has-khl' : '' ?>" 
+                onclick="showDetail('<?= $date ?>')"
+            >
                 <div class="day-number"><?= $day ?></div>
                 <?php if ($count > 0): ?>
                     <div class="khl-count"><?= $count ?> KHL</div>
@@ -308,26 +426,42 @@ function monthName($month) {
     </div>
 </main>
 
-<!-- Modal -->
 <div class="modal" id="khlModal">
     <div class="modal-content">
         <span class="close-btn" onclick="closeModal()">&times;</span>
-        <h3>Detail KHL</h3>
+        <h3 id="modalTitle">Detail KHL</h3>
         <div id="khlList"></div>
     </div>
 </div>
 
 <script>
 const khlData = <?= json_encode($khlData) ?>;
+const monthNames = {
+    1: 'Januari', 2: 'Februari', 3: 'Maret', 4: 'April',
+    5: 'Mei', 6: 'Juni', 7: 'Juli', 8: 'Agustus',
+    9: 'September', 10: 'Oktober', 11: 'November', 12: 'Desember'
+};
+
+function formatDisplayDate(dateString) {
+    const parts = dateString.split('-');
+    const year = parts[0];
+    const month = parseInt(parts[1], 10);
+    const day = parseInt(parts[2], 10);
+    return `${day} ${monthNames[month]} ${year}`;
+}
 
 function showDetail(date) {
     const modal = document.getElementById('khlModal');
     const list = document.getElementById('khlList');
+    const modalTitle = document.getElementById('modalTitle');
     const data = khlData[date];
+    
+    modalTitle.textContent = `Detail KHL Tanggal ${formatDisplayDate(date)}`;
 
-    if (!data) {
-        list.innerHTML = "<p>Tidak ada data KHL pada tanggal ini.</p>";
+    if (!data || data.length === 0) {
+        list.innerHTML = "<p style='text-align: center; color: #555; margin-top: 20px;'>Tidak ada data KHL pada tanggal ini.</p>";
     } else {
+        // Konten modal dikembalikan ke field yang tersedia di query awal
         let html = `<table>
                         <tr><th>Kode Karyawan</th><th>Divisi</th><th>Jabatan</th><th>Proyek</th><th>Jam Kerja</th></tr>`;
         data.forEach(d => {
@@ -352,6 +486,12 @@ function closeModal() {
 window.onclick = function(e) {
     if (e.target == document.getElementById('khlModal')) closeModal();
 }
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && document.getElementById('khlModal').style.display === 'flex') {
+        closeModal();
+    }
+});
 </script>
 
 </body>

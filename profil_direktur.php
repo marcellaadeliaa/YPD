@@ -60,6 +60,7 @@ $conn->close();
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Profil Saya - Direktur</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
     :root { 
         --primary-color: #1E105E; 
@@ -82,27 +83,88 @@ $conn->close();
         background: linear-gradient(180deg, var(--primary-color) 0%, #a29bb8 100%);
         min-height: 100vh;
         color: var(--text-color-dark);
+        padding-bottom: 40px;
     }
-    header {
-        background: var(--card-bg);
-        padding: 20px 40px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        box-shadow: 0 4px 15px var(--shadow-light);
+    
+    /* === PERBAIKAN HEADER DAN NAVIGASI DIMULAI DI SINI === */
+    header { 
+        background: var(--card-bg); 
+        padding: 20px 40px; 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        box-shadow: 0 4px 15px var(--shadow-light); 
     }
-    .logo { display: flex; align-items: center; gap: 16px; font-weight: 500; font-size: 20px; color: var(--text-color-dark); }
-    .logo img { width: 50px; height: 50px; object-fit: contain; border-radius: 50%; }
-    nav ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 30px; }
-    nav li { position: relative; }
-    nav a { text-decoration: none; color: var(--text-color-dark); font-weight: 600; padding: 8px 4px; display: block; transition: color 0.3s ease; }
-    nav a:hover { color: var(--accent-color); }
-    nav li ul {
-        display: none; position: absolute; top: 100%; left: 0; background: var(--card-bg); padding: 10px 0;
-        border-radius: 8px; box-shadow: 0 2px 10px var(--shadow-light); min-width: 200px; z-index: 999;
+    
+    .logo { 
+        display: flex; 
+        align-items: center; 
+        gap: 16px; 
+        font-weight: 500; 
+        font-size: 20px; 
+        color: var(--text-color-dark); 
     }
-    nav li:hover > ul { display: block; }
-    nav li ul li a { color: var(--text-color-dark); font-weight: 400; white-space: nowrap; padding: 5px 20px; }
+    
+    .logo img { 
+        width: 50px; 
+        height: 50px; 
+        object-fit: contain; 
+        border-radius: 50%; 
+    }
+    
+    nav ul { 
+        list-style: none; 
+        margin: 0; 
+        padding: 0; 
+        display: flex; 
+        gap: 40px; /* Jarak antar tombol navigasi utama */
+    }
+    
+    nav li { 
+        position: relative; 
+    }
+    
+    nav a { 
+        text-decoration: none; 
+        color: var(--text-color-dark); 
+        font-weight: 600; 
+        padding: 8px 4px; 
+        display: block; 
+    }
+    
+    nav li ul { 
+        display: none; 
+        position: absolute; 
+        top: 100%; 
+        left: 0; 
+        background: var(--card-bg); 
+        padding: 15px 0; /* Padding vertikal pada kotak dropdown */
+        border-radius: 8px; 
+        box-shadow: 0 2px 10px var(--shadow-light); 
+        min-width: 220px; 
+        z-index: 999; 
+    }
+    
+    nav li:hover > ul { 
+        display: block; 
+    }
+    
+    nav li ul li { 
+        margin-bottom: 7px; 
+        padding: 0; 
+    }
+
+    nav li ul li:last-child {
+        margin-bottom: 0; 
+    }
+    
+    nav li ul li a { 
+        color: var(--text-color-dark); 
+        font-weight: 400; 
+        white-space: nowrap; 
+        padding: 10px 25px; /* Padding yang lebih lega */
+    }
+    /* === AKHIR PERBAIKAN HEADER DAN NAVIGASI === */
     
     main {
         max-width: 1200px;
@@ -160,6 +222,30 @@ $conn->close();
     .error-message { background: var(--error-bg); color: var(--error-text); border-color: var(--error-border); }
 
     @media(max-width:768px) {
+        /* Tambahan responsive untuk header */
+        header { 
+            flex-direction: column; 
+            padding: 15px 20px; 
+            gap: 15px; 
+        }
+    
+        nav ul { 
+            flex-direction: column; 
+            gap: 10px; 
+            width: 100%; 
+        }
+    
+        nav li ul { 
+            position: static; 
+            box-shadow: none; 
+            border: 1px solid #e0e0e0; 
+            padding: 5px 0; 
+        }
+        
+        nav li ul li a {
+            padding: 8px 25px;
+        }
+        /* Akhir responsive header */
         .info-grid { grid-template-columns: 1fr; }
     }
 </style>
@@ -167,7 +253,10 @@ $conn->close();
 <body>
 
 <header>
-    <div class="logo"><img src="image/namayayasan.png" alt="Logo"><span>Yayasan Purba Danarta</span></div>
+    <div class="logo">
+        <img src="image/namayayasan.png" alt="Logo Yayasan">
+        <span>Yayasan Purba Danarta</span>
+    </div>
     <nav>
         <ul>
             <li><a href="dashboarddirektur.php">Beranda</a></li>

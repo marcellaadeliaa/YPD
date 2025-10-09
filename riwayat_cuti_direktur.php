@@ -357,7 +357,7 @@ $filtered_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
     </div>
     <nav>
         <ul>
-            <li><a href="dashboard_direktur.php">Beranda</a></li>
+            <li><a href="dashboarddirektur.php">Beranda</a></li>
             <li><a href="#">Cuti ▾</a>
                 <ul>
                     <li><a href="persetujuan_cuti_karyawan.php">Persetujuan Cuti</a></li>

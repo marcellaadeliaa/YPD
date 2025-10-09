@@ -149,7 +149,8 @@ $result = $stmt->get_result();
             margin: 0; 
             padding: 0; 
             display: flex; 
-            gap: 30px; 
+            /* PERBAIKAN: Menambah jarak antar tombol navigasi utama */
+            gap: 40px; /* Ditingkatkan dari 30px */
         }
         
         nav li { 
@@ -170,10 +171,11 @@ $result = $stmt->get_result();
             top: 100%; 
             left: 0; 
             background: var(--card-bg); 
-            padding: 10px 0; 
+            /* Menambah padding vertikal pada kotak dropdown secara keseluruhan */
+            padding: 15px 0; 
             border-radius: 8px; 
             box-shadow: 0 2px 10px var(--shadow-light); 
-            min-width: 200px; 
+            min-width: 220px; /* Sedikit dilebarkan untuk memberi ruang horizontal */
             z-index: 999; 
         }
         
@@ -181,11 +183,24 @@ $result = $stmt->get_result();
             display: block; 
         }
         
+        /* PERBAIKAN: Jarak antar item di dalam dropdown */
+        nav li ul li { 
+            /* Memberi jarak di bawah setiap item menu */
+            margin-bottom: 7px; /* Menambah jarak vertikal antar item */
+            /* Menghilangkan padding li agar padding hanya diatur pada <a> */
+            padding: 0; 
+        }
+
+        nav li ul li:last-child {
+            margin-bottom: 0; /* Menghilangkan margin bawah di item terakhir */
+        }
+        
         nav li ul li a { 
             color: var(--text-color-dark); 
             font-weight: 400; 
             white-space: nowrap; 
-            padding: 5px 20px; 
+            /* PERBAIKAN: Menambah padding untuk jarak atas/bawah/kiri/kanan yang lebih lega */
+            padding: 10px 25px; /* Ditingkatkan untuk memberi ruang yang cukup */
         }
         
         main { 
@@ -479,7 +494,7 @@ $result = $stmt->get_result();
     <div class="logo"><img src="image/namayayasan.png" alt="Logo"><span>Yayasan Purba Danarta</span></div>
     <nav>
         <ul>
-            <li><a href="dashboard_direktur.php">Beranda</a></li>
+            <li><a href="dashboarddirektur.php">Beranda</a></li>
             <li><a href="#">Cuti ▾</a>
                 <ul>
                     <li><a href="persetujuan_cuti_direktur.php">Persetujuan Cuti</a></li>
@@ -589,6 +604,7 @@ $result = $stmt->get_result();
                                         $start = new DateTime($row['tanggal_mulai']);
                                         $end = new DateTime($row['tanggal_akhir']);
                                         $interval = $start->diff($end);
+                                        // Menghitung hari inklusif, jadi +1
                                         echo ($interval->days + 1) . ' hari';
                                     ?>
                                 </div>
@@ -624,12 +640,11 @@ $result = $stmt->get_result();
         
         <div style="text-align: center; margin-top: 30px;">
             <a href="riwayat_cuti_direktur.php" class="back-link">📋 Lihat Riwayat Semua Cuti</a>
-            <a href="dashboard_direktur.php" class="back-link">← Kembali ke Dashboard</a>
+            <a href="dashboarddirektur.php" class="back-link">← Kembali ke Dashboard</a>
         </div>
     </div>
 </main>
 
-<!-- Modal untuk penolakan -->
 <div id="rejectModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">

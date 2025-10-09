@@ -83,9 +83,10 @@ $result = $stmt->get_result();
 <style>
     :root {
         --primary-color: #1E105E;
+        --secondary-color: #8897AE; /* Ditambahkan dari kode sebelumnya */
         --accent-color: #4a3f81;
         --card-bg: #fff;
-        --text-dark: #2e1f4f;
+        --text-dark: #2e1f4f; /* Diperbarui sesuai standar */
         --text-light: #fff;
         --shadow-light: rgba(0,0,0,0.15);
     }
@@ -100,10 +101,11 @@ $result = $stmt->get_result();
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         background: linear-gradient(180deg, var(--primary-color) 0%, #a29bb8 100%);
         min-height: 100vh;
-        color: var(--text-light);
+        color: var(--text-dark); /* Diperbarui untuk konten utama */
+        padding-bottom: 40px; /* Ditambahkan agar footer tidak menempel */
     }
 
-    /* HEADER STYLING SAMA PERSIS DENGAN DASHBOARD */
+    /* === PERBAIKAN HEADER DAN NAVIGASI DIMULAI DI SINI === */
     header { 
         background: var(--card-bg); 
         padding: 20px 40px; 
@@ -134,7 +136,7 @@ $result = $stmt->get_result();
         margin: 0; 
         padding: 0; 
         display: flex; 
-        gap: 30px; 
+        gap: 40px; /* PERBAIKAN: Menambah jarak antar tombol navigasi utama */
     }
     
     nav li { 
@@ -155,10 +157,10 @@ $result = $stmt->get_result();
         top: 100%; 
         left: 0; 
         background: var(--card-bg); 
-        padding: 10px 0; 
+        padding: 15px 0; /* Menambah padding vertikal pada kotak dropdown */
         border-radius: 8px; 
         box-shadow: 0 2px 10px var(--shadow-light); 
-        min-width: 200px; 
+        min-width: 220px; /* Diperlebar */
         z-index: 999; 
     }
     
@@ -166,12 +168,24 @@ $result = $stmt->get_result();
         display: block; 
     }
     
+    /* PERBAIKAN: Jarak antar item di dalam dropdown */
+    nav li ul li { 
+        margin-bottom: 7px; 
+        padding: 0; 
+    }
+
+    nav li ul li:last-child {
+        margin-bottom: 0; 
+    }
+    
     nav li ul li a { 
         color: var(--text-dark); 
         font-weight: 400; 
         white-space: nowrap; 
-        padding: 5px 20px; 
+        padding: 10px 25px; /* Ditingkatkan untuk memberi ruang yang cukup */
     }
+
+    /* === PERBAIKAN HEADER DAN NAVIGASI SELESAI DI SINI === */
 
     /* MAIN CONTENT */
     main {
@@ -376,22 +390,28 @@ $result = $stmt->get_result();
 
     /* RESPONSIVE DESIGN */
     @media (max-width: 768px) {
-        header {
-            flex-direction: column;
-            padding: 15px 20px;
-            gap: 15px;
+        /* Menggunakan style responsive dari kode sebelumnya */
+        header { 
+            flex-direction: column; 
+            padding: 15px 20px; 
+            gap: 15px; 
         }
-
-        nav ul {
-            flex-direction: column;
-            gap: 10px;
-            width: 100%;
+    
+        nav ul { 
+            flex-direction: column; 
+            gap: 10px; 
+            width: 100%; 
         }
-
-        nav li ul {
-            position: static;
-            box-shadow: none;
-            border: 1px solid #e0e0e0;
+    
+        nav li ul { 
+            position: static; 
+            box-shadow: none; 
+            border: 1px solid #e0e0e0; 
+            padding: 5px 0; /* Disesuaikan agar lebih ringkas di mobile */
+        }
+        
+        nav li ul li a {
+            padding: 8px 25px;
         }
 
         main {
@@ -414,14 +434,13 @@ $result = $stmt->get_result();
 <body>
 <header>
     <div class="logo">
-        <img src="image/namayayasan.png" alt="Logo Yayasan Purba Danarta">
+        <img src="image/namayayasan.png" alt="Logo Yayasan">
         <span>Yayasan Purba Danarta</span>
     </div>
     <nav>
         <ul>
             <li><a href="dashboarddirektur.php">Beranda</a></li>
-            <li>
-                <a href="#">Cuti ▾</a>
+            <li><a href="#">Cuti ▾</a>
                 <ul>
                     <li><a href="persetujuan_cuti_direktur.php">Persetujuan Cuti</a></li>
                     <li><a href="riwayat_cuti_direktur.php">Riwayat Semua Cuti</a></li>
@@ -429,8 +448,7 @@ $result = $stmt->get_result();
                     <li><a href="kalender_cuti_direktur.php">Kalender Cuti</a></li>
                 </ul>
             </li>
-            <li>
-                <a href="#">KHL ▾</a>
+            <li><a href="#">KHL ▾</a>
                 <ul>
                     <li><a href="persetujuan_khl_direktur.php">Persetujuan KHL</a></li>
                     <li><a href="riwayat_khl_direktur.php">Riwayat Semua KHL</a></li>
@@ -438,20 +456,17 @@ $result = $stmt->get_result();
                     <li><a href="kalender_khl_direktur.php">Kalender KHL</a></li>
                 </ul>
             </li>
-            <li>
-                <a href="#">Karyawan ▾</a>
+            <li><a href="#">Karyawan ▾</a>
                 <ul>
                     <li><a href="data_karyawan_direktur.php">Data Karyawan</a></li>
                 </ul>
             </li>
-            <li>
-                <a href="#">Pelamar ▾</a>
+            <li><a href="#">Pelamar ▾</a>
                 <ul>
                     <li><a href="riwayat_pelamar.php">Riwayat Pelamar</a></li>
                 </ul>
             </li>
-            <li>
-                <a href="#">Profil ▾</a>
+            <li><a href="#">Profil ▾</a>
                 <ul>
                     <li><a href="profil_direktur.php">Profil Saya</a></li>
                     <li><a href="logout2.php">Logout</a></li>
@@ -460,7 +475,6 @@ $result = $stmt->get_result();
         </ul>
     </nav>
 </header>
-
 <main>
     <h1>Persetujuan Kehadiran Harian Lepas (KHL)</h1>
     <p class="subtitle">Kelola dan verifikasi pengajuan KHL dari seluruh karyawan.</p>
@@ -526,7 +540,6 @@ $result = $stmt->get_result();
     <?php endif; ?>
 </main>
 
-<!-- Modal Penolakan -->
 <div id="rejectModal" class="modal">
     <div class="modal-content">
         <h3>Alasan Penolakan KHL</h3>
@@ -589,3 +602,4 @@ document.addEventListener('keydown', function(e) {
 <?php
 $stmt->close();
 $conn->close();
+?>

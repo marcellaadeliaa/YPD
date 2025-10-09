@@ -10,7 +10,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'direktur') {
 
 // Ambil data karyawan dari database
 $sql = "SELECT id_karyawan, kode_karyawan, nama_lengkap, email, password, jabatan, divisi, role, no_telp, 
-               sisa_cuti_tahunan, sisa_cuti_lustrum, status_aktif, created_at 
+             sisa_cuti_tahunan, sisa_cuti_lustrum, status_aktif, created_at 
         FROM data_karyawan 
         ORDER BY kode_karyawan";
 $result = $conn->query($sql);
@@ -31,23 +31,113 @@ if ($result && $result->num_rows > 0) {
 <title>Data Karyawan - Direktur</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-    body { margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg,#1E105E 0%,#8897AE 100%); min-height:100vh; color:#333; }
-    header { background:#fff; padding:20px 40px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #34377c; }
-    .logo { display:flex; align-items:center; gap:16px; font-weight:500; font-size:20px; color:#2e1f4f; }
-    .logo img { width:50px; height:50px; object-fit:contain; border-radius:50%; }
-    nav ul { list-style:none; margin:0; padding:0; display:flex; gap:30px; }
-    nav li { position:relative; }
-    nav a { text-decoration:none; color:#333; font-weight:600; padding:8px 4px; display:block; }
-    nav li ul { display:none; position:absolute; top:100%; left:0; background:#fff; padding:10px 0; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.15); min-width:200px; z-index:999; }
-    nav li:hover > ul { display:block; }
-    nav li ul li { padding:5px 20px; }
-    nav li ul li a { color:#333; font-weight:400; white-space:nowrap; }
+    /* CSS Variables */
+    :root { 
+        --primary-color: #1E105E; 
+        --secondary-color: #8897AE; 
+        --accent-color: #4a3f81; 
+        --card-bg: #FFFFFF; 
+        --text-color-light: #fff; 
+        --text-color-dark: #2e1f4f; 
+        --shadow-light: rgba(0,0,0,0.15); 
+    }
+
+    body { 
+        margin:0; 
+        font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+        background: linear-gradient(180deg, var(--primary-color) 0%, #a29bb8 100%); 
+        min-height:100vh; 
+        color:#333; 
+        padding-bottom: 40px;
+    }
+
+    /* === PERBAIKAN HEADER DAN NAVIGASI DIMULAI DI SINI === */
+    header { 
+        background: var(--card-bg); 
+        padding: 20px 40px; 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        box-shadow: 0 4px 15px var(--shadow-light); 
+    }
+    
+    .logo { 
+        display: flex; 
+        align-items: center; 
+        gap: 16px; 
+        font-weight: 500; 
+        font-size: 20px; 
+        color: var(--text-color-dark); 
+    }
+    
+    .logo img { 
+        width: 50px; 
+        height: 50px; 
+        object-fit: contain; 
+        border-radius: 50%; 
+    }
+    
+    nav ul { 
+        list-style: none; 
+        margin: 0; 
+        padding: 0; 
+        display: flex; 
+        gap: 40px; /* Jarak antar tombol navigasi utama */
+    }
+    
+    nav li { 
+        position: relative; 
+    }
+    
+    nav a { 
+        text-decoration: none; 
+        color: var(--text-color-dark); 
+        font-weight: 600; 
+        padding: 8px 4px; 
+        display: block; 
+    }
+    
+    nav li ul { 
+        display: none; 
+        position: absolute; 
+        top: 100%; 
+        left: 0; 
+        background: var(--card-bg); 
+        padding: 15px 0; /* Padding vertikal pada kotak dropdown */
+        border-radius: 8px; 
+        box-shadow: 0 2px 10px var(--shadow-light); 
+        min-width: 220px; 
+        z-index: 999; 
+    }
+    
+    nav li:hover > ul { 
+        display: block; 
+    }
+    
+    /* Jarak antar item di dalam dropdown */
+    nav li ul li { 
+        margin-bottom: 7px; 
+        padding: 0; 
+    }
+
+    nav li ul li:last-child {
+        margin-bottom: 0; 
+    }
+    
+    nav li ul li a { 
+        color: var(--text-color-dark); 
+        font-weight: 400; 
+        white-space: nowrap; 
+        padding: 10px 25px; /* Padding yang lebih lega */
+    }
+    /* === AKHIR PERBAIKAN HEADER DAN NAVIGASI === */
+
     main { max-width:1400px; margin:40px auto; padding:0 20px; }
     h1, p.admin-title { color: #fff; }
     h1 { font-size:28px; margin-bottom:10px; }
     p.admin-title { font-size:16px; margin-top:0; margin-bottom:30px; opacity:0.9; }
     .card { background:#fff; border-radius:20px; padding:30px 40px; box-shadow:0 2px 10px rgba(0,0,0,0.15); }
-    .page-title { font-size:28px; font-weight:600; text-align:center; margin-bottom:30px; color:#1E105E; }
+    .page-title { font-size:28px; font-weight:600; text-align:center; margin-bottom:30px; color:var(--primary-color); }
 
     .search-container { display:flex; gap:10px; margin-bottom:25px; align-items:center; }
     .search-box { flex-grow:1; position:relative; }
@@ -65,6 +155,31 @@ if ($result && $result->num_rows > 0) {
     .no-results { text-align:center; padding:20px; color:#666; font-style:italic; }
 
     @media (max-width:768px) {
+        /* Tambahan responsive untuk header */
+        header { 
+            flex-direction: column; 
+            padding: 15px 20px; 
+            gap: 15px; 
+        }
+    
+        nav ul { 
+            flex-direction: column; 
+            gap: 10px; 
+            width: 100%; 
+        }
+    
+        nav li ul { 
+            position: static; 
+            box-shadow: none; 
+            border: 1px solid #e0e0e0; 
+            padding: 5px 0; 
+        }
+        
+        nav li ul li a {
+            padding: 8px 25px;
+        }
+        /* Akhir responsive header */
+        
         .search-container { flex-wrap:wrap; }
         .data-table { display:block; overflow-x:auto; }
     }
@@ -79,22 +194,31 @@ if ($result && $result->num_rows > 0) {
     </div>
     <nav>
         <ul>
-            <li><a href="dashboard_direktur.php">Beranda</a></li>
+            <li><a href="dashboarddirektur.php">Beranda</a></li>
             <li><a href="#">Cuti ▾</a>
                 <ul>
-                    <li><a href="persetujuan_cuti_karyawan.php">Persetujuan Cuti</a></li>
-                    <li><a href="riwayat_cuti_direktur.php">Riwayat Cuti</a></li>
+                    <li><a href="persetujuan_cuti_direktur.php">Persetujuan Cuti</a></li>
+                    <li><a href="riwayat_cuti_direktur.php">Riwayat Semua Cuti</a></li>
+                    <li><a href="riwayat_cuti_pribadi_direktur.php">Riwayat Cuti Pribadi</a></li>
+                    <li><a href="kalender_cuti_direktur.php">Kalender Cuti</a></li>
                 </ul>
             </li>
             <li><a href="#">KHL ▾</a>
                 <ul>
                     <li><a href="persetujuan_khl_direktur.php">Persetujuan KHL</a></li>
-                    <li><a href="riwayat_khl_direktur.php">Riwayat KHL</a></li>
+                    <li><a href="riwayat_khl_direktur.php">Riwayat Semua KHL</a></li>
+                    <li><a href="riwayat_khl_pribadi_direktur.php">Riwayat KHL Pribadi</a></li>
+                    <li><a href="kalender_khl_direktur.php">Kalender KHL</a></li>
                 </ul>
             </li>
             <li><a href="#">Karyawan ▾</a>
                 <ul>
                     <li><a href="data_karyawan_direktur.php">Data Karyawan</a></li>
+                </ul>
+            </li>
+            <li><a href="#">Pelamar ▾</a>
+                <ul>
+                    <li><a href="riwayat_pelamar.php">Riwayat Pelamar</a></li>
                 </ul>
             </li>
             <li><a href="#">Profil ▾</a>
@@ -175,7 +299,22 @@ function performSearch() {
     const rows = document.querySelectorAll('#tableBody tr');
     let found = false;
 
+    // Hapus pesan "Belum ada data karyawan" jika ada
+    const initialNoData = document.querySelector('.no-results');
+    if (initialNoData && initialNoData.textContent.includes('Belum ada data karyawan')) {
+         // Jangan tampilkan pesan "Tidak ada hasil" jika ini adalah pesan awal
+    } else {
+        const existingNoResults = document.getElementById('noResults');
+        if (existingNoResults) existingNoResults.remove();
+    }
+
+
     rows.forEach(row => {
+        // Lewati baris "Belum ada data karyawan"
+        if (row.querySelector('.no-results') && row.querySelector('.no-results').textContent.includes('Belum ada data karyawan')) {
+            return;
+        }
+
         const text = row.textContent.toLowerCase();
         if (text.includes(term)) {
             row.style.display = '';
@@ -187,11 +326,15 @@ function performSearch() {
 
     const noResults = document.getElementById('noResults');
     if (!found && term !== '') {
-        if (!noResults) {
-            const tr = document.createElement('tr');
-            tr.id = 'noResults';
-            tr.innerHTML = `<td colspan="10" class="no-results">Tidak ada hasil untuk "${term}"</td>`;
-            document.getElementById('tableBody').appendChild(tr);
+        // Cek apakah ada pesan "Belum ada data karyawan" di awal
+        const initialRowCount = <?= count($karyawan) ?>;
+        if (initialRowCount > 0) { // Hanya tampilkan pesan "Tidak ada hasil" jika memang ada data awal
+            if (!noResults) {
+                const tr = document.createElement('tr');
+                tr.id = 'noResults';
+                tr.innerHTML = `<td colspan="10" class="no-results">Tidak ada hasil untuk "${term}"</td>`;
+                document.getElementById('tableBody').appendChild(tr);
+            }
         }
     } else if (noResults) {
         noResults.remove();
