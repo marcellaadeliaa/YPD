@@ -12,7 +12,6 @@ $nama_pj = $user['nama_lengkap'];
 $divisi_pj = $user['divisi'];
 $jabatan = "Penanggung Jawab Divisi " . $divisi_pj;
 
-// Hitung Cuti Menunggu
 $stmt_cuti = $conn->prepare("SELECT COUNT(id) as total 
                             FROM data_pengajuan_cuti 
                             WHERE divisi = ? 
@@ -24,7 +23,6 @@ $stmt_cuti->execute();
 $cuti_menunggu = $stmt_cuti->get_result()->fetch_assoc()['total'] ?? 0;
 $stmt_cuti->close();
 
-// Hitung KHL Menunggu
 $stmt_khl = $conn->prepare("SELECT COUNT(id_khl) as total 
                            FROM data_pengajuan_khl 
                            WHERE divisi = ? 
@@ -36,7 +34,6 @@ $stmt_khl->execute();
 $khl_menunggu = $stmt_khl->get_result()->fetch_assoc()['total'] ?? 0;
 $stmt_khl->close();
 
-// Hitung Total Karyawan
 $stmt_karyawan = $conn->prepare("SELECT COUNT(id_karyawan) AS total 
                                 FROM data_karyawan 
                                 WHERE divisi = ? 
@@ -47,7 +44,6 @@ $stmt_karyawan->execute();
 $total_karyawan_divisi = $stmt_karyawan->get_result()->fetch_assoc()['total'] ?? 0;
 $stmt_karyawan->close();
 
-// 5 pengajuan cuti terbaru
 $stmt_recent_cuti = $conn->prepare("SELECT nama_karyawan, jenis_cuti, tanggal_mulai, tanggal_akhir, created_at 
                                     FROM data_pengajuan_cuti 
                                     WHERE divisi = ? 
@@ -60,7 +56,6 @@ $stmt_recent_cuti->execute();
 $recent_cuti = $stmt_recent_cuti->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt_recent_cuti->close();
 
-// 5 pengajuan khl terbaru
 $stmt_recent_khl = $conn->prepare("SELECT kode_karyawan, proyek, tanggal_khl, tanggal_cuti_khl, created_at 
                                    FROM data_pengajuan_khl 
                                    WHERE divisi = ? 
@@ -211,9 +206,7 @@ $conn->close();
         </div>
     </div>
 
-    <!-- Dua tabel berdampingan -->
     <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-        <!-- Cuti -->
         <div class="card" style="flex: 1; min-width: 48%;">
             <h3>5 Pengajuan Cuti Terbaru (Menunggu Persetujuan)</h3>
             <?php if (count($recent_cuti) > 0): ?>

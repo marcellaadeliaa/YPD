@@ -2,7 +2,6 @@
 session_start();
 require 'config.php';
 
-// Cek apakah user sudah login sebagai penanggung jawab
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'penanggung jawab') {
     header("Location: login_karyawan.php");
     exit();
@@ -14,14 +13,12 @@ $nama_pj = $user['nama_lengkap'];
 $divisi_pj = $user['divisi'];
 $jabatan = "Penanggung Jawab Divisi " . $divisi_pj;
 
-// --- KONFIGURASI PAGINASI ---
-$limit = 5; // Hanya tampilkan 5 data per halaman
+$limit = 5; 
 $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
 if ($page < 1) $page = 1;
 
 $offset = ($page - 1) * $limit;
 
-// --- QUERY UTAMA DENGAN LIMIT & OFFSET ---
 $sql = "SELECT * FROM data_pengajuan_cuti 
         WHERE kode_karyawan = ? 
         ORDER BY created_at DESC
@@ -36,7 +33,6 @@ while ($row = $result->fetch_assoc()) {
     $riwayat_cuti[] = $row;
 }
 
-// --- QUERY UNTUK TOTAL DATA (untuk pagination) ---
 $sql_total = "SELECT COUNT(*) as total FROM data_pengajuan_cuti WHERE kode_karyawan = ?";
 $stmt_total = $conn->prepare($sql_total);
 $stmt_total->bind_param("s", $kode_karyawan);
@@ -45,7 +41,6 @@ $result_total = $stmt_total->get_result();
 $total_data = $result_total->fetch_assoc()['total'];
 $total_pages = ceil($total_data / $limit);
 
-// --- HITUNG STATISTIK (dari semua data) ---
 $sql_stats = "SELECT 
               COUNT(*) as total,
               SUM(CASE WHEN status = 'Diterima' THEN 1 ELSE 0 END) as diterima,
@@ -64,15 +59,14 @@ $diterima_count = $stats['diterima'];
 $ditolak_count = $stats['ditolak'];
 $menunggu_count = $stats['menunggu'];
 
-// Function untuk menghitung hari kerja (Senin-Jumat)
 function hitungHariKerja($tanggal_mulai, $tanggal_akhir) {
     $jumlah_hari = 0;
     $current_date = new DateTime($tanggal_mulai);
     $end_date = new DateTime($tanggal_akhir);
     
     while ($current_date <= $end_date) {
-        $day_of_week = $current_date->format('N'); // 1=Senin, 7=Minggu
-        if ($day_of_week >= 1 && $day_of_week <= 5) { // Senin-Jumat
+        $day_of_week = $current_date->format('N'); 
+        if ($day_of_week >= 1 && $day_of_week <= 5) { 
             $jumlah_hari++;
         }
         $current_date->modify('+1 day');
@@ -81,7 +75,6 @@ function hitungHariKerja($tanggal_mulai, $tanggal_akhir) {
     return $jumlah_hari;
 }
 
-// Hitung total hari kerja yang sudah diambil (dari semua data yang diterima)
 $sql_hari_kerja = "SELECT tanggal_mulai, tanggal_akhir FROM data_pengajuan_cuti 
                    WHERE kode_karyawan = ? AND status = 'Diterima'";
 $stmt_hari_kerja = $conn->prepare($sql_hari_kerja);
@@ -402,7 +395,6 @@ $conn->close();
             line-height: 1.3;
         }
         
-        /* --- GAYA PAGINASI BARU --- */
         .pagination-wrapper {
             background-color: #f8f9fa;
             padding: 20px 15px;
@@ -533,7 +525,6 @@ $conn->close();
             <div class="hari-kerja-info">📝 Catatan: Sabtu & Minggu tidak terhitung sebagai hari cuti</div>
         </div>
 
-        <!-- Info Pagination -->
         <div class="info-pagination">
             Menampilkan <?php echo count($riwayat_cuti); ?> dari <?php echo $total_data; ?> cuti 
             (Halaman <?php echo $page; ?> dari <?php echo $total_pages; ?>)
@@ -573,11 +564,9 @@ $conn->close();
                         foreach ($riwayat_cuti as $cuti): 
                         ?>
                             <?php
-                            // Hitung hari kerja
                             $jumlah_hari_kerja = hitungHariKerja($cuti['tanggal_mulai'], $cuti['tanggal_akhir']);
                             $total_hari_kalender = (strtotime($cuti['tanggal_akhir']) - strtotime($cuti['tanggal_mulai'])) / (60 * 60 * 24) + 1;
                             
-                            // Tentukan badge class berdasarkan jenis cuti
                             $badge_class = '';
                             switch ($cuti['jenis_cuti']) {
                                 case 'Tahunan':
@@ -596,7 +585,6 @@ $conn->close();
                                     $badge_class = 'badge-tahunan';
                             }
                             
-                            // Tentukan status class
                             $status_class = '';
                             $status_text = '';
                             switch ($cuti['status']) {
@@ -677,18 +665,15 @@ $conn->close();
                     </tbody>
                 </table>
 
-                <!-- PAGINATION -->
                 <?php if ($total_pages > 1): ?>
                 <div class="pagination-wrapper">
                     <?php
-                    // Tombol Sebelumnya
                     if ($page > 1) {
                         echo '<a href="?page=' . ($page - 1) . '">‹ Sebelumnya</a>';
                     } else {
                         echo '<span class="disabled">‹ Sebelumnya</span>';
                     }
 
-                    // Nomor halaman
                     $range = 1;
                     if ($page > ($range + 1)) {
                         echo '<a href="?page=1">1</a>';
@@ -712,7 +697,6 @@ $conn->close();
                         echo '<a href="?page=' . $total_pages . '">' . $total_pages . '</a>';
                     }
 
-                    // Tombol Selanjutnya
                     if ($page < $total_pages) {
                         echo '<a href="?page=' . ($page + 1) . '">Selanjutnya ›</a>';
                     } else {
@@ -725,7 +709,6 @@ $conn->close();
             <?php endif; ?>
         </div>
 
-        <!-- STATISTIK -->
         <?php if (!empty($riwayat_cuti)): ?>
             <div style="margin-top: 30px; padding: 15px; background: #f8f9fa; border-radius: 10px;">
                 <h4 style="margin-top: 0; color: var(--primary-color);">Statistik Pengajuan Cuti</h4>
@@ -757,7 +740,6 @@ $conn->close();
 </main>
 
 <script>
-// Konfirmasi sebelum menghapus
 function confirmDelete(cutiId) {
     if (confirm('Apakah Anda yakin ingin menghapus pengajuan cuti ini?')) {
         window.location.href = 'hapus_cuti.php?id=' + cutiId;
@@ -765,7 +747,6 @@ function confirmDelete(cutiId) {
     return false;
 }
 
-// Tooltip untuk alasan yang dipotong
 document.addEventListener('DOMContentLoaded', function() {
     const alasanElements = document.querySelectorAll('.alasan-text');
     alasanElements.forEach(function(el) {

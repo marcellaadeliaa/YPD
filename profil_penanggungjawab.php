@@ -2,16 +2,13 @@
 session_start();
 require_once 'config.php';
 
-// Cek apakah user sudah login dan perannya adalah penanggung jawab
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'penanggung jawab') {
     header("Location: login_karyawan.php");
     exit;
 }
 
-// Ambil id_karyawan dari session
 $user_id = $_SESSION['user']['id_karyawan'];
 
-// Ambil data karyawan dari database
 $sql = "SELECT * FROM data_karyawan WHERE id_karyawan = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $user_id);
@@ -20,19 +17,16 @@ $result = $stmt->get_result();
 $karyawan = $result->fetch_assoc();
 $stmt->close();
 
-// Jika data tidak ditemukan, redirect ke login
 if (!$karyawan) {
     header("Location: login_karyawan.php");
     exit;
 }
 
-// Proses update no telepon
 $success_message = '';
 $error_message = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_telepon'])) {
     $no_telp_baru = $_POST['no_telp'] ?? '';
     
-    // Validasi sederhana: pastikan tidak kosong dan numerik
     if (!empty($no_telp_baru) && is_numeric($no_telp_baru)) {
         $update_sql = "UPDATE data_karyawan SET no_telp = ? WHERE id_karyawan = ?";
         $update_stmt = $conn->prepare($update_sql);
@@ -40,9 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_telepon'])) {
         
         if ($update_stmt->execute()) {
             $success_message = "Nomor telepon berhasil diupdate!";
-            // Update data di variabel lokal untuk ditampilkan langsung
             $karyawan['no_telp'] = $no_telp_baru;
-            // Update juga data di session jika perlu
             $_SESSION['user']['no_telp'] = $no_telp_baru;
         } else {
             $error_message = "Gagal mengupdate nomor telepon. Silakan coba lagi.";
@@ -104,9 +96,8 @@ $conn->close();
     nav li:hover > ul { display: block; }
     nav li ul li a { color: var(--text-color-dark); font-weight: 400; white-space: nowrap; padding: 5px 20px; }
     
-    /* === PERUBAHAN CSS DI SINI === */
     main {
-        max-width: 1200px; /* Diubah agar konsisten */
+        max-width: 1200px; 
         margin: 40px auto;
         padding: 0 20px;
     }
@@ -124,12 +115,12 @@ $conn->close();
         opacity: 0.9;
         color: #fff;
     }
-    /* === AKHIR PERUBAHAN CSS === */
+
     
     .card {
         width: 100%;
-        max-width: 800px; /* Sedikit diperlebar agar tidak terlalu sempit */
-        margin: 0 auto; /* Tambahkan ini agar kartu di tengah */
+        max-width: 800px; 
+        margin: 0 auto; 
         background: var(--card-bg);
         border-radius: 15px;
         padding: 30px 40px;

@@ -644,7 +644,6 @@ $rows_for_current_page = array_slice($filtered_rows, $offset, $limit);
                 </thead>
                 <tbody>
                     <?php 
-                    // Nomor urut disesuaikan dengan halaman
                     $no = $offset + 1;
                     foreach ($rows_for_current_page as $row): 
                     ?>
@@ -696,30 +695,17 @@ $rows_for_current_page = array_slice($filtered_rows, $offset, $limit);
             <?php if ($total_pages > 1): ?>
 <div class="pagination-wrapper">
     <?php
-    // BAGIAN 1: PERSIAPAN URL
-    // ------------------------------------
-    // Ambil semua parameter GET yang ada (untuk filter) dan hapus parameter 'page'
     $query_params = $_GET;
     unset($query_params['page']);
-    // Bangun kembali query string agar filter tidak hilang saat berpindah halaman
     $base_url = http_build_query($query_params);
     $ampersand = !empty($base_url) ? '&' : '';
 
-    // BAGIAN 2: TOMBOL "SEBELUMNYA"
-    // ------------------------------------
-    // Tampilkan tombol 'Sebelumnya' jika halaman saat ini bukan halaman pertama
     if ($page > 1) {
         echo '<a href="?' . $base_url . $ampersand . 'page=' . ($page - 1) . '">‹ Sebelumnya</a>';
     } else {
         echo '<span class="disabled">‹ Sebelumnya</span>';
     }
 
-    // BAGIAN 3: LOGIKA NOMOR HALAMAN
-    // ------------------------------------
-    // Aturan: Tampilkan beberapa halaman di sekitar halaman aktif, dan gunakan '...' untuk mempersingkat
-    $range = 1; // Jumlah halaman yang ditampilkan di kiri dan kanan halaman aktif
-
-    // Tampilkan halaman pertama dan '...' jika perlu
     if ($page > ($range + 1)) {
         echo '<a href="?' . $base_url . $ampersand . 'page=1">1</a>';
         if ($page > ($range + 2)) {
@@ -727,18 +713,14 @@ $rows_for_current_page = array_slice($filtered_rows, $offset, $limit);
         }
     }
 
-    // Loop utama untuk nomor halaman
-    // Mencetak nomor halaman dari (halaman_aktif - range) hingga (halaman_aktif + range)
     for ($i = max(1, $page - $range); $i <= min($total_pages, $page + $range); $i++) {
         if ($i == $page) {
-            // Tandai halaman yang sedang aktif
             echo '<span class="active">' . $i . '</span>';
         } else {
             echo '<a href="?' . $base_url . $ampersand . 'page=' . $i . '">' . $i . '</a>';
         }
     }
 
-    // Tampilkan halaman terakhir dan '...' jika perlu
     if ($page < ($total_pages - $range)) {
         if ($page < ($total_pages - $range - 1)) {
             echo '<span class="ellipsis">...</span>';
@@ -746,9 +728,6 @@ $rows_for_current_page = array_slice($filtered_rows, $offset, $limit);
         echo '<a href="?' . $base_url . $ampersand . 'page=' . $total_pages . '">' . $total_pages . '</a>';
     }
 
-    // BAGIAN 4: TOMBOL "SELANJUTNYA"
-    // ------------------------------------
-    // Tampilkan tombol 'Selanjutnya' jika halaman saat ini bukan halaman terakhir
     if ($page < $total_pages) {
         echo '<a href="?' . $base_url . $ampersand . 'page=' . ($page + 1) . '">Selanjutnya ›</a>';
     } else {
@@ -774,7 +753,6 @@ $rows_for_current_page = array_slice($filtered_rows, $offset, $limit);
 </html>
 
 <?php
-// Tutup koneksi
 $stmt->close();
 $conn->close();
 ?>

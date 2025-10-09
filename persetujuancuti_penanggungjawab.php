@@ -11,15 +11,14 @@ $user = $_SESSION['user'];
 $divisi_penanggung_jawab = $user['divisi'];
 $nama_pj = $user['nama_lengkap'];
 
-// Function untuk menghitung hari kerja (Senin-Jumat)
 function hitungHariKerja($tanggal_mulai, $tanggal_akhir) {
     $jumlah_hari = 0;
     $current_date = new DateTime($tanggal_mulai);
     $end_date = new DateTime($tanggal_akhir);
     
     while ($current_date <= $end_date) {
-        $day_of_week = $current_date->format('N'); // 1=Senin, 7=Minggu
-        if ($day_of_week >= 1 && $day_of_week <= 5) { // Senin-Jumat
+        $day_of_week = $current_date->format('N'); 
+        if ($day_of_week >= 1 && $day_of_week <= 5) { 
             $jumlah_hari++;
         }
         $current_date->modify('+1 day');
@@ -28,20 +27,17 @@ function hitungHariKerja($tanggal_mulai, $tanggal_akhir) {
     return $jumlah_hari;
 }
 
-// Cek jika ada parameter message dari redirect
 if (isset($_GET['message']) && isset($_GET['message_type'])) {
     $message = $_GET['message'];
     $message_type = $_GET['message_type'];
 }
 
-// Proses persetujuan/tolak cuti
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['action']) && isset($_POST['id_cuti'])) {
         $id_cuti = $_POST['id_cuti'];
         $action = $_POST['action'];
         $alasan_penolakan = isset($_POST['alasan_penolakan']) ? trim($_POST['alasan_penolakan']) : '';
         
-        // Validasi apakah cuti tersebut termasuk dalam divisi penanggung jawab dan dari karyawan
         $check_query = "SELECT dpc.*, dk.sisa_cuti_tahunan, dk.sisa_cuti_lustrum, dk.divisi, dk.role 
                        FROM data_pengajuan_cuti dpc 
                        JOIN data_karyawan dk ON dpc.kode_karyawan = dk.kode_karyawan 
@@ -54,17 +50,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($check_result->num_rows > 0) {
             $cuti_data = $check_result->fetch_assoc();
             
-            // Jika menolak, validasi alasan penolakan
             if ($action == 'reject' && empty($alasan_penolakan)) {
                 $message = "Harap berikan alasan penolakan";
                 $message_type = "error";
             } else {
-                // Validasi sisa cuti jika approve
                 if ($action == 'approve') {
-                    // Hitung hari kerja (Senin-Jumat saja)
                     $jumlah_hari = hitungHariKerja($cuti_data['tanggal_mulai'], $cuti_data['tanggal_akhir']);
                     
-                    // Cek ketersediaan cuti berdasarkan jenis
                     if ($cuti_data['jenis_cuti'] == 'Tahunan') {
                         if ($cuti_data['sisa_cuti_tahunan'] < $jumlah_hari) {
                             $message = "Sisa cuti tahunan tidak mencukupi. Sisa: " . $cuti_data['sisa_cuti_tahunan'] . " hari kerja, Butuh: " . $jumlah_hari . " hari kerja";
@@ -77,23 +69,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         }
                     }
                     
-                    // Jika ada error validasi, jangan lanjutkan
                     if (isset($message) && $message_type == 'error') {
-                        // Tetap di halaman ini dengan pesan error
                     } else {
-                        // Update status cuti - biarkan trigger yang menangani pengurangan sisa cuti
                         $new_status = 'Diterima';
                         $waktu_persetujuan = date('Y-m-d H:i:s');
                         
                         $update_query = "UPDATE data_pengajuan_cuti SET status = ?, alasan = ?, waktu_persetujuan = ? WHERE id = ?";
                         $update_stmt = $conn->prepare($update_query);
                         
-                        $alasan_update = $cuti_data['alasan']; // Tetap gunakan alasan asli
+                        $alasan_update = $cuti_data['alasan']; 
                         
                         $update_stmt->bind_param("sssi", $new_status, $alasan_update, $waktu_persetujuan, $id_cuti);
                         
                         if ($update_stmt->execute()) {
-                            // TIDAK ADA pengurangan manual di sini - biarkan trigger yang memanggil stored procedure
                             header("Location: persetujuancuti_penanggungjawab.php?message=Cuti berhasil disetujui&message_type=success");
                             exit();
                         } else {
@@ -104,7 +92,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         $update_stmt->close();
                     }
                 } else {
-                    // Untuk reject
                     $new_status = 'Ditolak';
                     $waktu_persetujuan = date('Y-m-d H:i:s');
                     
@@ -133,7 +120,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-// Ambil data cuti yang sesuai dengan divisi penanggung jawab dan hanya dari karyawan dengan status pending
 $query = "SELECT dpc.*, dk.nama_lengkap, dk.divisi, dk.role, dk.sisa_cuti_tahunan, dk.sisa_cuti_lustrum
           FROM data_pengajuan_cuti dpc 
           JOIN data_karyawan dk ON dpc.kode_karyawan = dk.kode_karyawan 
@@ -434,7 +420,6 @@ $result = $stmt->get_result();
             font-weight: bold;
         }
         
-        /* Modal Styles */
         .modal {
             display: none;
             position: fixed;
@@ -609,11 +594,9 @@ $result = $stmt->get_result();
                     <?php $no = 1; ?>
                     <?php while ($row = $result->fetch_assoc()): ?>
                         <?php
-                        // Hitung jumlah hari kerja (Senin-Jumat)
                         $jumlah_hari_kerja = hitungHariKerja($row['tanggal_mulai'], $row['tanggal_akhir']);
                         $total_hari_kalender = (strtotime($row['tanggal_akhir']) - strtotime($row['tanggal_mulai'])) / (60 * 60 * 24) + 1;
                         
-                        // Tentukan class warning berdasarkan sisa cuti
                         $warning_class = '';
                         if ($row['jenis_cuti'] == 'Tahunan' && $row['sisa_cuti_tahunan'] < $jumlah_hari_kerja) {
                             $warning_class = 'danger';
@@ -691,7 +674,6 @@ $result = $stmt->get_result();
     </div>
 </main>
 
-<!-- Modal untuk penolakan -->
 <div id="rejectModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -723,7 +705,6 @@ $result = $stmt->get_result();
         document.getElementById('alasan_penolakan').value = '';
     }
     
-    // Tutup modal ketika klik di luar modal
     window.onclick = function(event) {
         const modal = document.getElementById('rejectModal');
         if (event.target === modal) {
@@ -731,7 +712,6 @@ $result = $stmt->get_result();
         }
     }
     
-    // Validasi form penolakan
     document.getElementById('rejectForm').addEventListener('submit', function(e) {
         const alasan = document.getElementById('alasan_penolakan').value.trim();
         if (!alasan) {
@@ -742,7 +722,6 @@ $result = $stmt->get_result();
         return confirm('Apakah Anda yakin ingin menolak cuti ini?');
     });
 
-    // Tambahkan konfirmasi khusus untuk cuti dengan sisa sedikit
     document.querySelectorAll('.btn-approve').forEach(button => {
         button.addEventListener('click', function(e) {
             const row = this.closest('tr');
@@ -759,7 +738,6 @@ $result = $stmt->get_result();
 </html>
 
 <?php
-// Tutup koneksi
 $stmt->close();
 $conn->close();
 ?>

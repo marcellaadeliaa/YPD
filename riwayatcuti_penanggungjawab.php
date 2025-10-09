@@ -11,7 +11,6 @@ $user = $_SESSION['user'];
 $divisi_penanggung_jawab = $user['divisi'];
 $nama_pj = $user['nama_lengkap'];
 
-// Ambil data riwayat cuti yang sesuai dengan divisi penanggung jawab
 $query = "SELECT dpc.*, dk.nama_lengkap, dk.divisi, dk.role, dk.sisa_cuti_tahunan, dk.sisa_cuti_lustrum
           FROM data_pengajuan_cuti dpc 
           JOIN data_karyawan dk ON dpc.kode_karyawan = dk.kode_karyawan 
@@ -22,43 +21,35 @@ $stmt->bind_param("s", $divisi_penanggung_jawab);
 $stmt->execute();
 $result = $stmt->get_result();
 
-// Hitung statistik
 $total_cuti = 0;
 $diterima = 0;
 $ditolak = 0;
 $menunggu = 0;
 
-// Fetch all results into an array to be filtered
 $all_rows = $result->fetch_all(MYSQLI_ASSOC);
 
-// Lakukan filter di PHP
 $filtered_rows = [];
 foreach ($all_rows as $row) {
     $show_row = true;
     
-    // Filter status
     if (isset($_GET['status_filter']) && $_GET['status_filter'] != '' && $row['status'] != $_GET['status_filter']) {
         $show_row = false;
     }
     
-    // Filter tanggal mulai
     if (isset($_GET['start_date']) && $_GET['start_date'] != '' && date('Y-m-d', strtotime($row['created_at'])) < $_GET['start_date']) {
         $show_row = false;
     }
     
-    // Filter tanggal akhir
     if (isset($_GET['end_date']) && $_GET['end_date'] != '' && date('Y-m-d', strtotime($row['created_at'])) > $_GET['end_date']) {
         $show_row = false;
     }
 
-    // Filter berdasarkan nama (case-insensitive)
     if (isset($_GET['search_nama']) && !empty(trim($_GET['search_nama']))) {
         if (stripos($row['nama_lengkap'], trim($_GET['search_nama'])) === false) {
             $show_row = false;
         }
     }
 
-    // Filter berdasarkan jenis cuti
     if (isset($_GET['jenis_cuti_filter']) && $_GET['jenis_cuti_filter'] != '' && $row['jenis_cuti'] != $_GET['jenis_cuti_filter']) {
         $show_row = false;
     }
@@ -68,7 +59,6 @@ foreach ($all_rows as $row) {
     }
 }
 
-// Hitung statistik dari data yang tidak difilter
 foreach ($all_rows as $row) {
     $total_cuti++;
     switch ($row['status']) {
@@ -78,15 +68,12 @@ foreach ($all_rows as $row) {
     }
 }
 
-// --- LOGIKA PAGINASI ---
-$limit = 5; // Jumlah data per halaman
+$limit = 5; 
 $total_records = count($filtered_rows);
 $total_pages = ceil($total_records / $limit);
 
-// Tentukan halaman saat ini, defaultnya adalah halaman 1
 $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
 
-// Pastikan nomor halaman valid
 if ($page < 1) {
     $page = 1;
 }
@@ -94,21 +81,18 @@ if ($page > $total_pages && $total_pages > 0) {
     $page = $total_pages;
 }
 
-// Hitung offset (data mulai dari mana)
 $offset = ($page - 1) * $limit;
 
-// Ambil data untuk halaman saat ini menggunakan array_slice
 $rows_for_current_page = array_slice($filtered_rows, $offset, $limit);
 
-// Function untuk menghitung hari kerja (Senin-Jumat)
 function hitungHariKerja($tanggal_mulai, $tanggal_akhir) {
     $jumlah_hari = 0;
     $current_date = new DateTime($tanggal_mulai);
     $end_date = new DateTime($tanggal_akhir);
     
     while ($current_date <= $end_date) {
-        $day_of_week = $current_date->format('N'); // 1=Senin, 7=Minggu
-        if ($day_of_week >= 1 && $day_of_week <= 5) { // Senin-Jumat
+        $day_of_week = $current_date->format('N'); 
+        if ($day_of_week >= 1 && $day_of_week <= 5) { 
             $jumlah_hari++;
         }
         $current_date->modify('+1 day');
@@ -126,7 +110,6 @@ function hitungHariKerja($tanggal_mulai, $tanggal_akhir) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Riwayat Cuti Divisi - Penanggung Jawab</title>
     <style>
-        /* --- GAYA PAGINASI --- */
         .pagination-wrapper {
             background-color: #f8f9fa;
             padding: 20px 15px;
@@ -679,10 +662,8 @@ function hitungHariKerja($tanggal_mulai, $tanggal_akhir) {
                 </thead>
                 <tbody>
                     <?php 
-                    // Nomor urut disesuaikan dengan halaman
                     $no = $offset + 1;
                     foreach ($rows_for_current_page as $row): 
-                        // Hitung hari kerja dan total hari
                         $jumlah_hari_kerja = hitungHariKerja($row['tanggal_mulai'], $row['tanggal_akhir']);
                         $total_hari_kalender = (strtotime($row['tanggal_akhir']) - strtotime($row['tanggal_mulai'])) / (60 * 60 * 24) + 1;
                     ?>
@@ -741,20 +722,17 @@ function hitungHariKerja($tanggal_mulai, $tanggal_akhir) {
             <?php if ($total_pages > 1): ?>
                 <div class="pagination-wrapper">
                     <?php
-                    // Persiapkan URL untuk pagination
                     $query_params = $_GET;
                     unset($query_params['page']);
                     $base_url = http_build_query($query_params);
                     $ampersand = !empty($base_url) ? '&' : '';
 
-                    // Tombol "Sebelumnya"
                     if ($page > 1) {
                         echo '<a href="?' . $base_url . $ampersand . 'page=' . ($page - 1) . '">‹ Sebelumnya</a>';
                     } else {
                         echo '<span class="disabled">‹ Sebelumnya</span>';
                     }
 
-                    // Logika nomor halaman
                     $range = 1;
                     if ($page > ($range + 1)) {
                         echo '<a href="?' . $base_url . $ampersand . 'page=1">1</a>';
@@ -763,7 +741,6 @@ function hitungHariKerja($tanggal_mulai, $tanggal_akhir) {
                         }
                     }
 
-                    // Loop utama untuk nomor halaman
                     for ($i = max(1, $page - $range); $i <= min($total_pages, $page + $range); $i++) {
                         if ($i == $page) {
                             echo '<span class="active">' . $i . '</span>';
@@ -772,7 +749,6 @@ function hitungHariKerja($tanggal_mulai, $tanggal_akhir) {
                         }
                     }
 
-                    // Tampilkan halaman terakhir dan '...' jika perlu
                     if ($page < ($total_pages - $range)) {
                         if ($page < ($total_pages - $range - 1)) {
                             echo '<span class="ellipsis">...</span>';
@@ -780,7 +756,6 @@ function hitungHariKerja($tanggal_mulai, $tanggal_akhir) {
                         echo '<a href="?' . $base_url . $ampersand . 'page=' . $total_pages . '">' . $total_pages . '</a>';
                     }
 
-                    // Tombol "Selanjutnya"
                     if ($page < $total_pages) {
                         echo '<a href="?' . $base_url . $ampersand . 'page=' . ($page + 1) . '">Selanjutnya ›</a>';
                     } else {
@@ -806,7 +781,6 @@ function hitungHariKerja($tanggal_mulai, $tanggal_akhir) {
 </html>
 
 <?php
-// Tutup koneksi
 $stmt->close();
 $conn->close();
 ?>

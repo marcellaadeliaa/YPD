@@ -2,19 +2,16 @@
     session_start();
     require 'config.php';
 
-    // 1. Cek sesi dan peran (role) pengguna
     if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'penanggung jawab') {
         header("Location: login_karyawan.php");
         exit();
     }
 
-    // 2. Ambil data dari session
     $user = $_SESSION['user'];
     $nama_pj = $user['nama_lengkap'];
     $divisi_pj = $user['divisi'];
     $jabatan = "Penanggung Jawab Divisi " . $divisi_pj;
 
-    // Hitung statistik untuk header (sama seperti dashboard)
     $stmt_cuti = $conn->prepare("SELECT COUNT(id) as total FROM pengajuan_cuti WHERE divisi = ? AND status = 'Menunggu'");
     $stmt_cuti->bind_param("s", $divisi_pj);
     $stmt_cuti->execute();
@@ -33,7 +30,6 @@
     $total_karyawan_divisi = $stmt_karyawan->get_result()->fetch_assoc()['total'] ?? 0;
     $stmt_karyawan->close();
 
-    // 3. Ambil data karyawan dari database berdasarkan divisi penanggung jawab
     $karyawan_divisi = [];
     $sql = "SELECT id_karyawan, kode_karyawan, nama_lengkap, email, jabatan, role, no_telp, status_aktif 
             FROM data_karyawan 
@@ -65,7 +61,6 @@
             :root { --primary-color: #1E105E; --secondary-color: #8897AE; --accent-color: #4a3f81; --card-bg: #FFFFFF; --text-color-light: #fff; --text-color-dark: #2e1f4f; --shadow-light: rgba(0,0,0,0.15); }
             body { margin: 0; font-family: 'Segoe UI', sans-serif; background: linear-gradient(180deg, var(--primary-color) 0%, #a29bb8 100%); min-height: 100vh; color: var(--text-color-light); padding-bottom: 40px; }
             
-            /* HEADER SAMA PERSIS DENGAN DASHBOARD */
             header { background: var(--card-bg); padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px var(--shadow-light); }
             .logo { display: flex; align-items: center; gap: 16px; font-weight: 500; font-size: 20px; color: var(--text-color-dark); }
             .logo img { width: 50px; height: 50px; object-fit: contain; border-radius: 50%; }
@@ -80,16 +75,13 @@
             .heading-section h1 { font-size: 2.5rem; margin: 0; color: #fff;}
             .heading-section p { font-size: 1.1rem; margin-top: 5px; opacity: 0.9; margin-bottom: 30px; color: #fff;}
             
-            /* Card Styles */
             .card { background: var(--card-bg); color: var(--text-color-dark); border-radius: 20px; padding: 30px 40px; box-shadow: 0 5px 20px var(--shadow-light); margin-bottom: 30px; }
             
-            /* Search Styles */
             .search-container { display: flex; gap: 10px; margin-bottom: 25px; align-items: center; }
             .search-box { flex-grow: 1; position: relative; }
             .search-box input { width: 100%; padding: 12px 45px 12px 15px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
             .search-icon { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #666; cursor: pointer; }
             
-            /* Table Styles */
             .data-table { width: 100%; border-collapse: collapse; font-size: 14px; text-align: center; }
             .data-table th, .data-table td { padding: 12px 10px; border-bottom: 1px solid #ddd; vertical-align:middle; }
             .data-table .text-left { text-align: left; }
@@ -105,7 +97,6 @@
         </style>
     </head>
     <body>
-        <!-- HEADER SAMA PERSIS DENGAN DASHBOARD -->
         <header>
             <div class="logo"><img src="image/namayayasan.png" alt="Logo"><span>Yayasan Purba Danarta</span></div>
             <nav>
@@ -201,7 +192,6 @@
                 const tableRows = document.querySelectorAll('#tableBody tr');
                 
                 tableRows.forEach(row => {
-                    // Pastikan tidak mencoba mencari di dalam baris "no results"
                     if (row.querySelector('td').colSpan === 7) return;
 
                     const rowText = row.textContent.toLowerCase();
@@ -213,10 +203,9 @@
                 });
             }
 
-            // Jalankan pencarian saat tombol search di-klik atau saat menekan Enter
             document.getElementById('searchButton').addEventListener('click', performSearch);
             document.getElementById('searchInput').addEventListener('keyup', function(event) {
-                performSearch(); // Langsung cari saat mengetik
+                performSearch(); 
             });
         </script>
     </body>

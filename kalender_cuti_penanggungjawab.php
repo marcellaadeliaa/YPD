@@ -2,7 +2,6 @@
 session_start();
 require 'config.php';
 
-// Cek apakah user sudah login sebagai penanggung jawab
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'penanggung jawab') {
     header("Location: login_karyawan.php");
     exit();
@@ -13,11 +12,9 @@ $nama_pj = $user['nama_lengkap'];
 $divisi_pj = $user['divisi'];
 $jabatan = "Penanggung Jawab Divisi " . $divisi_pj;
 
-// Get current month and year untuk kalender
 $month = isset($_GET['month']) ? (int)$_GET['month'] : date('n');
 $year = isset($_GET['year']) ? (int)$_GET['year'] : date('Y');
 
-// Navigation
 $prev_month = $month - 1;
 $prev_year = $year;
 $next_month = $month + 1;
@@ -33,15 +30,12 @@ if ($next_month > 12) {
     $next_year++;
 }
 
-// Get first day of the month
 $first_day = mktime(0, 0, 0, $month, 1, $year);
 $days_in_month = date('t', $first_day);
 $first_day_of_week = date('w', $first_day);
 
-// Adjust Sunday to be 0 instead of 7
 $first_day_of_week = $first_day_of_week == 0 ? 6 : $first_day_of_week - 1;
 
-// Query untuk mengambil data cuti divisi penanggung jawab dari database
 $cuti_by_date = [];
 $sql = "SELECT dpc.*, dk.nama_lengkap, dk.jabatan, dk.role 
         FROM data_pengajuan_cuti dpc 
@@ -64,7 +58,7 @@ $result = $stmt->get_result();
 while ($row = $result->fetch_assoc()) {
     $start = new DateTime($row['tanggal_mulai']);
     $end = new DateTime($row['tanggal_akhir']);
-    $end->modify('+1 day'); // Include end date
+    $end->modify('+1 day'); 
     
     $interval = new DateInterval('P1D');
     $period = new DatePeriod($start, $interval, $end);
@@ -73,7 +67,6 @@ while ($row = $result->fetch_assoc()) {
         $current_month = (int)$date->format('n');
         $current_year = (int)$date->format('Y');
         
-        // Only include dates in current month
         if ($current_month == $month && $current_year == $year) {
             $date_str = $date->format('Y-m-d');
             if (!isset($cuti_by_date[$date_str])) {
@@ -96,11 +89,9 @@ while ($row = $result->fetch_assoc()) {
 }
 $stmt->close();
 
-// Hitung statistik
 $total_cuti_hari = array_sum(array_map('count', $cuti_by_date));
 $hari_dengan_cuti = count($cuti_by_date);
 
-// Hitung breakdown per jenis cuti
 $stats_jenis = [
     'Tahunan' => 0,
     'Lustrum' => 0,
@@ -109,7 +100,6 @@ $stats_jenis = [
     'Lainnya' => 0
 ];
 
-// Hitung breakdown per role
 $stats_role = [
     'penanggung jawab' => 0,
     'karyawan' => 0
@@ -140,7 +130,6 @@ $month_names = [
     9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
 ];
 
-// Warna untuk jenis cuti
 $cuti_colors = [
     'Tahunan' => '#4ecdc4',
     'Lustrum' => '#45b7af',
@@ -428,7 +417,6 @@ $cuti_colors = [
         .legend-khusus { background: #ffd93d; }
         .legend-pj { background: #ffc107; }
         
-        /* Modal Styles */
         .modal { 
             display: none; 
             position: fixed; 
@@ -676,7 +664,6 @@ $cuti_colors = [
         </div>
 
         <div class="calendar">
-            <!-- Day Headers -->
             <div class="calendar-day-header">Senin</div>
             <div class="calendar-day-header">Selasa</div>
             <div class="calendar-day-header">Rabu</div>
@@ -759,25 +746,21 @@ $cuti_colors = [
     </div>
 </main>
 
-<!-- Modal for Cuti details -->
 <div id="cutiModal" class="modal">
     <div class="modal-content">
         <span class="close">&times;</span>
         <div class="modal-title" id="modalTitle">Detail Cuti Divisi <?= htmlspecialchars($divisi_pj) ?></div>
         <div class="karyawan-list" id="karyawanList">
-            <!-- Content will be populated by JavaScript -->
         </div>
     </div>
 </div>
 
 <script>
-    // Modal functionality
     const modal = document.getElementById('cutiModal');
     const closeBtn = document.querySelector('.close');
     const modalTitle = document.getElementById('modalTitle');
     const karyawanList = document.getElementById('karyawanList');
     
-    // Data Cuti from PHP (converted to JavaScript object)
     const cutiData = <?= json_encode($cuti_by_date) ?>;
     const monthNames = <?= json_encode($month_names) ?>;
     const divisiPj = "<?= $divisi_pj ?>";
@@ -804,7 +787,6 @@ $cuti_colors = [
                 const isPj = cuti.role === 'penanggung jawab';
                 const roleBadge = isPj ? '<span class="role-badge badge-pj">PJ</span>' : '<span class="role-badge badge-karyawan">Karyawan</span>';
                 
-                // Determine badge class based on jenis cuti
                 let cutiBadgeClass = 'badge-tahunan';
                 let cutiItemClass = '';
                 

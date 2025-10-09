@@ -64,7 +64,6 @@ if (empty($divisi) || empty($jabatan)) {
         :root { --primary-color: #1E105E; --secondary-color: #8897AE; --accent-color: #4a3f81; --card-bg: #FFFFFF; --text-color-light: #fff; --text-color-dark: #2e1f4f; --shadow-light: rgba(0,0,0,0.15); }
         body { margin: 0; font-family: 'Segoe UI', sans-serif; background: linear-gradient(180deg, var(--primary-color) 0%, #a29bb8 100%); min-height: 100vh; color: var(--text-color-light); padding-bottom: 40px; }
         
-        /* HEADER/NAVIGASI SAMA PERSIS DENGAN DASHBOARD */
         header { background: var(--card-bg); padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px var(--shadow-light); }
         .logo { display: flex; align-items: center; gap: 16px; font-weight: 500; font-size: 20px; color: var(--text-color-dark); }
         .logo img { width: 50px; height: 50px; object-fit: contain; border-radius: 50%; }
@@ -79,7 +78,6 @@ if (empty($divisi) || empty($jabatan)) {
         .heading-section h1 { font-size: 2.5rem; margin: 0; color: #fff;}
         .heading-section p { font-size: 1.1rem; margin-top: 5px; opacity: 0.9; margin-bottom: 30px; color: #fff;}
         
-        /* Form Styles */
         .form-container {
             background: var(--card-bg);
             color: var(--text-color-dark);
@@ -197,7 +195,6 @@ if (empty($divisi) || empty($jabatan)) {
     </style>
 </head>
 <body>
-    <!-- HEADER/NAVIGASI SAMA PERSIS DENGAN DASHBOARD -->
     <header>
         <div class="logo"><img src="image/namayayasan.png" alt="Logo"><span>Yayasan Purba Danarta</span></div>
         <nav>
@@ -241,7 +238,6 @@ if (empty($divisi) || empty($jabatan)) {
         <div class="form-container">
             <h2>Pengajuan KHL - Penanggung Jawab</h2>
             
-            <!-- Tampilkan pesan sukses/error jika ada -->
             <?php
             if (isset($_GET['status'])) {
                 if ($_GET['status'] == 'success') {
@@ -260,7 +256,6 @@ if (empty($divisi) || empty($jabatan)) {
             }
             ?>
 
-            <!-- Info Pengguna -->
             <div class="user-info">
                 <p><strong>Kode Karyawan:</strong> <?php echo htmlspecialchars($nik); ?></p>
                 <p><strong>Nama:</strong> <?php echo htmlspecialchars($nama_lengkap); ?></p>
@@ -273,7 +268,6 @@ if (empty($divisi) || empty($jabatan)) {
                 <strong>Catatan:</strong> Sebagai Penanggung Jawab, pengajuan KHL Anda akan masuk dengan status <strong>Pending</strong> dan membutuhkan persetujuan dari atasan.
             </div>
             
-            <!-- FORM YANG BENAR -->
             <form method="post" action="proseskhl_penanggungjawab.php">
 
                 <label>No. Kode Karyawan</label>
@@ -330,7 +324,6 @@ if (empty($divisi) || empty($jabatan)) {
     </main>
 
     <?php
-    // Tutup koneksi database
     mysqli_close($conn);
     ?>
 </body>

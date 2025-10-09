@@ -11,14 +11,12 @@ $user = $_SESSION['user'];
 $divisi_penanggung_jawab = $user['divisi'];
 $nama_pj = $user['nama_lengkap'];
 
-// Proses persetujuan/tolak KHL
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['action']) && isset($_POST['id_khl'])) {
         $id_khl = $_POST['id_khl'];
         $action = $_POST['action'];
         $alasan_penolakan = isset($_POST['alasan_penolakan']) ? trim($_POST['alasan_penolakan']) : '';
         
-        // Validasi apakah KHL tersebut termasuk dalam divisi penanggung jawab dan dari karyawan
         $check_query = "SELECT dk.divisi, dk.role 
                        FROM data_pengajuan_khl dpk 
                        JOIN data_karyawan dk ON dpk.kode_karyawan = dk.kode_karyawan 
@@ -29,12 +27,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $check_result = $check_stmt->get_result();
         
         if ($check_result->num_rows > 0) {
-            // Jika menolak, validasi alasan penolakan
             if ($action == 'reject' && empty($alasan_penolakan)) {
                 $message = "Harap berikan alasan penolakan";
                 $message_type = "error";
             } else {
-                // Update status KHL
                 $new_status = ($action == 'approve') ? 'disetujui' : 'ditolak';
                 
                 $update_query = "UPDATE data_pengajuan_khl SET status_khl = ?, alasan_penolakan = ? WHERE id_khl = ?";
@@ -47,7 +43,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 }
                 
                 if ($update_stmt->execute()) {
-                    // Redirect ke riwayat setelah berhasil
                     header("Location: riwayatkhl_penanggungjawab.php?status=" . ($action == 'approve' ? 'disetujui' : 'ditolak'));
                     exit();
                 } else {
@@ -66,7 +61,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-// Ambil data KHL yang sesuai dengan divisi penanggung jawab dan hanya dari karyawan dengan status pending
 $query = "SELECT dpk.*, dk.nama_lengkap, dk.divisi, dk.role 
           FROM data_pengajuan_khl dpk 
           JOIN data_karyawan dk ON dpk.kode_karyawan = dk.kode_karyawan 
@@ -337,7 +331,6 @@ $result = $stmt->get_result();
             color: #155724;
         }
         
-        /* Modal Styles */
         .modal {
             display: none;
             position: fixed;
@@ -527,7 +520,6 @@ $result = $stmt->get_result();
     </div>
 </main>
 
-<!-- Modal untuk penolakan -->
 <div id="rejectModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
@@ -559,7 +551,6 @@ $result = $stmt->get_result();
         document.getElementById('alasan_penolakan').value = '';
     }
     
-    // Tutup modal ketika klik di luar modal
     window.onclick = function(event) {
         const modal = document.getElementById('rejectModal');
         if (event.target === modal) {
@@ -567,7 +558,6 @@ $result = $stmt->get_result();
         }
     }
     
-    // Validasi form penolakan
     document.getElementById('rejectForm').addEventListener('submit', function(e) {
         const alasan = document.getElementById('alasan_penolakan').value.trim();
         if (!alasan) {
@@ -582,7 +572,6 @@ $result = $stmt->get_result();
 </html>
 
 <?php
-// Tutup koneksi
 $stmt->close();
 $conn->close();
 ?>

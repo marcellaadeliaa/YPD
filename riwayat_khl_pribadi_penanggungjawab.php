@@ -2,7 +2,6 @@
 session_start();
 require 'config.php';
 
-// Cek apakah user sudah login sebagai penanggung jawab
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'penanggung jawab') {
     header("Location: login_karyawan.php");
     exit();
@@ -14,14 +13,12 @@ $nama_pj = $user['nama_lengkap'];
 $divisi_pj = $user['divisi'];
 $jabatan = "Penanggung Jawab Divisi " . $divisi_pj;
 
-// --- KONFIGURASI PAGINASI ---
-$limit = 5; // Hanya tampilkan 5 data per halaman
+$limit = 5; 
 $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
 if ($page < 1) $page = 1;
 
 $offset = ($page - 1) * $limit;
 
-// --- QUERY UTAMA DENGAN LIMIT & OFFSET ---
 $sql = "SELECT * FROM data_pengajuan_khl 
         WHERE kode_karyawan = ? 
         ORDER BY created_at DESC
@@ -36,7 +33,6 @@ while ($row = $result->fetch_assoc()) {
     $riwayat_khl[] = $row;
 }
 
-// --- QUERY UNTUK TOTAL DATA (untuk pagination) ---
 $sql_total = "SELECT COUNT(*) as total FROM data_pengajuan_khl WHERE kode_karyawan = ?";
 $stmt_total = $conn->prepare($sql_total);
 $stmt_total->bind_param("s", $kode_karyawan);
@@ -45,7 +41,6 @@ $result_total = $stmt_total->get_result();
 $total_data = $result_total->fetch_assoc()['total'];
 $total_pages = ceil($total_data / $limit);
 
-// --- HITUNG STATISTIK (dari semua data) ---
 $sql_stats = "SELECT 
               COUNT(*) as total,
               SUM(CASE WHEN status_khl = 'disetujui' THEN 1 ELSE 0 END) as disetujui,
@@ -323,7 +318,6 @@ $conn->close();
             color: #666; 
         }
         
-        /* --- GAYA PAGINASI BARU --- */
         .pagination-wrapper {
             background-color: #f8f9fa;
             padding: 20px 15px;
@@ -453,7 +447,6 @@ $conn->close();
             <p><strong>Jabatan:</strong> <?= htmlspecialchars($jabatan) ?></p>
         </div>
 
-        <!-- Info Pagination -->
         <div class="info-pagination">
             Menampilkan <?php echo count($riwayat_khl); ?> dari <?php echo $total_data; ?> KHL 
             (Halaman <?php echo $page; ?> dari <?php echo $total_pages; ?>)
@@ -548,18 +541,15 @@ $conn->close();
                     </tbody>
                 </table>
 
-                <!-- PAGINATION -->
                 <?php if ($total_pages > 1): ?>
                 <div class="pagination-wrapper">
                     <?php
-                    // Tombol Sebelumnya
                     if ($page > 1) {
                         echo '<a href="?page=' . ($page - 1) . '">‹ Sebelumnya</a>';
                     } else {
                         echo '<span class="disabled">‹ Sebelumnya</span>';
                     }
 
-                    // Nomor halaman
                     $range = 1;
                     if ($page > ($range + 1)) {
                         echo '<a href="?page=1">1</a>';
@@ -583,7 +573,6 @@ $conn->close();
                         echo '<a href="?page=' . $total_pages . '">' . $total_pages . '</a>';
                     }
 
-                    // Tombol Selanjutnya
                     if ($page < $total_pages) {
                         echo '<a href="?page=' . ($page + 1) . '">Selanjutnya ›</a>';
                     } else {
@@ -596,7 +585,6 @@ $conn->close();
             <?php endif; ?>
         </div>
 
-        <!-- STATISTIK -->
         <?php if (!empty($riwayat_khl)): ?>
             <div style="margin-top: 30px; padding: 15px; background: #f8f9fa; border-radius: 10px;">
                 <h4 style="margin-top: 0; color: var(--primary-color);">Statistik Pengajuan KHL</h4>
@@ -624,7 +612,6 @@ $conn->close();
 </main>
 
 <script>
-// Konfirmasi sebelum menghapus
 function confirmDelete(khlId) {
     if (confirm('Apakah Anda yakin ingin menghapus pengajuan KHL ini?')) {
         window.location.href = 'hapus_khl.php?id=' + khlId;

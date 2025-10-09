@@ -1,26 +1,22 @@
 <?php
 session_start();
-require_once 'config.php'; // Memanggil file koneksi database
+require_once 'config.php'; 
 
-// Inisialisasi variabel
 $display_data = false;
 $error_msg = '';
 
-// Cek apakah user sudah login sebagai penanggung jawab
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'penanggung jawab') {
     header("Location: login_penanggungjawab.php");
     exit();
 }
 
-// Hanya proses jika metode request adalah POST
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Ambil data dari session dan form
     $user = $_SESSION['user'];
     $kode_karyawan = $user['kode_karyawan'];
     $nama_karyawan = $user['nama_lengkap'];
     $divisi = $user['divisi'];
     $jabatan = $user['jabatan'];
-    $role = 'penanggung jawab'; // Set role secara eksplisit
+    $role = 'penanggung jawab'; 
 
     $proyek = $_POST['proyek'] ?? '';
     $tanggal_khl = $_POST['tanggal_khl'] ?? '';
@@ -30,13 +26,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $jam_mulai_cuti_khl = $_POST['jam_mulai_cuti_khl'] ?? '';
     $jam_akhir_cuti_khl = $_POST['jam_akhir_cuti_khl'] ?? '';
 
-    // Validasi data wajib
     if (empty($proyek) || empty($tanggal_khl) || empty($jam_mulai_kerja) || empty($jam_akhir_kerja) || 
         empty($tanggal_cuti_khl) || empty($jam_mulai_cuti_khl) || empty($jam_akhir_cuti_khl)) {
         $error_msg = "Semua field harus diisi.";
     }
 
-    // Validasi kode karyawan ada di database
     if (empty($error_msg)) {
         $check_karyawan = "SELECT kode_karyawan FROM data_karyawan WHERE kode_karyawan = ?";
         $stmt_check = mysqli_prepare($conn, $check_karyawan);
@@ -50,22 +44,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         mysqli_stmt_close($stmt_check);
     }
 
-    // Validasi tanggal
     if (empty($error_msg) && $tanggal_khl > $tanggal_cuti_khl) {
         $error_msg = "Tanggal KHL tidak boleh lebih besar dari Tanggal Cuti KHL.";
     }
     
-    // Validasi jam kerja
     if (empty($error_msg) && $jam_mulai_kerja >= $jam_akhir_kerja) {
         $error_msg = "Jam mulai kerja harus lebih awal dari jam akhir kerja.";
     }
     
-    // Validasi jam cuti
     if (empty($error_msg) && $jam_mulai_cuti_khl >= $jam_akhir_cuti_khl) {
         $error_msg = "Jam mulai cuti harus lebih awal dari jam akhir cuti.";
     }
 
-    // Jika tidak ada error, lanjutkan proses ke database
     if (empty($error_msg)) {
         $status_khl = "pending";
         
@@ -88,7 +78,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
             if (mysqli_stmt_execute($stmt_insert)) {
                 $id_khl = mysqli_insert_id($conn);
-                $display_data = true; // Set flag untuk menampilkan data di HTML
+                $display_data = true; 
             } else {
                 $error_msg = "Gagal menyimpan data: " . mysqli_error($conn);
             }
@@ -99,7 +89,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 } else {
-    // Jika bukan metode POST, langsung tampilkan halaman error
     $display_data = false;
     $error_msg = "Metode request tidak valid.";
 }
@@ -132,7 +121,6 @@ mysqli_close($conn);
         padding-bottom: 40px; 
     }
     
-    /* HEADER/NAVIGASI SAMA PERSIS DENGAN DASHBOARD */
     header { 
         background: var(--card-bg); 
         padding: 20px 40px; 

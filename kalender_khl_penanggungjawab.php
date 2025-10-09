@@ -2,7 +2,6 @@
 session_start();
 require 'config.php';
 
-// Cek apakah user sudah login sebagai penanggung jawab
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'penanggung jawab') {
     header("Location: login_karyawan.php");
     exit();
@@ -13,32 +12,27 @@ $nama_pj = $user['nama_lengkap'];
 $divisi_pj = $user['divisi'];
 $jabatan = "Penanggung Jawab Divisi " . $divisi_pj;
 
-// Hitung Cuti Menunggu
 $stmt_cuti = $conn->prepare("SELECT COUNT(id) as total FROM pengajuan_cuti WHERE divisi = ? AND status = 'Menunggu'");
 $stmt_cuti->bind_param("s", $divisi_pj);
 $stmt_cuti->execute();
 $cuti_menunggu = $stmt_cuti->get_result()->fetch_assoc()['total'] ?? 0;
 $stmt_cuti->close();
 
-// Hitung KHL Menunggu
 $stmt_khl = $conn->prepare("SELECT COUNT(id) as total FROM pengajuan_khl WHERE divisi = ? AND status = 'Menunggu'");
 $stmt_khl->bind_param("s", $divisi_pj);
 $stmt_khl->execute();
 $khl_menunggu = $stmt_khl->get_result()->fetch_assoc()['total'] ?? 0;
 $stmt_khl->close();
 
-// Hitung Total Karyawan
 $stmt_karyawan = $conn->prepare("SELECT COUNT(id_karyawan) as total FROM data_karyawan WHERE divisi = ? AND status_aktif = 'aktif'");
 $stmt_karyawan->bind_param("s", $divisi_pj);
 $stmt_karyawan->execute();
 $total_karyawan_divisi = $stmt_karyawan->get_result()->fetch_assoc()['total'] ?? 0;
 $stmt_karyawan->close();
 
-// Get current month and year untuk kalender
 $month = isset($_GET['month']) ? (int)$_GET['month'] : date('n');
 $year = isset($_GET['year']) ? (int)$_GET['year'] : date('Y');
 
-// Navigation
 $prev_month = $month - 1;
 $prev_year = $year;
 $next_month = $month + 1;
@@ -54,15 +48,12 @@ if ($next_month > 12) {
     $next_year++;
 }
 
-// Get first day of the month
 $first_day = mktime(0, 0, 0, $month, 1, $year);
 $days_in_month = date('t', $first_day);
 $first_day_of_week = date('w', $first_day);
 
-// Adjust Sunday to be 0 instead of 7
 $first_day_of_week = $first_day_of_week == 0 ? 6 : $first_day_of_week - 1;
 
-// Query untuk mengambil data KHL divisi penanggung jawab dari database
 $khl_by_date = [];
 $sql = "SELECT dpk.*, dk.nama_lengkap, dk.jabatan 
         FROM data_pengajuan_khl dpk 
@@ -95,11 +86,9 @@ while ($row = $result->fetch_assoc()) {
 }
 $stmt->close();
 
-// Hitung statistik
 $total_khl = array_sum(array_map('count', $khl_by_date));
 $hari_dengan_khl = count($khl_by_date);
 
-// Hitung breakdown per role/jabatan
 $stats_role = [
     'penanggung jawab' => 0,
     'karyawan' => 0
@@ -146,7 +135,6 @@ $month_names = [
         .heading-section h1 { font-size: 2.5rem; margin: 0; color: #fff;}
         .heading-section p { font-size: 1.1rem; margin-top: 5px; opacity: 0.9; margin-bottom: 30px; color: #fff;}
         
-        /* Calendar Styles */
         .card { background: var(--card-bg); color: var(--text-color-dark); border-radius: 20px; padding: 30px 40px; box-shadow: 0 5px 20px var(--shadow-light); margin-bottom: 30px; }
         .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px; }
         .calendar-nav { display: flex; gap: 10px; align-items: center; }
@@ -195,7 +183,6 @@ $month_names = [
         .legend-khl { background: #4ecdc4; }
         .legend-pj { background: #ffc107; }
         
-        /* Modal Styles */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
         .modal-content { background-color: white; margin: 5% auto; padding: 20px; border-radius: 10px; width: 80%; max-width: 600px; color: var(--text-color-dark); }
         .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
@@ -336,7 +323,6 @@ $month_names = [
         </div>
 
         <div class="calendar">
-            <!-- Day Headers -->
             <div class="calendar-day-header">Senin</div>
             <div class="calendar-day-header">Selasa</div>
             <div class="calendar-day-header">Rabu</div>
@@ -345,12 +331,10 @@ $month_names = [
             <div class="calendar-day-header">Sabtu</div>
             <div class="calendar-day-header">Minggu</div>
             
-            <!-- Empty days for first week -->
             <?php for ($i = 0; $i < $first_day_of_week; $i++): ?>
                 <div class="calendar-day other-month"></div>
             <?php endfor; ?>
             
-            <!-- Days of the month -->
             <?php for ($day = 1; $day <= $days_in_month; $day++): ?>
                 <?php
                 $current_date = date('Y-m-d', mktime(0, 0, 0, $month, $day, $year));
@@ -395,25 +379,21 @@ $month_names = [
     </div>
 </main>
 
-<!-- Modal for KHL details -->
 <div id="khlModal" class="modal">
     <div class="modal-content">
         <span class="close">&times;</span>
         <div class="modal-title" id="modalTitle">Detail KHL Divisi <?= htmlspecialchars($divisi_pj) ?></div>
         <div class="karyawan-list" id="karyawanList">
-            <!-- Content will be populated by JavaScript -->
         </div>
     </div>
 </div>
 
 <script>
-    // Modal functionality
     const modal = document.getElementById('khlModal');
     const closeBtn = document.querySelector('.close');
     const modalTitle = document.getElementById('modalTitle');
     const karyawanList = document.getElementById('karyawanList');
     
-    // Data KHL from PHP (converted to JavaScript object)
     const khlData = <?= json_encode($khl_by_date) ?>;
     const monthNames = <?= json_encode($month_names) ?>;
     const divisiPj = "<?= $divisi_pj ?>";
