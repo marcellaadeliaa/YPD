@@ -7,12 +7,10 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
     exit();
 }
 
-// Inisialisasi variabel filter
 $start_date = $_GET['start_date'] ?? '';
 $end_date = $_GET['end_date'] ?? '';
 $search_query = $_GET['search'] ?? '';
 
-// AMBIL DATA DARI TABEL data_pengajuan_khl
 $query = "SELECT 
             dk.nama_lengkap,
             dpk.* 
@@ -23,7 +21,6 @@ $query = "SELECT
 $params = [];
 $types = '';
 
-// Filter berdasarkan tanggal
 if (!empty($start_date)) {
     $query .= " AND dpk.tanggal_khl >= ?";
     $params[] = $start_date;
@@ -36,7 +33,6 @@ if (!empty($end_date)) {
     $types .= 's';
 }
 
-// Filter berdasarkan pencarian
 if (!empty($search_query)) {
     $query .= " AND (dk.nama_lengkap LIKE ? OR dpk.kode_karyawan LIKE ? OR dpk.proyek LIKE ?)";
     $search_param = "%$search_query%";
@@ -48,7 +44,6 @@ if (!empty($search_query)) {
 
 $query .= " ORDER BY dpk.created_at DESC";
 
-// Prepare dan execute query
 $stmt = $conn->prepare($query);
 
 if ($stmt) {
@@ -64,21 +59,19 @@ if ($stmt) {
     error_log("Error preparing query: " . $conn->error);
 }
 
-// Mapping status untuk konsistensi dengan tampilan sebelumnya
 $status_mapping = [
     'disetujui' => 'Diterima',
     'ditolak' => 'Ditolak',
     'pending' => 'Menunggu'
 ];
 
-// Format data untuk konsistensi dengan struktur sebelumnya
 $filtered_data = [];
 foreach ($riwayat_khl as $khl) {
     $filtered_data[] = [
         'id' => $khl['id_khl'],
-        'kode_khl' => $khl['id_khl'], // Menggunakan id_khl sebagai kode KHL
+        'kode_khl' => $khl['id_khl'],
         'nama_karyawan' => $khl['nama_lengkap'],
-        'jenis_khl' => $khl['divisi'], // Menggunakan divisi sebagai jenis KHL
+        'jenis_khl' => $khl['divisi'], 
         'projek' => $khl['proyek'],
         'tanggal_kerja' => $khl['tanggal_khl'],
         'jam_mulai_kerja' => $khl['jam_mulai_kerja'],
@@ -90,7 +83,6 @@ foreach ($riwayat_khl as $khl) {
     ];
 }
 
-// AMBIL DATA ADMIN UNTUK WELCOME MESSAGE
 $nama_user = 'Admin';
 if (isset($_SESSION['user_id'])) {
     $user_id = $_SESSION['user_id'];
@@ -116,7 +108,6 @@ $conn->close();
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Riwayat KHL Pegawai - Admin</title>
 <style>
-    /* Menggunakan style yang konsisten dari halaman admin sebelumnya */
     body { margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg,#1E105E 0%,#8897AE 100%); min-height:100vh; color:#333; }
     header { background:rgba(255,255,255,1); padding:20px 40px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #34377c; flex-wrap: wrap; }
     .logo { display:flex; align-items:center; gap:16px; font-weight:500; font-size:20px; color:#2e1f4f; }
@@ -135,7 +126,6 @@ $conn->close();
     .card { background:#fff; border-radius:20px; padding:30px 40px; box-shadow:0 2px 10px rgba(0,0,0,0.15); }
     .page-title { font-size: 30px; font-weight: 600; text-align: center; margin-bottom: 30px; color: #1E105E; }
     
-    /* Style untuk filter section */
     .filter-section { background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 25px; border: 1px solid #e0e0e0; }
     .filter-row { display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; }
     .filter-group { display: flex; flex-direction: column; gap: 5px; }
@@ -157,7 +147,6 @@ $conn->close();
     .data-table th { background-color: #f8f9fa; font-weight: 600; color: #333; position: sticky; top: 0; }
     .data-table tbody tr:hover { background-color: #f1f1f1; }
     
-    /* Status styles */
     .status-diterima { color: #28a745; font-weight: 600; }
     .status-ditolak { color: #d9534f; font-weight: 600; }
     .status-menunggu { color: #f0ad4e; font-weight: 600; }
@@ -166,7 +155,6 @@ $conn->close();
     
     .filter-info { background: #e7f3ff; padding: 10px 15px; border-radius: 6px; margin-bottom: 20px; font-size: 14px; border-left: 4px solid #4a3f81; display: flex; justify-content: space-between; align-items: center; }
     
-    /* Responsive */
     @media (max-width: 992px) {
         header { flex-direction: column; align-items: flex-start; }
         nav ul { flex-direction: column; gap: 10px; width: 100%; margin-top: 15px; align-items: flex-start; }
@@ -323,7 +311,6 @@ $conn->close();
 </main>
 
 <script>
-    // Validasi tanggal: end date tidak boleh kurang dari start date
     document.addEventListener('DOMContentLoaded', function() {
         const startDate = document.getElementById('start_date');
         const endDate = document.getElementById('end_date');

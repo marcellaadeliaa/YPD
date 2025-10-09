@@ -8,7 +8,6 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Ambil data dari form
     $kode_karyawan = $_POST['kode_karyawan'] ?? '';
     $nama_lengkap = $_POST['nama_lengkap'] ?? '';
     $email = $_POST['email'] ?? '';
@@ -19,7 +18,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $no_telp = $_POST['no_telp'] ?? '';
     $status_aktif = $_POST['status_aktif'] ?? 'aktif';
     
-    // Validasi data wajib
     if (empty($kode_karyawan) || empty($nama_lengkap) || empty($email) || empty($password) || 
         empty($jabatan) || empty($divisi) || empty($role)) {
         $_SESSION['error_message'] = "Semua field wajib harus diisi!";
@@ -27,7 +25,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     
-    // Cek apakah kode karyawan sudah ada
     $check_sql = "SELECT id_karyawan FROM data_karyawan WHERE kode_karyawan = ?";
     $check_stmt = $conn->prepare($check_sql);
     $check_stmt->bind_param("s", $kode_karyawan);
@@ -40,7 +37,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     
-    // Cek apakah email sudah ada
     $check_email_sql = "SELECT id_karyawan FROM data_karyawan WHERE email = ?";
     $check_email_stmt = $conn->prepare($check_email_sql);
     $check_email_stmt->bind_param("s", $email);
@@ -52,12 +48,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header("Location: tambah_karyawan.php");
         exit;
     }
-    
-    // SIMPAN PASSWORD PLAIN TEXT (bisa dilihat admin)
-    // JANGAN gunakan password_hash()
+
     $plain_password = $password;
     
-    // Insert data ke database
     $sql = "INSERT INTO data_karyawan 
             (kode_karyawan, nama_lengkap, email, password, jabatan, divisi, role, no_telp, status_aktif) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -67,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $kode_karyawan, 
         $nama_lengkap, 
         $email, 
-        $plain_password,  // Simpan sebagai plain text
+        $plain_password,  
         $jabatan, 
         $divisi, 
         $role, 
@@ -76,14 +69,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     );
     
     if ($stmt->execute()) {
-        // Set pesan sukses
         $_SESSION['success_message'] = "Data karyawan berhasil ditambahkan! Kode: $kode_karyawan, Password: $plain_password";
         
-        // Redirect ke halaman data karyawan
         header("Location: data_karyawan.php");
         exit;
     } else {
-        // Jika terjadi error
         $_SESSION['error_message'] = "Terjadi kesalahan saat menyimpan data: " . $conn->error;
         header("Location: tambah_karyawan.php");
         exit;
@@ -93,7 +83,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $conn->close();
     
 } else {
-    // Jika bukan method POST, redirect ke halaman tambah
     header("Location: tambah_karyawan.php");
     exit;
 }

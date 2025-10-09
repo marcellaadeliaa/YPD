@@ -2,21 +2,16 @@
 session_start();
 require 'config.php';
 
-// --- PROSES PENCARIAN ---
 $search_keyword = '';
 if (isset($_GET['search']) && !empty(trim($_GET['search']))) {
     $search_keyword = trim($_GET['search']);
 }
 
-// --- LOGIKA UNTUK PENGUMUMAN UMUM (TETAP SAMA) ---
 if (isset($_POST['action_pengumuman'])) {
-    // ... Logika ini tidak berubah ...
     header("Location: administrasi_pelamar.php");
     exit;
 }
 
-// --- LOGIKA UPDATE DENGAN STRUKTUR TABEL YANG SUDAH ADA ---
-// --- LOGIKA UPDATE YANG DIPERBAIKI ---
 if (isset($_GET['action']) && isset($_GET['id'])) {
     $action = $_GET['action'];
     $id = $_GET['id'];
@@ -24,7 +19,6 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
     $currentStatus = $_GET['current_status'] ?? '';
     $custom_message = $_GET['message'] ?? '';
     
-    // Set default values untuk riwayat
     $status_admin = NULL;
     $status_wawancara = NULL;
     $status_psikotes = NULL;
@@ -34,77 +28,73 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
     if ($action == 'lolos') {
         $next_stage = $_GET['next_stage'] ?? '';
 
-        // GANTI BLOK SWITCH LAMA ANDA DENGAN INI
         switch ($currentStatus) {
             case 'Menunggu Proses':
                 $newStatus = 'Seleksi Administratif';
-                $status_admin = 'Lolos'; // Tahap ini lolos
+                $status_admin = 'Lolos'; 
                 if (empty($custom_message)) $custom_message = "Selamat! Lamaran Anda telah diterima dan masuk ke tahap seleksi administratif.";
                 break;
                 
             case 'Seleksi Administratif':
                 $newStatus = 'Seleksi Wawancara';
-                $status_admin = 'Lolos'; // PERTAHANKAN: Tahap sebelumnya juga lolos
-                $status_wawancara = 'Lolos'; // Tahap ini lolos
+                $status_admin = 'Lolos'; 
+                $status_wawancara = 'Lolos'; 
                 if (empty($custom_message)) $custom_message = "Selamat! Anda lolos seleksi administratif. Tahap selanjutnya adalah wawancara.";
                 break;
                 
             case 'Seleksi Wawancara':
-                $status_admin = 'Lolos'; // PERTAHANKAN
-                $status_wawancara = 'Lolos'; // PERTAHANKAN
+                $status_admin = 'Lolos'; 
+                $status_wawancara = 'Lolos'; 
 
                 if ($next_stage == 'psikotes') {
                     $newStatus = 'Seleksi Psikotes';
-                    $status_psikotes = 'Lolos'; // Tahap ini lolos
+                    $status_psikotes = 'Lolos'; 
                     if (empty($custom_message)) $custom_message = "Selamat! Anda lolos wawancara. Tahap selanjutnya adalah Psikotes.";
                 } elseif ($next_stage == 'kesehatan') {
                     $newStatus = 'Seleksi Kesehatan';
-                    $status_kesehatan = 'Lolos'; // Tahap ini lolos
+                    $status_kesehatan = 'Lolos'; 
                     if (empty($custom_message)) $custom_message = "Selamat! Anda lolos wawancara. Tahap selanjutnya adalah Tes Kesehatan.";
                 } elseif ($next_stage == 'keduanya') {
                     $newStatus = 'Seleksi Psikotes & Kesehatan';
-                    $status_psikotes = 'Lolos'; // Tahap ini lolos
+                    $status_psikotes = 'Lolos'; 
                     if (empty($custom_message)) $custom_message = "Selamat! Anda lolos wawancara. Tahap selanjutnya adalah Psikotes dan Tes Kesehatan.";
                 }
                 break;
                 
             case 'Seleksi Psikotes':
                 $newStatus = 'Diterima';
-                $status_admin = 'Lolos'; // PERTAHANKAN
-                $status_wawancara = 'Lolos'; // PERTAHANKAN
-                $status_psikotes = 'Lolos'; // PERTAHANKAN
-                $status_final = 'Diterima'; // Tahap ini lolos
+                $status_admin = 'Lolos'; 
+                $status_wawancara = 'Lolos'; 
+                $status_psikotes = 'Lolos';
+                $status_final = 'Diterima'; 
                 if (empty($custom_message)) $custom_message = "Selamat! Anda telah lolos seluruh rangkaian seleksi dan dinyatakan DITERIMA.";
                 break;
                 
             case 'Seleksi Psikotes & Kesehatan':
                 $newStatus = 'Seleksi Kesehatan';
-                $status_admin = 'Lolos'; // PERTAHANKAN
-                $status_wawancara = 'Lolos'; // PERTAHANKAN
-                $status_psikotes = 'Lolos'; // PERTAHANKAN
-                $status_kesehatan = 'Lolos'; // Tahap ini lolos
+                $status_admin = 'Lolos'; 
+                $status_wawancara = 'Lolos';
+                $status_psikotes = 'Lolos'; 
+                $status_kesehatan = 'Lolos'; 
                 if (empty($custom_message)) $custom_message = "Selamat! Anda lolos Psikotes. Tahap selanjutnya adalah Tes Kesehatan.";
                 break;
                 
             case 'Seleksi Kesehatan':
                 $newStatus = 'Diterima';
-                $status_admin = 'Lolos'; // PERTAHANKAN
-                $status_wawancara = 'Lolos'; // PERTAHANKAN
-                // Asumsi jika sampai sini, psikotes juga sudah lolos
+                $status_admin = 'Lolos';
+                $status_wawancara = 'Lolos';
                 $status_psikotes = 'Lolos';
-                $status_kesehatan = 'Lolos'; // PERTAHANKAN
-                $status_final = 'Diterima'; // Tahap ini lolos
+                $status_kesehatan = 'Lolos'; 
+                $status_final = 'Diterima';
                 if (empty($custom_message)) $custom_message = "Selamat! Anda telah lolos seluruh rangkaian seleksi dan dinyatakan DITERIMA.";
                 break;
         }
         
         if ($newStatus) {
-            // Update status di data_pelamar
             $stmt = $conn->prepare("UPDATE data_pelamar SET status = ? WHERE id = ?");
             $stmt->bind_param("si", $newStatus, $id);
             $stmt->execute();
             
-            // [PERBAIKAN] Update riwayat_pelamar dengan semua nilai
             $stmt_riwayat = $conn->prepare("INSERT INTO riwayat_pelamar 
                 (pelamar_id, status_administratif, status_wawancara, status_psikotes, status_kesehatan, status_final) 
                 VALUES (?, ?, ?, ?, ?, ?) 
@@ -118,7 +108,6 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
             $stmt_riwayat->bind_param("isssss", $id, $status_admin, $status_wawancara, $status_psikotes, $status_kesehatan, $status_final);
             $stmt_riwayat->execute();
             
-            // Simpan pengumuman
             $stmt_pengumuman = $conn->prepare("INSERT INTO pengumuman_pelamar (pelamar_id, tahap, pesan, tanggal) VALUES (?, ?, ?, CURDATE())");
             $stmt_pengumuman->bind_param("iss", $id, $currentStatus, $custom_message);
             $stmt_pengumuman->execute();
@@ -127,7 +116,6 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
     } elseif ($action == 'tidak') {
         $newStatus = 'Tidak Lolos';
         
-        // Set status tidak lolos berdasarkan tahap
         switch($currentStatus) {
             case 'Menunggu Proses':
             case 'Seleksi Administratif':
@@ -148,12 +136,10 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
         }
         $status_final = 'Tidak Lolos';
         
-        // Update data_pelamar
         $stmt = $conn->prepare("UPDATE data_pelamar SET status = ? WHERE id = ?");
         $stmt->bind_param("si", $newStatus, $id);
         $stmt->execute();
         
-        // Update riwayat_pelamar
         $stmt_riwayat = $conn->prepare("INSERT INTO riwayat_pelamar 
             (pelamar_id, status_administratif, status_wawancara, status_psikotes, status_kesehatan, status_final) 
             VALUES (?, ?, ?, ?, ?, ?) 
@@ -178,7 +164,6 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
     exit;
 }
 
-// --- FUNGSI UNTUK MENGAMBIL DATA PELAMAR DENGAN PENCARIAN ---
 function getApplicantsByStatus($conn, $status, $search_keyword = '') {
     if (!empty($search_keyword)) {
         $sql = "SELECT id, nama_lengkap, posisi_dilamar, no_telp, email, status 
@@ -198,11 +183,8 @@ function getApplicantsByStatus($conn, $status, $search_keyword = '') {
     return $stmt->get_result();
 }
 
-// Ambil data pengumuman umum
 $pengumuman_umum = $conn->query("SELECT * FROM pengumuman_umum WHERE status = 'active' ORDER BY tanggal DESC, id DESC");
 
-// Panggil semua status pelamar
-// Panggil semua status pelamar DENGAN PENCARIAN
 $pelamarMenunggu = getApplicantsByStatus($conn, 'Menunggu Proses', $search_keyword);
 $pelamarAdministrasi = getApplicantsByStatus($conn, 'Seleksi Administratif', $search_keyword);
 $pelamarWawancara = getApplicantsByStatus($conn, 'Seleksi Wawancara', $search_keyword);
@@ -389,7 +371,6 @@ $pelamarTidakLolos = getApplicantsByStatus($conn, 'Tidak Lolos', $search_keyword
             <button class="btn-hapus">Hapus</button>
         </div>
 
-        <!-- Hapus komentar ini dan ganti dengan kode PHP di bawah -->
         <?php if(!empty($search_keyword)): ?>
             <div style="margin-bottom: 15px; padding: 10px; background: #e7f3ff; border-radius: 5px;">
                 Menampilkan hasil pencarian untuk: <strong>"<?= htmlspecialchars($search_keyword) ?>"</strong>
@@ -641,7 +622,6 @@ $pelamarTidakLolos = getApplicantsByStatus($conn, 'Tidak Lolos', $search_keyword
 </main>
 
 <script>
-// Fungsi untuk modal pelamar
 function bukaModal(pelamarId, currentStatus, namaPelamar) {
     document.getElementById('modalPelamarId').value = pelamarId;
     document.getElementById('modalCurrentStatus').value = currentStatus;
@@ -649,7 +629,6 @@ function bukaModal(pelamarId, currentStatus, namaPelamar) {
     const pilihanTahapDiv = document.getElementById('pilihanTahapSelanjutnya');
     const textarea = document.querySelector('#formPengumuman textarea[name="message"]');
     
-    // Sembunyikan pilihan secara default
     pilihanTahapDiv.style.display = 'none';
 
     let defaultMessage = "";
@@ -661,15 +640,13 @@ function bukaModal(pelamarId, currentStatus, namaPelamar) {
         case 'Seleksi Administratif':
             defaultMessage = `Selamat ${namaPelamar}! Anda lolos seleksi administratif. Tahap selanjutnya adalah wawancara.`;
             break;
-        // JIKA DARI WAWANCARA, TAMPILKAN PILIHAN
         case 'Seleksi Wawancara':
-            pilihanTahapDiv.style.display = 'block'; // Tampilkan pilihan
+            pilihanTahapDiv.style.display = 'block'; 
             defaultMessage = `Selamat ${namaPelamar}! Anda lolos tahap wawancara. Silakan lanjutkan ke tahap berikutnya.`;
             break;
         case 'Seleksi Psikotes':
             defaultMessage = `Selamat ${namaPelamar}! Anda lolos psikotes. Tahap selanjutnya adalah pemeriksaan kesehatan.`;
             break;
-        // JIKA DARI TAHAP GABUNGAN
         case 'Seleksi Psikotes & Kesehatan':
             defaultMessage = `Selamat ${namaPelamar}! Anda telah lolos tahap Psikotes. Tahap selanjutnya adalah Tes Kesehatan.`;
             break;
@@ -678,8 +655,8 @@ function bukaModal(pelamarId, currentStatus, namaPelamar) {
             break;
     }
     
-    textarea.value = ""; // Kosongkan dulu agar placeholder terlihat
-    textarea.placeholder = defaultMessage; // Gunakan pesan default sebagai placeholder
+    textarea.value = "";
+    textarea.placeholder = defaultMessage; 
     document.getElementById('modalPengumuman').style.display = 'block';
 }
 
@@ -687,7 +664,6 @@ function tutupModal() {
     document.getElementById('modalPengumuman').style.display = 'none';
 }
 
-// Fungsi untuk modal edit pengumuman umum
 function editPengumuman(id, judul, isi, tanggal) {
     document.getElementById('editPengumumanId').value = id;
     document.getElementById('editJudul').value = judul;
@@ -700,7 +676,6 @@ function tutupModalEdit() {
     document.getElementById('modalEditPengumuman').style.display = 'none';
 }
 
-// Tutup modal jika klik di luar
 window.onclick = function(event) {
     const modal = document.getElementById('modalPengumuman');
     const modalEdit = document.getElementById('modalEditPengumuman');

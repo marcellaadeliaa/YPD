@@ -2,23 +2,19 @@
 session_start();
 require_once 'config.php';
 
-// Cek apakah user sudah login
-if (!isset($_SESSION['user'])) {
-    header("Location: login_karyawan.php");
-    exit;
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'karyawan') {
+    header("Location: login_karyawan.php?error=unauthorized");
+    exit();
 }
 
-// Ambil data dari session
 $user = $_SESSION['user'];
 $user_id = $user['id_karyawan'];
 $nik = $user['kode_karyawan'];
 $nama_lengkap = $user['nama_lengkap'];
 
-// Ambil data karyawan dari database
 $sql = "SELECT * FROM data_karyawan WHERE id_karyawan = ?";
 $stmt = mysqli_prepare($conn, $sql);
 
-// Cek jika prepared statement gagal
 if (!$stmt) {
     die("Error preparing statement: " . mysqli_error($conn));
 }
@@ -28,7 +24,6 @@ mysqli_stmt_execute($stmt);
 $result = mysqli_stmt_get_result($stmt);
 $karyawan = $result->fetch_assoc();
 
-// Jika data tidak ditemukan, hapus session dan redirect ke login
 if (!$karyawan) {
     session_destroy();
     header("Location: login_karyawan.php");
@@ -37,13 +32,11 @@ if (!$karyawan) {
 
 mysqli_stmt_close($stmt);
 
-// Ambil data dari database
 $nama = $karyawan['nama_lengkap'];
 $sisa_cuti_tahunan = $karyawan['sisa_cuti_tahunan'];
 $sisa_cuti_lustrum = $karyawan['sisa_cuti_lustrum'];
-$kode_karyawan = $karyawan['kode_karyawan']; // Ambil kode_karyawan
+$kode_karyawan = $karyawan['kode_karyawan']; 
 
-// Set nilai default untuk cuti dan KHL
 $tanggal_cuti = "-";
 $jenis_cuti = "-";
 $status_cuti = null;
@@ -51,8 +44,6 @@ $tanggal_khl = "-";
 $jenis_khl = "-";
 $status_khl = null;
 
-// --- MODIFIKASI DI SINI ---
-// Query untuk mendapatkan pengajuan cuti terakhir dari tabel 'data_pengajuan_cuti'
 $sql_cuti = "SELECT * FROM data_pengajuan_cuti WHERE kode_karyawan = ? ORDER BY created_at DESC LIMIT 1";
 $stmt_cuti = mysqli_prepare($conn, $sql_cuti);
 
@@ -72,10 +63,7 @@ if ($stmt_cuti) {
     }
     mysqli_stmt_close($stmt_cuti);
 }
-// --- AKHIR MODIFIKASI ---
 
-
-// Query untuk mendapatkan pengajuan KHL terakhir
 $sql_khl = "SELECT * FROM data_pengajuan_khl WHERE kode_karyawan = ? ORDER BY created_at DESC LIMIT 1";
 $stmt_khl = mysqli_prepare($conn, $sql_khl);
 
@@ -98,7 +86,6 @@ if ($stmt_khl) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard Karyawan</title>
 <style>
-/* === GLOBAL === */
 body {
   margin:0;
   font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -149,7 +136,6 @@ nav a {
   display:block;
 }
 
-/* ===== DROPDOWN ===== */
 nav li ul {
   display:none;
   position:absolute;

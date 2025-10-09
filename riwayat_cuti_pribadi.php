@@ -1,22 +1,18 @@
 <?php
 session_start();
-require 'config.php'; // Menghubungkan ke database
+require 'config.php'; 
 
-// 1. Ambil data karyawan yang sedang login dari session
-if (!isset($_SESSION['user']['kode_karyawan'])) {
-    // Jika tidak ada session, kembali ke halaman login
-    header("Location: login_karyawan.php");
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'karyawan') {
+    header("Location: login_karyawan.php?error=unauthorized");
     exit();
 }
 $user_data = $_SESSION['user'];
 $kode_karyawan_login = $user_data['kode_karyawan'];
 
-// Inisialisasi variabel filter dari URL
 $start_date = $_GET['start_date'] ?? '';
 $end_date = $_GET['end_date'] ?? '';
 $search_query = $_GET['search'] ?? '';
 
-// 2. Query database untuk mengambil riwayat cuti PRIBADI, termasuk tanggal_akhir
 $sql = "SELECT 
             id, 
             kode_karyawan, 
@@ -36,7 +32,6 @@ $sql = "SELECT
 $params = [$kode_karyawan_login];
 $types = "s";
 
-// Tambahkan filter ke query SQL
 if (!empty($start_date)) {
     $sql .= " AND tanggal_mulai >= ?";
     $params[] = $start_date;
@@ -65,7 +60,6 @@ if ($stmt) {
     $filtered_data = $result->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
 } else {
-    // Handle error jika query gagal
     $filtered_data = [];
 }
 

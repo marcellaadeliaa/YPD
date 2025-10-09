@@ -11,7 +11,6 @@ $user = $_SESSION['user'];
 $divisi_penanggung_jawab = $user['divisi'];
 $nama_pj = $user['nama_lengkap'];
 
-// Ambil data riwayat KHL yang sesuai dengan divisi penanggung jawab
 $query = "SELECT dpk.*, dk.nama_lengkap, dk.divisi, dk.role 
           FROM data_pengajuan_khl dpk 
           JOIN data_karyawan dk ON dpk.kode_karyawan = dk.kode_karyawan 
@@ -22,36 +21,29 @@ $stmt->bind_param("s", $divisi_penanggung_jawab);
 $stmt->execute();
 $result = $stmt->get_result();
 
-// Hitung statistik
 $total_khl = 0;
 $disetujui = 0;
 $ditolak = 0;
 $pending = 0;
 
-// Fetch all results into an array to be filtered
 $all_rows = $result->fetch_all(MYSQLI_ASSOC);
 
-// Lakukan filter di PHP
 $filtered_rows = [];
 foreach ($all_rows as $row) {
     $show_row = true;
     
-    // Filter status
     if (isset($_GET['status_filter']) && $_GET['status_filter'] != '' && $row['status_khl'] != $_GET['status_filter']) {
         $show_row = false;
     }
     
-    // Filter tanggal mulai
     if (isset($_GET['start_date']) && $_GET['start_date'] != '' && date('Y-m-d', strtotime($row['created_at'])) < $_GET['start_date']) {
         $show_row = false;
     }
     
-    // Filter tanggal akhir
     if (isset($_GET['end_date']) && $_GET['end_date'] != '' && date('Y-m-d', strtotime($row['created_at'])) > $_GET['end_date']) {
         $show_row = false;
     }
 
-    // BARU: Filter berdasarkan nama (case-insensitive)
     if (isset($_GET['search_nama']) && !empty(trim($_GET['search_nama']))) {
         if (stripos($row['nama_lengkap'], trim($_GET['search_nama'])) === false) {
             $show_row = false;
@@ -64,7 +56,6 @@ foreach ($all_rows as $row) {
 }
 
 
-// Hitung statistik dari data yang tidak difilter
 foreach ($all_rows as $row) {
     $total_khl++;
     switch ($row['status_khl']) {
@@ -74,15 +65,12 @@ foreach ($all_rows as $row) {
     }
 }
 
-// --- LOGIKA PAGINASI BARU ---
-$limit = 5; // Jumlah data per halaman
+$limit = 5; 
 $total_records = count($filtered_rows);
 $total_pages = ceil($total_records / $limit);
 
-// Tentukan halaman saat ini, defaultnya adalah halaman 1
 $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
 
-// Pastikan nomor halaman valid
 if ($page < 1) {
     $page = 1;
 }
@@ -90,10 +78,8 @@ if ($page > $total_pages && $total_pages > 0) {
     $page = $total_pages;
 }
 
-// Hitung offset (data mulai dari mana)
 $offset = ($page - 1) * $limit;
 
-// Ambil data untuk halaman saat ini menggunakan array_slice
 $rows_for_current_page = array_slice($filtered_rows, $offset, $limit);
 
 ?>
@@ -105,9 +91,8 @@ $rows_for_current_page = array_slice($filtered_rows, $offset, $limit);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Riwayat KHL Divisi - Penanggung Jawab</title>
     <style>
-        /* --- GAYA PAGINASI BARU YANG LEBIH RAPI --- */
 .pagination-wrapper {
-    background-color: #f8f9fa; /* Warna latar belakang lembut */
+    background-color: #f8f9fa;
     padding: 20px 15px;
     margin-top: 30px;
     border-radius: 12px;
@@ -115,13 +100,13 @@ $rows_for_current_page = array_slice($filtered_rows, $offset, $limit);
     justify-content: center;
     align-items: center;
     box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    flex-wrap: wrap; /* Agar responsif di layar kecil */
-    gap: 10px; /* Jarak antar tombol */
+    flex-wrap: wrap; 
+    gap: 10px; 
 }
 
 .pagination-wrapper a, 
 .pagination-wrapper span {
-    display: inline-flex; /* Menggunakan flex untuk alignment */
+    display: inline-flex; 
     align-items: center;
     justify-content: center;
     min-width: 40px;
@@ -132,7 +117,7 @@ $rows_for_current_page = array_slice($filtered_rows, $offset, $limit);
     font-weight: 600;
     font-size: 0.95rem;
     transition: all 0.2s ease-in-out;
-    user-select: none; /* Mencegah teks terseleksi saat diklik cepat */
+    user-select: none; 
 }
 
 .pagination-wrapper a {
@@ -145,7 +130,7 @@ $rows_for_current_page = array_slice($filtered_rows, $offset, $limit);
     background-color: var(--primary-color);
     color: #fff;
     border-color: var(--primary-color);
-    transform: translateY(-2px); /* Efek sedikit terangkat */
+    transform: translateY(-2px);
     box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
@@ -486,7 +471,6 @@ $rows_for_current_page = array_slice($filtered_rows, $offset, $limit);
             border: 1px solid #c3e6cb;
         }
 
-        /* --- CSS BARU UNTUK PAGINASI --- */
         .pagination-container {
             margin-top: 30px;
             display: flex;

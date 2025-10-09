@@ -7,7 +7,6 @@ $error = '';
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = trim($_POST['email']);
     
-    // Cek apakah email ada di database
     $stmt = $conn->prepare("SELECT id, email FROM users WHERE email = ?");
     $stmt->bind_param("s", $email);
     $stmt->execute();
@@ -15,7 +14,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $user = $result->fetch_assoc();
     
     if ($user) {
-        // Simpan email di session untuk reset password
         $_SESSION['reset_email'] = $email;
         header("Location: reset_password.php");
         exit;

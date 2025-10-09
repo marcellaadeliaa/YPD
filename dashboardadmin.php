@@ -7,9 +7,31 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
     exit();
 }
 
-$nama_user = 'Cell';
+$user_data = $_SESSION['user'];
+$user_id = $user_data['id_karyawan']; 
 
-// QUERY YANG DIPERBAIKI - Berdasarkan riwayat_pelamar
+$sql = "SELECT * FROM data_karyawan WHERE id_karyawan = ?";
+$stmt = mysqli_prepare($conn, $sql);
+
+if (!$stmt) {
+    die("Error preparing statement: " . mysqli_error($conn));
+}
+
+mysqli_stmt_bind_param($stmt, "i", $user_id);
+mysqli_stmt_execute($stmt);
+$result = mysqli_stmt_get_result($stmt);
+$admin_data = $result->fetch_assoc();
+
+if (!$admin_data) {
+    session_destroy();
+    header("Location: login_karyawan.php");
+    exit;
+}
+
+mysqli_stmt_close($stmt);
+
+$nama_user = $admin_data['nama_lengkap'];
+
 $query_status_pelamar = "
     SELECT 
         -- Menunggu Proses: Pelamar yang belum ada riwayat atau masih di tahap awal
@@ -60,7 +82,6 @@ $query_status_pelamar = "
 $result_status = $conn->query($query_status_pelamar);
 $status_pelamar = $result_status->fetch_assoc();
 
-// Jika masih kosong, coba query alternatif berdasarkan data_pelamar.status
 if (!$status_pelamar || array_sum($status_pelamar) == 0) {
     $query_alternatif = "
         SELECT 
@@ -79,7 +100,6 @@ if (!$status_pelamar || array_sum($status_pelamar) == 0) {
     $status_pelamar = $result_alt->fetch_assoc();
 }
 
-// Set default values jika masih kosong
 $status_pelamar = array_merge([
     'menunggu_proses' => 0,
     'administratif' => 0,
@@ -90,11 +110,9 @@ $status_pelamar = array_merge([
     'total_pelamar_aktif' => 0
 ], $status_pelamar ?: []);
 
-// 2. Mengambil data untuk tabel
 $query_tabel = "SELECT nama_lengkap, posisi_dilamar, created_at FROM data_pelamar ORDER BY created_at DESC LIMIT 5";
 $result_tabel = $conn->query($query_tabel);
 
-// Menutup koneksi database setelah selesai mengambil data
 $conn->close();
 ?>
 
@@ -105,7 +123,6 @@ $conn->close();
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard Admin SDM</title>
 <style>
-/* === GLOBAL (Diambil dari dashboardkaryawan.css) === */
 body {
   margin:0;
   font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -114,7 +131,6 @@ body {
   color:#fff;
 }
 
-/* ===== HEADER & NAV ===== */
 header {
   background:rgba(255,255,255,1);
   padding:20px 40px;
@@ -156,7 +172,6 @@ nav a {
   display:block;
 }
 
-/* ===== DROPDOWN ===== */
 nav li ul {
   display:none;
   position:absolute;
@@ -177,7 +192,6 @@ nav li ul li a {
   white-space:nowrap;
 }
 
-/* ===== MAIN CONTENT ===== */
 main {
   max-width:1200px;
   margin:40px auto;
@@ -196,7 +210,6 @@ p.admin-title {
     opacity: 0.9;
 }
 
-/* ===== DASHBOARD GRID & CARDS (Penyesuaian untuk Admin) ===== */
 .dashboard-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -225,7 +238,6 @@ p.admin-title {
     line-height: 1.6;
 }
 
-/* Style untuk status pelamar */
 .status-list {
     margin: 10px 0;
 }
@@ -241,7 +253,6 @@ p.admin-title {
     color: #1E105E;
 }
 
-/* Style untuk tombol */
 .btn {
   display:inline-block;
   background:#4a3f81;
@@ -251,7 +262,7 @@ p.admin-title {
   text-decoration:none;
   font-weight:600;
   font-size:14px;
-  margin-top: auto; /* Mendorong tombol ke bawah kartu */
+  margin-top: auto; 
   text-align: center;
   transition: background-color 0.3s;
 }
@@ -259,7 +270,6 @@ p.admin-title {
     background-color: #352d5c;
 }
 
-/* Style untuk ikon kalender */
 .calendar-icon {
     font-size: 3rem;
     text-align: center;
@@ -267,7 +277,6 @@ p.admin-title {
     color: #1E105E;
 }
 
-/* ===== TABEL DATA (Style baru) ===== */
 .data-table {
     width: 100%;
     border-collapse: collapse;
@@ -286,7 +295,6 @@ p.admin-title {
     background-color: #f1f1f1;
 }
 
-/* ===== Responsive ===== */
 @media(max-width:768px){
   header{flex-direction:column;align-items:flex-start;}
   nav ul{flex-direction:column;gap:10px;width:100%;margin-top:15px;}

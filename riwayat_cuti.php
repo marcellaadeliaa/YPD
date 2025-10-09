@@ -1,20 +1,17 @@
 <?php
 session_start();
-require 'config.php'; // Menghubungkan ke database
+require 'config.php'; 
 
-// Keamanan: Pastikan hanya admin yang bisa mengakses halaman ini
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
     header("Location: login_karyawan.php?error=unauthorized");
     exit();
 }
 
-// Inisialisasi variabel filter dari URL
 $start_date = $_GET['start_date'] ?? '';
 $end_date = $_GET['end_date'] ?? '';
 $search_query = $_GET['search'] ?? '';
 
-// --- PENGAMBILAN DATA DARI DATABASE ---
-// Query untuk mengambil riwayat cuti dari tabel data_pengajuan_cuti
+
 $sql = "SELECT 
             id,
             kode_karyawan,
@@ -29,12 +26,11 @@ $sql = "SELECT
             waktu_persetujuan
         FROM 
             data_pengajuan_cuti
-        WHERE 1=1"; // Kondisi awal untuk memudahkan penambahan filter
+        WHERE 1=1"; 
 
 $params = [];
 $types = '';
 
-// Tambahkan filter tanggal ke query jika ada input
 if (!empty($start_date)) {
     $sql .= " AND tanggal_mulai >= ?";
     $params[] = $start_date;
@@ -46,7 +42,6 @@ if (!empty($end_date)) {
     $types .= 's';
 }
 
-// Tambahkan filter pencarian ke query jika ada input
 if (!empty($search_query)) {
     $search_param = "%" . $search_query . "%";
     $sql .= " AND (nama_karyawan LIKE ? OR kode_karyawan LIKE ? OR divisi LIKE ? OR jabatan LIKE ?)";
@@ -59,7 +54,6 @@ $sql .= " ORDER BY created_at DESC";
 $stmt = $conn->prepare($sql);
 
 if ($stmt) {
-    // Bind parameter jika ada filter yang digunakan
     if (!empty($params)) {
         $stmt->bind_param($types, ...$params);
     }
@@ -68,7 +62,6 @@ if ($stmt) {
     $filtered_data = $result->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
 } else {
-    // Handle jika query gagal
     $filtered_data = [];
 }
 
@@ -81,7 +74,6 @@ $conn->close();
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Riwayat Cuti Pegawai - Admin</title>
 <style>
-    /* CSS tidak ada perubahan, tetap sama seperti sebelumnya */
     body { margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg,#1E105E 0%,#8897AE 100%); min-height:100vh; color:#333; }
     header { background:rgba(255,255,255,1); padding:20px 40px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #34377c; }
     .logo { display:flex; align-items:center; gap:16px; font-weight:500; font-size:20px; color:#2e1f4f; }

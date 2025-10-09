@@ -3,18 +3,15 @@ require_once 'config.php';
 
 echo "<h2>Status Database</h2>";
 
-// Cek koneksi
 if (!$conn) {
     die("Koneksi database gagal: " . mysqli_connect_error());
 }
 echo "✓ Koneksi database berhasil<br>";
 
-// Cek tabel pengajuan_khl
 $result = mysqli_query($conn, "SHOW TABLES LIKE 'pengajuan_khl'");
 if (mysqli_num_rows($result) > 0) {
     echo "✓ Tabel pengajuan_khl ada<br>";
     
-    // Tampilkan struktur tabel
     $structure = mysqli_query($conn, "DESCRIBE pengajuan_khl");
     echo "<h3>Struktur tabel pengajuan_khl:</h3>";
     echo "<table border='1'>";
@@ -34,7 +31,6 @@ if (mysqli_num_rows($result) > 0) {
     echo "✗ Tabel pengajuan_khl tidak ada<br>";
 }
 
-// Cek data yang ada
 $data = mysqli_query($conn, "SELECT * FROM pengajuan_khl ORDER BY created_at DESC LIMIT 5");
 echo "<h3>Data terbaru dalam pengajuan_khl:</h3>";
 if (mysqli_num_rows($data) > 0) {

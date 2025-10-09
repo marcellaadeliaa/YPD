@@ -1,6 +1,5 @@
 <?php
 
-// Perintah Wajib untuk Menampilkan Error Apapun yang Terjadi
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
@@ -8,13 +7,11 @@ echo "<h1>Tes Diagnostik Server</h1>";
 echo "<p>Tes dimulai pada: " . date('Y-m-d H:i:s') . "</p>";
 echo "<hr>";
 
-// Tes 1: Memuat file konfigurasi
 echo "<h2>Tes 1: Memuat config.php</h2>";
 if (file_exists('config.php')) {
     require 'config.php';
     echo "<p style='color:green;'><b>BERHASIL:</b> File 'config.php' ditemukan dan dimuat.</p>";
 
-    // Tes 2: Mengecek koneksi database
     echo "<hr><h2>Tes 2: Koneksi ke Database</h2>";
     if (isset($conn) && $conn instanceof mysqli) {
         if ($conn->ping()) {

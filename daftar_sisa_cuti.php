@@ -1,20 +1,17 @@
 <?php
 session_start();
-require 'config.php'; // Menghubungkan ke database
+require 'config.php'; 
 
-// --- Logika Keamanan: Pastikan hanya admin yang bisa mengakses ---
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
     header("Location: login_karyawan.php?error=unauthorized");
     exit();
 }
 
-// --- Logika untuk Memperbarui Sisa Cuti dari Modal ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['karyawan_id'])) {
     $karyawan_id = $_POST['karyawan_id'];
     $sisa_tahunan = (int)$_POST['sisa_cuti_tahunan'];
     $sisa_lustrum = (int)$_POST['sisa_cuti_lustrum'];
 
-    // Query untuk update sisa cuti di database
     $stmt_update = $conn->prepare("UPDATE data_karyawan SET sisa_cuti_tahunan = ?, sisa_cuti_lustrum = ? WHERE id_karyawan = ?");
     $stmt_update->bind_param("iii", $sisa_tahunan, $sisa_lustrum, $karyawan_id);
     
@@ -25,18 +22,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['karyawan_id'])) {
     }
     $stmt_update->close();
     
-    // Redirect untuk menghindari resubmit form saat refresh
     header("Location: daftar_sisa_cuti.php");
     exit();
 }
 
-// --- Logika untuk Mengambil Data Karyawan ---
 $search_query = $_GET['search'] ?? '';
 
-// Query dasar untuk mengambil data karyawan (termasuk role)
 $sql = "SELECT id_karyawan, kode_karyawan, nama_lengkap, divisi, role, sisa_cuti_tahunan, sisa_cuti_lustrum FROM data_karyawan";
 
-// Tambahkan filter pencarian jika ada
 if (!empty($search_query)) {
     $search_term = "%" . $search_query . "%";
     $sql .= " WHERE nama_lengkap LIKE ? OR kode_karyawan LIKE ? OR divisi LIKE ? OR role LIKE ?";

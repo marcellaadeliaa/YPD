@@ -8,14 +8,11 @@ if (!isset($_SESSION['user']) ||
     exit();
 }
 
-
-// --- PROSES PENCARIAN ---
 $search_keyword = '';
 if (isset($_GET['search']) && !empty(trim($_GET['search']))) {
     $search_keyword = trim($_GET['search']);
 }
 
-// --- QUERY DENGAN PENCARIAN ---
 $sql = "
     SELECT 
         dp.id, 
@@ -34,7 +31,6 @@ $sql = "
         dp.status IN ('Diterima', 'Tidak Lolos')
 ";
 
-// Tambahkan kondisi pencarian jika ada keyword
 if (!empty($search_keyword)) {
     $sql .= " AND (dp.nama_lengkap LIKE ? OR dp.posisi_dilamar LIKE ?)";
 }
@@ -43,7 +39,6 @@ $sql .= " ORDER BY dp.id DESC";
 
 $query_pelamar = $conn->prepare($sql);
 
-// Bind parameter jika ada pencarian
 if (!empty($search_keyword)) {
     $search_term = "%$search_keyword%";
     $query_pelamar->bind_param("ss", $search_term, $search_term);
@@ -52,7 +47,6 @@ if (!empty($search_keyword)) {
 $query_pelamar->execute();
 $riwayat_pelamar_result = $query_pelamar->get_result();
 
-// --- TAMBAHKAN FUNGSI INI ---
 function displayStatus($status) {
     switch($status) {
         case 'Lolos':
@@ -75,7 +69,6 @@ function displayStatus($status) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Riwayat Pelamar</title>
     <style>
-        /* CSS Lengkap Anda akan ditaruh di sini */
         body { margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg,#1E105E 0%,#8897AE 100%); min-height:100vh; color:#333; }
         header { background:rgba(255,255,255,1); padding:20px 40px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #34377c; flex-wrap:wrap; }
         .logo { display:flex; align-items:center; gap:16px; font-weight:500; font-size:20px; color:#2e1f4f; }

@@ -2,9 +2,9 @@
 include 'config.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $email    = $_POST['email'];
-    $password = $_POST['password'];
-    $confirm  = $_POST['confirm'];
+    $email    = trim($_POST['email']);
+    $password = trim($_POST['password']);
+    $confirm  = trim($_POST['confirm']);
 
     if (strlen($password) < 8 || !preg_match('/[0-9]/', $password) || !preg_match('/[A-Za-z]/', $password)) {
         $error = "Password minimal 8 karakter dan harus mengandung huruf & angka.";
@@ -12,13 +12,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $error = "Konfirmasi password tidak sesuai.";
     } else {
         $hash = password_hash($password, PASSWORD_DEFAULT);
-        $sql = "INSERT INTO users (email, password) VALUES ('$email', '$hash')";
-        if (mysqli_query($conn, $sql)) {
+        $nama_lengkap = ""; 
+        
+        $stmt = $conn->prepare("INSERT INTO users (nama_lengkap, email, password) VALUES (?, ?, ?)");
+        $stmt->bind_param("sss", $nama_lengkap, $email, $hash);
+        
+        if ($stmt->execute()) {
             header("Location: login.php?success=1");
             exit;
         } else {
-            $error = "Gagal mendaftar: " . mysqli_error($conn);
+            $error = "Gagal mendaftar: " . $stmt->error;
         }
+        $stmt->close();
     }
 }
 ?>
