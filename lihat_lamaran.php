@@ -42,9 +42,59 @@ if ($status_lamaran == 'Diterima') {
     header { background:rgba(255,255,255,1); padding:20px 40px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #34377c; }
     .logo { display:flex; align-items:center; gap:16px; font-weight:500; font-size:20px; color:#2e1f4f; }
     .logo img { width:140px; height:50px; object-fit:contain; }
-    nav ul { list-style:none; margin:0; padding:0; display:flex; gap:30px; }
+    
+    nav ul { list-style:none; margin:0; padding:0; display:flex; gap:30px; position: relative; }
     nav li { position:relative; }
-    nav a { text-decoration:none; color:#333; font-weight:600; padding:8px 4px; display:block; }
+    nav a { text-decoration:none; color:#333; font-weight:600; padding:8px 4px; display:block; transition: color 0.3s ease; }
+    nav a:hover { color:#4a3f81; }
+    
+    nav li ul { 
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        background: #fff;
+        min-width: 180px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        border-radius: 8px;
+        padding: 8px 0;
+        z-index: 1000;
+        border: 1px solid #e9ecef;
+    }
+    
+    nav li:hover ul { 
+        display: block; 
+    }
+    
+    nav li ul li { 
+        margin: 0; 
+        display: block; 
+    }
+    
+    nav li ul a { 
+        padding: 10px 16px; 
+        color: #333;
+        font-weight: 500;
+        transition: background-color 0.3s ease;
+        white-space: nowrap;
+    }
+    
+    nav li ul a:hover { 
+        background-color: #f8f9fa; 
+        color: #4a3f81;
+    }
+    
+    nav li > a::after {
+        content: '';
+        display: inline-block;
+        margin-left: 6px;
+        transition: transform 0.3s ease;
+    }
+    
+    nav li:hover > a::after {
+        transform: rotate(180deg);
+    }
+    
     main { max-width:1000px; margin:40px auto; padding:0 20px; }
     .page-header { text-align: center; margin-bottom: 30px; }
     .page-header h1 { font-size: 26px; margin-bottom: 10px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
@@ -62,10 +112,17 @@ if ($status_lamaran == 'Diterima') {
     .file-list a { text-decoration: none; color: #2e1f4f; }
     .file-item { padding: 10px; background: #f8f9fa; border-radius: 6px; margin-bottom: 8px; border: 1px solid #e9ecef; transition: background-color 0.2s; }
     .file-item:hover { background-color: #e9ecef; }
-    .btn { display:inline-block; background:#4a3f81; color:#fff; padding:12px 24px; border-radius:8px; text-decoration:none; font-weight:600; font-size:14px; border: none; cursor: pointer; text-align: center; }
+    .btn { display:inline-block; background:#4a3f81; color:#fff; padding:12px 24px; border-radius:8px; text-decoration:none; font-weight:600; font-size:14px; border: none; cursor: pointer; text-align: center; transition: background 0.3s ease; }
+    .btn:hover { background:#3a3162; }
     .btn-secondary { background: #6c757d; }
+    .btn-secondary:hover { background: #545b62; }
     .action-buttons { display: flex; gap: 15px; margin-top: 25px; justify-content: center; }
-    @media(max-width:768px){ .data-grid { grid-template-columns: 1fr; } }
+    @media(max-width:768px){ 
+        .data-grid { grid-template-columns: 1fr; } 
+        header { padding: 15px 20px; flex-direction: column; gap: 15px; }
+        nav ul { gap: 15px; }
+        nav li ul { left: -50%; }
+    }
   </style>
 </head>
 <body>
@@ -75,12 +132,16 @@ if ($status_lamaran == 'Diterima') {
       <span>Yayasan Purba Danarta</span>
     </div>
     <nav>
-        <ul>
-            <li><a href="dashboard_user.php">Beranda</a></li>
+      <ul>
+        <li><a href="dashboardpelamar.php">Beranda</a></li>
+        <li>
+          <a href="#">Profil ▼</a>
+          <ul>
             <li><a href="lihat_lamaran.php">Lihat Lamaran</a></li>
-            <li><a href="edit_lamaran.php">Edit Lamaran</a></li>
-            <li><a href="logout.php">Logout</a></li>
-        </ul>
+          </ul>
+        </li>
+        <li><a href="logout.php">Logout</a></li>
+      </ul>
     </nav>
   </header>
 

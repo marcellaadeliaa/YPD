@@ -23,7 +23,8 @@ $sql = "SELECT
             tanggal_akhir,
             jenis_cuti,
             status,
-            waktu_persetujuan
+            waktu_persetujuan,
+            alasan
         FROM 
             data_pengajuan_cuti
         WHERE 1=1"; 
@@ -123,6 +124,15 @@ $conn->close();
         margin-bottom: 15px; 
         font-size: 14px; 
         border-left: 4px solid #4a3f81;
+    }
+    
+    .alasan-penolakan { 
+        max-width: 200px; 
+        white-space: nowrap; 
+        overflow: hidden; 
+        text-overflow: ellipsis; 
+        color: #d9534f;
+        font-style: italic;
     }
     
     @media (max-width: 768px) {
@@ -232,6 +242,7 @@ $conn->close();
                         <th>Jenis Cuti</th>
                         <th>Status</th>
                         <th>Waktu Persetujuan</th>
+                        <th>Alasan Penolakan</th> 
                     </tr>
                 </thead>
                 <tbody>
@@ -253,11 +264,14 @@ $conn->close();
                                 <span class="<?= $status_class ?>"><?= htmlspecialchars($cuti['status']) ?></span>
                             </td>
                             <td><?= $cuti['waktu_persetujuan'] ? date('d/m/Y H:i', strtotime($cuti['waktu_persetujuan'])) : '-' ?></td>
+                            <td class="alasan-penolakan" title="<?= htmlspecialchars($cuti['alasan'] ?? '') ?>">
+                                <?= ($cuti['status'] == 'Ditolak' && !empty($cuti['alasan'])) ? htmlspecialchars($cuti['alasan']) : '-' ?>
+                            </td>
                         </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="10" class="no-data">Tidak ada data cuti yang ditemukan</td>
+                            <td colspan="11" class="no-data">Tidak ada data cuti yang ditemukan</td> <!-- Ubah colspan menjadi 11 -->
                         </tr>
                     <?php endif; ?>
                 </tbody>

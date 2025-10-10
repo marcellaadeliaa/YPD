@@ -168,7 +168,6 @@ nav li ul li a {
     white-space: nowrap; 
 }
 
-/* Main Content */
 main { 
     max-width: 1200px; 
     margin: 40px auto; 
@@ -309,8 +308,8 @@ main {
         <p><?= htmlspecialchars($jabatan) ?></p>
     </div>
     <div class="action-buttons">
-        <a href="pengajuancuti_direktur.php">Pengajuan Cuti</a>
-        <a href="pengajuankhl_direktur.php">Pengajuan KHL</a>
+        <a href="pengajuan_cuti_direktur.php">Pengajuan Cuti</a>
+        <a href="pengajuan_khl_direktur.php">Pengajuan KHL</a>
     </div>
 </div>
 

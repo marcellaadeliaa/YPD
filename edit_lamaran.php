@@ -78,6 +78,59 @@ $query->close();
     header { background:rgba(255,255,255,1); padding:20px 40px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #34377c; backdrop-filter:blur(5px); flex-wrap:wrap; }
     .logo { display:flex; align-items:center; gap:16px; font-weight:500; font-size:20px; color:#2e1f4f; }
     .logo img { width:140px; height:50px; object-fit:contain; }
+    
+    nav ul { list-style:none; margin:0; padding:0; display:flex; gap:30px; position: relative; }
+    nav li { position:relative; }
+    nav a { text-decoration:none; color:#333; font-weight:600; padding:8px 4px; display:block; transition: color 0.3s ease; }
+    nav a:hover { color:#4a3f81; }
+    
+    nav li ul { 
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        background: #fff;
+        min-width: 180px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        border-radius: 8px;
+        padding: 8px 0;
+        z-index: 1000;
+        border: 1px solid #e9ecef;
+    }
+    
+    nav li:hover ul { 
+        display: block; 
+    }
+    
+    nav li ul li { 
+        margin: 0; 
+        display: block; 
+    }
+    
+    nav li ul a { 
+        padding: 10px 16px; 
+        color: #333;
+        font-weight: 500;
+        transition: background-color 0.3s ease;
+        white-space: nowrap;
+    }
+    
+    nav li ul a:hover { 
+        background-color: #f8f9fa; 
+        color: #4a3f81;
+    }
+ 
+    nav li > a::after {
+        content: '';
+        display: inline-block;
+        margin-left: 6px;
+        transition: transform 0.3s ease;
+    }
+    
+    nav li:hover > a::after {
+        transform: rotate(180deg);
+    }
+    
     main { max-width:1000px; margin:40px auto; padding:0 20px; }
     .page-header { text-align: center; margin-bottom: 30px; }
     .page-header h1 { font-size: 26px; margin-bottom: 10px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
@@ -98,12 +151,33 @@ $query->close();
     .alert { padding: 15px; border-radius: 8px; margin-bottom: 20px; font-weight: 600; }
     .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
     .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-    @media(max-width:768px){ .form-container { flex-direction: column; gap: 20px; } }
+    @media(max-width:768px){ 
+        .form-container { flex-direction: column; gap: 20px; } 
+        header { padding: 15px 20px; flex-direction: column; gap: 15px; }
+        nav ul { gap: 15px; }
+        nav li ul { left: -50%; }
+    }
   </style>
 </head>
 <body>
   <header>
-    </header>
+    <div class="logo">
+      <img src="image/namayayasan.png" alt="Logo Yayasan Purba Danarta">
+      <span>Yayasan Purba Danarta</span>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="dashboardpelamar.php">Beranda</a></li>
+        <li>
+          <a href="#">Profil ▼</a>
+          <ul>
+            <li><a href="lihat_lamaran.php">Lihat Lamaran</a></li>
+          </ul>
+        </li>
+        <li><a href="logout.php">Logout</a></li>
+      </ul>
+    </nav>
+  </header>
 
   <main>
     <div class="page-header">

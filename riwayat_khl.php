@@ -70,6 +70,7 @@ foreach ($riwayat_khl as $khl) {
     $filtered_data[] = [
         'id' => $khl['id_khl'],
         'kode_khl' => $khl['id_khl'],
+        'kode_karyawan' => $khl['kode_karyawan'], 
         'nama_karyawan' => $khl['nama_lengkap'],
         'jenis_khl' => $khl['divisi'], 
         'projek' => $khl['proyek'],
@@ -79,7 +80,8 @@ foreach ($riwayat_khl as $khl) {
         'tanggal_libur' => $khl['tanggal_cuti_khl'],
         'jam_mulai_libur' => $khl['jam_mulai_cuti_khl'],
         'jam_selesai_libur' => $khl['jam_akhir_cuti_khl'],
-        'status' => $status_mapping[$khl['status_khl']] ?? $khl['status_khl']
+        'status' => $status_mapping[$khl['status_khl']] ?? $khl['status_khl'],
+        'alasan_penolakan' => $khl['alasan_penolakan'] ?? '' 
     ];
 }
 
@@ -154,6 +156,15 @@ $conn->close();
     .no-data { text-align: center; padding: 40px; color: #666; font-style: italic; }
     
     .filter-info { background: #e7f3ff; padding: 10px 15px; border-radius: 6px; margin-bottom: 20px; font-size: 14px; border-left: 4px solid #4a3f81; display: flex; justify-content: space-between; align-items: center; }
+    
+    .alasan-penolakan { 
+        max-width: 200px; 
+        white-space: nowrap; 
+        overflow: hidden; 
+        text-overflow: ellipsis; 
+        color: #d9534f;
+        font-style: italic;
+    }
     
     @media (max-width: 992px) {
         header { flex-direction: column; align-items: flex-start; }
@@ -259,8 +270,8 @@ $conn->close();
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>No. Code</th>
-                        <th>Name</th>
+                        <th>No. Kode Karyawan</th>
+                        <th>Nama</th>
                         <th>Jenis KHL</th>
                         <th>Projek</th>
                         <th>Tanggal Kerja</th>
@@ -270,13 +281,14 @@ $conn->close();
                         <th>Jam Mulai</th>
                         <th>Jam Selesai</th>
                         <th>Status</th>
+                        <th>Alasan Penolakan</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (!empty($filtered_data)): ?>
                         <?php foreach($filtered_data as $khl): ?>
                         <tr>
-                            <td><?= htmlspecialchars($khl['kode_khl']) ?></td>
+                            <td><?= htmlspecialchars($khl['kode_karyawan']) ?></td> 
                             <td><?= htmlspecialchars($khl['nama_karyawan']) ?></td>
                             <td><?= htmlspecialchars($khl['jenis_khl']) ?></td>
                             <td><?= htmlspecialchars($khl['projek']) ?></td>
@@ -297,11 +309,14 @@ $conn->close();
                                     <?= htmlspecialchars($khl['status']) ?>
                                 <?php endif; ?>
                             </td>
+                            <td class="alasan-penolakan" title="<?= htmlspecialchars($khl['alasan_penolakan']) ?>">
+                                <?= !empty($khl['alasan_penolakan']) ? htmlspecialchars($khl['alasan_penolakan']) : '-' ?>
+                            </td>
                         </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="11" class="no-data">Tidak ada data KHL yang ditemukan</td>
+                            <td colspan="12" class="no-data">Tidak ada data KHL yang ditemukan</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>

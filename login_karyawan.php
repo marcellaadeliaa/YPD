@@ -129,11 +129,6 @@ if (isset($_SESSION['user'])) {
                             <button type="submit" class="login-btn">Login →</button>
                         </form>
                     </div>
-                    
-                    <div class="btn-row">
-                        <button class="action-btn" onclick="window.location.href='#'">Bantuan</button>
-                        <button class="action-btn" onclick="window.location.href='#'">Info</button>
-                    </div>
                 </div>
             </div>
         </div>

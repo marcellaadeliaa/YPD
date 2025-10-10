@@ -230,7 +230,7 @@ $stmt->close();
     
     <main>
         <div class="welcome-section">
-            <h2>Detail Karyawan</h2>
+            <h1>Detail Karyawan</h1>
         </div>
         
         <div class="card">

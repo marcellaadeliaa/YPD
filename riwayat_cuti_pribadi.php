@@ -23,7 +23,8 @@ $sql = "SELECT
             jenis_cuti, 
             status, 
             waktu_persetujuan,
-            file_surat_dokter 
+            file_surat_dokter,
+            alasan
         FROM 
             data_pengajuan_cuti 
         WHERE 
@@ -113,6 +114,16 @@ $conn->close();
     .status-Ditolak { color: #d9534f; font-weight: 600; }
     .status-Menunggu-Persetujuan { color: #f39c12; font-weight: 600; }
     .btn-lihat-surat { background-color: #17a2b8; color: white; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-size: 12px; }
+    
+    .alasan-penolakan {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-size: 13px;
+        border-left: 3px solid #dc3545;
+        margin-top: 5px;
+    }
     
     .no-data { text-align: center; padding: 40px; color: #666; font-style: italic; }
     
@@ -242,6 +253,7 @@ $conn->close();
                         <th>Surat Dokter</th>
                         <th>Status</th>
                         <th>Waktu Persetujuan</th>
+                        <th>Alasan Penolakan</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -272,11 +284,24 @@ $conn->close();
                                     <span style="color: #999;">-</span>
                                 <?php endif; ?>
                             </td>
+                            <td>
+                                <?php if ($cuti['status'] == 'Ditolak' && !empty($cuti['alasan'])): ?>
+                                    <div class="alasan-penolakan"><?= htmlspecialchars($cuti['alasan']) ?></div>
+                                <?php else: ?>
+                                    <span style="color: #999;">-</span>
+                                <?php endif; ?>
+                            </td>
                         </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="7" class="no-data">Tidak ada data cuti yang ditemukan</td>
+                            <td colspan="8" class="no-data">
+                                Tidak ada data cuti yang ditemukan
+                                <?php if (empty($start_date) && empty($end_date) && empty($search_query)): ?>
+                                    <br><br>
+                                    <a href="formcutikaryawan.php" class="btn btn-ajukan" style="text-decoration: none;">Ajukan Cuti Pertama</a>
+                                <?php endif; ?>
+                            </td>
                         </tr>
                     <?php endif; ?>
                 </tbody>

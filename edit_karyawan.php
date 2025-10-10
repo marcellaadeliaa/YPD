@@ -232,7 +232,7 @@ $stmt->close();
     
     <main>
         <div class="welcome-section">
-            <h2>Edit Data Karyawan</h2>
+            <h1>Edit Data Karyawan</h1>
         </div>
         
         <div class="card">
