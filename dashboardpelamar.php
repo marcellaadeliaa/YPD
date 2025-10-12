@@ -68,17 +68,27 @@ $judul_pengumuman = '';
 $isi_pengumuman = '';
 $tanggal_pengumuman = '';
 
-if ($pengumumanPelamar) {
+// Logika pengumuman berdasarkan status
+if ($status == 'Tidak Lolos') {
+    // Untuk status Tidak Lolos, tampilkan pesan khusus
+    $judul_pengumuman = "Hasil Seleksi";
+    $isi_pengumuman = "Terima kasih telah berpartisipasi dalam proses seleksi di Yayasan Purba Danarta. Setelah melalui tahap penilaian yang teliti, kami menyampaikan bahwa Anda belum dapat melanjutkan ke tahap selanjutnya pada kesempatan ini.\n\nKami sangat menghargai waktu dan usaha yang telah Anda berikan. Jangan berkecil hati, karena setiap proses adalah pembelajaran berharga untuk kesempatan di masa depan.\n\nKami berharap Anda terus bersemangat dalam mengembangkan potensi diri dan mencari kesempatan lainnya yang sesuai dengan kemampuan Anda.";
+    $tanggal_pengumuman = date('d/m/Y');
+    $show_pengumuman = true;
+} elseif ($pengumumanPelamar) {
+    // Untuk status lain yang memiliki pengumuman personal
     $judul_pengumuman = "Update Status - " . ($pengumumanPelamar['tahap'] ?? '');
     $isi_pengumuman = $pengumumanPelamar['pesan'] ?? '';
     $tanggal_pengumuman = !empty($pengumumanPelamar['tanggal']) ? date('d/m/Y', strtotime($pengumumanPelamar['tanggal'])) : '';
     $show_pengumuman = true;
 } elseif ($pengumumanUmum && $status == 'Menunggu Proses') {
+    // Untuk status Menunggu Proses dengan pengumuman umum
     $judul_pengumuman = $pengumumanUmum['judul'] ?? 'Pengumuman';
     $isi_pengumuman = $pengumumanUmum['isi'] ?? '';
     $tanggal_pengumuman = !empty($pengumumanUmum['tanggal']) ? date('d/m/Y', strtotime($pengumumanUmum['tanggal'])) : '';
     $show_pengumuman = true;
 } else {
+    // Default ketika tidak ada pengumuman
     $show_pengumuman = false;
     $judul_pengumuman = 'Tidak ada pengumuman';
     $isi_pengumuman = 'Belum ada pengumuman terbaru untuk Anda saat ini.';
@@ -357,6 +367,26 @@ if ($status == 'Diterima') {
       text-align: center;
       padding: 20px 0;
     }
+    
+    .pesan-tidak-lolos {
+      background: #f8d7da;
+      color: #721c24;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+      border-left: 4px solid #dc3545;
+    }
+    
+    .pesan-tidak-lolos h4 {
+      margin: 0 0 15px 0;
+      color: #721c24;
+      font-size: 18px;
+    }
+    
+    .pesan-tidak-lolos p {
+      margin: 10px 0;
+      font-weight: 500;
+    }
 
     @media(max-width:768px){
       header{
@@ -435,7 +465,12 @@ if ($status == 'Diterima') {
             <a href="dashboardlogin.php" class="link-karyawan">Akses Dashboard Karyawan, pilih Login sebagai Karyawan</a>
           </div>
         <?php elseif ($status == 'Tidak Lolos'): ?>
-          <p>Terima kasih telah berpartisipasi dalam proses seleksi di Yayasan Purba Danarta. Mohon maaf, saat ini Anda belum dapat melanjutkan ke tahap berikutnya. Kami menghargai waktu dan usaha yang telah Anda berikan.</p>
+          <div class="pesan-tidak-lolos">
+            <h4>📝 Informasi Hasil Seleksi</h4>
+            <p><strong>Terima kasih telah berpartisipasi dalam proses seleksi.</strong></p>
+            <p>Setelah melalui tahap penilaian yang teliti, kami menyampaikan bahwa Anda belum dapat melanjutkan ke tahap selanjutnya pada kesempatan ini.</p>
+            <p>Kami sangat menghargai waktu dan usaha yang telah Anda berikan. Jangan berkecil hati, karena setiap proses adalah pembelajaran berharga untuk kesempatan di masa depan.</p>
+          </div>
         <?php else: ?>
           <p>Status lamaran Anda akan diperbarui secara berkala. Silakan pantau halaman ini untuk informasi terbaru.</p>
         <?php endif; ?>

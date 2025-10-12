@@ -97,7 +97,21 @@ mysqli_close($conn);
     header { background:#fff; padding:20px 40px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #34377c; }
     .logo {display:flex;align-items:center;gap:16px;font-weight:500;font-size:20px;color:#2e1f4f;}
     .logo img {width:140px;height:50px;object-fit:contain;}
+    nav ul {list-style:none;margin:0;padding:0;display:flex;gap:30px;}
+    nav li {position:relative;}
     nav a {text-decoration:none;color:#333;font-weight:600;}
+    nav li ul {
+        display:none;
+        position:absolute;
+        background:#fff;
+        padding:10px 0;
+        border-radius:8px;
+        box-shadow:0 2px 8px rgba(0,0,0,.15);
+        min-width:150px;
+    }
+    nav li:hover ul {display:block;}
+    nav li ul li {padding:5px 20px;}
+    nav li ul li a {color:#333;font-weight:400;}
     main { flex:1; display:flex; justify-content:center; align-items:center; padding:40px 20px; }
     .container { width:100%; max-width:600px; background:rgba(255,255,255,0.95); border-radius:15px; padding:30px 40px; box-shadow:0 0 15px rgba(0,0,0,0.2); }
     h2 { text-align:center; font-size:22px; color:#2e1f4f; margin-bottom:20px; }
@@ -122,7 +136,27 @@ mysqli_close($conn);
         <span>Yayasan Purba Danarta</span>
     </div>
     <nav>
-        <a href="dashboardkaryawan.php">Beranda</a>
+        <ul>
+            <li><a href="dashboardkaryawan.php">Beranda</a></li>
+            <li><a href="#">Cuti ▾</a>
+                <ul>
+                    <li><a href="formcutikaryawan.php">Pengajuan Cuti</a></li>
+                    <li><a href="riwayat_cuti_pribadi.php">Riwayat Cuti</a></li>
+                </ul>
+            </li>
+            <li><a href="#">KHL ▾</a>
+                <ul>
+                    <li><a href="formkhlkaryawan.php">Pengajuan KHL</a></li>
+                    <li><a href="riwayat_khl_pribadi.php">Riwayat KHL</a></li>
+                </ul>
+            </li>
+            <li><a href="#">Profil ▾</a>
+                <ul>
+                    <li><a href="data_pribadi.php">Data Pribadi</a></li>
+                    <li><a href="logout2.php">Logout</a></li>
+                </ul>
+            </li>
+        </ul>
     </nav>
 </header>
 

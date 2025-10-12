@@ -645,7 +645,7 @@ function bukaModal(pelamarId, currentStatus, namaPelamar) {
             defaultMessage = `Selamat ${namaPelamar}! Anda lolos tahap wawancara. Silakan lanjutkan ke tahap berikutnya.`;
             break;
         case 'Seleksi Psikotes':
-            defaultMessage = `Selamat ${namaPelamar}! Anda lolos psikotes. Tahap selanjutnya adalah pemeriksaan kesehatan.`;
+            defaultMessage = `Selamat ${namaPelamar}! Anda lolos psikotes. Anda diterima sebagai karyawan tetap. Selamat bergabung!.`;
             break;
         case 'Seleksi Psikotes & Kesehatan':
             defaultMessage = `Selamat ${namaPelamar}! Anda telah lolos tahap Psikotes. Tahap selanjutnya adalah Tes Kesehatan.`;

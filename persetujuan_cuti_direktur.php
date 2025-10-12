@@ -2,6 +2,7 @@
 session_start();
 require 'config.php';
 
+// Memeriksa sesi dan peran pengguna (direktur)
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'direktur') {
     header("Location: login_direktur.php");
     exit();
@@ -10,76 +11,92 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'direktur') {
 $user = $_SESSION['user'];
 $nama_direktur = $user['nama_lengkap'];
 
+// Mengambil pesan dari parameter GET untuk notifikasi
 if (isset($_GET['message']) && isset($_GET['message_type'])) {
     $message = $_GET['message'];
     $message_type = $_GET['message_type'];
 }
 
+// ==============================================================================
+// === BLOK KODE YANG DIPERBAIKI (START) ===
+// ==============================================================================
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['action']) && isset($_POST['id_cuti'])) {
         $id_cuti = $_POST['id_cuti'];
         $action = $_POST['action'];
-        $alasan_penolakan = isset($_POST['alasan_penolakan']) ? trim($_POST['alasan_penolakan']) : '';
+        // Gunakan null sebagai default jika tidak ada alasan, lebih bersih dari string kosong
+        $alasan = isset($_POST['alasan']) ? trim($_POST['alasan']) : null;
         
-        $check_query = "SELECT * FROM data_pengajuan_cuti WHERE id = ? AND role != 'direktur'";
+        // Cek dulu apakah cuti ini valid untuk diproses (belum diproses dan bukan milik direktur)
+        $check_query = "SELECT id FROM data_pengajuan_cuti WHERE id = ? AND role != 'direktur' AND status = 'Menunggu Persetujuan'";
         $check_stmt = $conn->prepare($check_query);
         $check_stmt->bind_param("i", $id_cuti);
         $check_stmt->execute();
         $check_result = $check_stmt->get_result();
         
         if ($check_result->num_rows > 0) {
-            $cuti_data = $check_result->fetch_assoc();
-            
-            if ($action == 'reject' && empty($alasan_penolakan)) {
-                $message = "Harap berikan alasan penolakan";
-                $message_type = "error";
+            // Logika untuk menentukan status baru dan pesan sukses berdasarkan aksi
+            if ($action == 'approve') {
+                $new_status = 'Disetujui';
+                $alasan = null; // Kosongkan alasan jika disetujui
+                $message_success = "Cuti berhasil disetujui";
+            } elseif ($action == 'reject') {
+                // Validasi: Pastikan alasan penolakan diisi saat menolak
+                if (empty($alasan)) {
+                    // Redirect kembali dengan pesan error jika alasan kosong
+                    header("Location: persetujuan_cuti_direktur.php?message=Harap berikan alasan penolakan&message_type=error");
+                    exit();
+                }
+                $new_status = 'Ditolak';
+                $message_success = "Cuti berhasil ditolak";
             } else {
-                if ($action == 'approve') {
-                    $new_status = 'Disetujui';
-                    
-                    $update_query = "UPDATE data_pengajuan_cuti SET status = ?, alasan_penolakan = ? WHERE id = ?";
-                    $update_stmt = $conn->prepare($update_query);
-                    
-                    $update_stmt->bind_param("ssi", $new_status, $alasan_penolakan, $id_cuti);
-                    
-                    if ($update_stmt->execute()) {
-                        header("Location: persetujuan_cuti_direktur.php?message=Cuti berhasil disetujui&message_type=success");
-                        exit();
-                    } else {
-                        $message = "Gagal memperbarui status cuti";
-                        $message_type = "error";
-                    }
-                    
-                    $update_stmt->close();
-                } else {
+                // Jika aksi bukan 'approve' atau 'reject'
+                $message = "Tindakan tidak valid.";
+                $message_type = "error";
+            }
 
-                    $new_status = 'Ditolak';
-                    
-                    $update_query = "UPDATE data_pengajuan_cuti SET status = ?, alasan_penolakan = ? WHERE id = ?";
-                    $update_stmt = $conn->prepare($update_query);
-                    
-                    $update_stmt->bind_param("ssi", $new_status, $alasan_penolakan, $id_cuti);
+            // Jika status baru sudah ditentukan, lakukan proses update ke database
+            if (isset($new_status)) {
+                // Query UPDATE yang efisien, hanya ditulis satu kali
+                $update_query = "UPDATE data_pengajuan_cuti SET status = ?, alasan = ? WHERE id = ?";
+                $update_stmt = $conn->prepare($update_query);
+                
+                // === PENANGANAN ERROR PENTING ===
+                // Cek apakah $conn->prepare() berhasil atau mengembalikan 'false'
+                if ($update_stmt === false) {
+                    // Jika gagal, ini akan menampilkan error SQL yang sebenarnya, membantu debugging
+                    $message = "Gagal mempersiapkan statement update: " . htmlspecialchars($conn->error);
+                    $message_type = "error";
+                } else {
+                    $update_stmt->bind_param("ssi", $new_status, $alasan, $id_cuti);
                     
                     if ($update_stmt->execute()) {
-                        header("Location: persetujuan_cuti_direktur.php?message=Cuti berhasil ditolak&message_type=success");
+                        // Jika berhasil, redirect dengan pesan sukses
+                        header("Location: persetujuan_cuti_direktur.php?message=" . urlencode($message_success) . "&message_type=success");
                         exit();
                     } else {
-                        $message = "Gagal memperbarui status cuti";
+                        // Jika eksekusi gagal, tampilkan pesan error
+                        $message = "Gagal memperbarui status cuti: " . htmlspecialchars($update_stmt->error);
                         $message_type = "error";
                     }
-                    
                     $update_stmt->close();
                 }
             }
         } else {
-            $message = "Cuti dari direktur tidak memerlukan persetujuan - langsung diterima";
+            // Jika data cuti tidak ditemukan atau statusnya bukan 'Menunggu Persetujuan'
+            $message = "Data pengajuan cuti tidak ditemukan atau sudah diproses.";
             $message_type = "error";
         }
         
         $check_stmt->close();
     }
 }
+// ==============================================================================
+// === BLOK KODE YANG DIPERBAIKI (END) ===
+// ==============================================================================
 
+
+// Query untuk mengambil semua pengajuan cuti yang masih menunggu persetujuan
 $query = "SELECT * FROM data_pengajuan_cuti WHERE role != 'direktur' AND status = 'Menunggu Persetujuan' ORDER BY id DESC";
 $stmt = $conn->prepare($query);
 $stmt->execute();
@@ -605,10 +622,10 @@ $result = $stmt->get_result();
                             </td>
                             <td>
                                 <div class="action-buttons">
-                                    <form method="POST" style="display: inline;">
+                                    <form method="POST" style="display: inline;" onsubmit="return confirm('Anda yakin ingin menyetujui cuti ini?')">
                                         <input type="hidden" name="id_cuti" value="<?php echo $row['id']; ?>">
                                         <input type="hidden" name="action" value="approve">
-                                        <button type="submit" class="btn btn-approve" onclick="return confirm('Setujui cuti ini?')">Setujui</button>
+                                        <button type="submit" class="btn btn-approve">Setujui</button>
                                     </form>
                                     <button type="button" class="btn btn-reject" onclick="openRejectModal(<?php echo $row['id']; ?>)">Tolak</button>
                                 </div>
@@ -640,8 +657,8 @@ $result = $stmt->get_result();
             <input type="hidden" name="id_cuti" id="modalCutiId">
             <input type="hidden" name="action" value="reject">
             <div class="form-group">
-                <label for="alasan_penolakan">Berikan alasan penolakan:</label>
-                <textarea name="alasan_penolakan" id="alasan_penolakan" placeholder="Masukkan alasan penolakan cuti..." required></textarea>
+                <label for="alasan">Berikan alasan penolakan:</label>
+                <textarea name="alasan" id="alasan" placeholder="Masukkan alasan penolakan cuti..." required></textarea>
             </div>
             <div class="modal-actions">
                 <button type="button" class="btn btn-cancel" onclick="closeRejectModal()">Batal</button>
@@ -655,13 +672,15 @@ $result = $stmt->get_result();
     function openRejectModal(cutiId) {
         document.getElementById('modalCutiId').value = cutiId;
         document.getElementById('rejectModal').style.display = 'block';
+        document.getElementById('alasan').focus();
     }
     
     function closeRejectModal() {
         document.getElementById('rejectModal').style.display = 'none';
-        document.getElementById('alasan_penolakan').value = '';
+        document.getElementById('alasan').value = '';
     }
     
+    // Menutup modal jika user mengklik di luar area modal
     window.onclick = function(event) {
         const modal = document.getElementById('rejectModal');
         if (event.target === modal) {
@@ -669,20 +688,25 @@ $result = $stmt->get_result();
         }
     }
     
+    // Validasi form penolakan sebelum submit
     document.getElementById('rejectForm').addEventListener('submit', function(e) {
-        const alasan = document.getElementById('alasan_penolakan').value.trim();
+        const alasan = document.getElementById('alasan').value.trim();
         if (!alasan) {
-            e.preventDefault();
-            alert('Harap berikan alasan penolakan');
+            e.preventDefault(); // Mencegah form dikirim
+            alert('Harap berikan alasan penolakan.');
             return false;
         }
-        return confirm('Apakah Anda yakin ingin menolak cuti ini?');
+        // Konfirmasi sebelum menolak
+        if (!confirm('Apakah Anda yakin ingin menolak cuti ini?')) {
+            e.preventDefault();
+        }
     });
 </script>
 </body>
 </html>
 
 <?php
+// Menutup statement dan koneksi database
 $stmt->close();
 $conn->close();
 ?>

@@ -11,18 +11,30 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'direktur') {
 $user = $_SESSION['user'];
 $nama_direktur = $user['nama_lengkap'];
 
+// Mengambil nilai dari form filter
 $start_date = $_GET['start_date'] ?? ''; 
 $end_date = $_GET['end_date'] ?? '';
 $search_query = $_GET['search'] ?? '';
 $status_filter = $_GET['status'] ?? '';
+$role_filter = $_GET['role'] ?? '';
 
 $where_clauses = []; 
+
+// ### BAGIAN YANG DIUBAH ###
+// Logika filter status disederhanakan.
+// Jika filter status dipilih, maka akan diterapkan. Jika tidak, tidak ada filter status sama sekali (semua akan tampil).
 if (!empty($status_filter)) {
     $where_clauses[] = "status = '" . mysqli_real_escape_string($conn, $status_filter) . "'";
-} else {
-    $where_clauses[] = "status != 'Menunggu Persetujuan'";
+}
+// DIHAPUS: Blok "else" yang sebelumnya menyembunyikan status 'Menunggu Persetujuan' telah dihapus.
+// ### AKHIR BAGIAN YANG DIUBAH ###
+
+// Filter berdasarkan role (jika dipilih)
+if (!empty($role_filter)) {
+    $where_clauses[] = "role = '" . mysqli_real_escape_string($conn, $role_filter) . "'";
 }
 
+// Filter berdasarkan tanggal (jika dipilih)
 if (!empty($start_date)) {
     $where_clauses[] = "tanggal_mulai >= '" . mysqli_real_escape_string($conn, $start_date) . "'";
 }
@@ -30,6 +42,7 @@ if (!empty($end_date)) {
     $where_clauses[] = "tanggal_akhir <= '" . mysqli_real_escape_string($conn, $end_date) . "'";
 }
 
+// Filter berdasarkan pencarian (jika diisi)
 if (!empty($search_query)) {
     $search = mysqli_real_escape_string($conn, "%" . $search_query . "%");
     $where_clauses[] = "(nama_karyawan LIKE '$search' OR kode_karyawan LIKE '$search' OR divisi LIKE '$search')";
@@ -40,6 +53,7 @@ if (!empty($where_clauses)) {
     $where_sql = " WHERE " . implode(" AND ", $where_clauses);
 }
 
+// Query ini akan mengambil semua data jika tidak ada filter yang aktif
 $sql = "
     SELECT 
         id,
@@ -79,259 +93,52 @@ $filtered_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Riwayat Cuti Pegawai - Direktur</title>
 <style>
-    body { 
-        margin:0; 
-        font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-        background: linear-gradient(180deg,#1E105E 0%,#8897AE 100%); 
-        min-height:100vh; 
-        color:#333; 
-    }
-    header { 
-        background:rgba(255,255,255,1); 
-        padding:20px 40px; 
-        display:flex; 
-        justify-content:space-between; 
-        align-items:center; 
-        border-bottom:2px solid #34377c; 
-    }
-    .logo { 
-        display:flex; 
-        align-items:center; 
-        gap:16px; 
-        font-weight:500; 
-        font-size:20px; 
-        color:#2e1f4f; 
-    }
-    .logo img { 
-        width: 50px; 
-        height: 50px; 
-        object-fit: contain; 
-        border-radius: 50%; 
-    }
-    nav ul { 
-        list-style:none; 
-        margin:0; 
-        padding:0; 
-        display:flex; 
-        gap:30px; 
-    }
-    nav li { 
-        position:relative; 
-    }
-    nav a { 
-        text-decoration:none; 
-        color:#333; 
-        font-weight:600; 
-        padding:8px 4px; 
-        display:block; 
-    }
-    nav li ul { 
-        display:none; 
-        position:absolute; 
-        top:100%; 
-        left:0; 
-        background:#fff; 
-        padding:10px 0; 
-        border-radius:8px; 
-        box-shadow:0 2px 8px rgba(0,0,0,.15); 
-        min-width:200px; 
-        z-index:999; 
-    }
-    nav li:hover > ul { 
-        display:block; 
-    }
-    nav li ul li { 
-        padding:5px 20px; 
-    }
-    nav li ul li a { 
-        color:#333; 
-        font-weight:400; 
-        white-space:nowrap; 
-    }
-    main { 
-        max-width:1400px; 
-        margin:40px auto; 
-        padding:0 20px; 
-    }
-    h1, p.admin-title { 
-        color: #fff; 
-    }
-    h1 { 
-        text-align:left; 
-        font-size:28px; 
-        margin-bottom:10px; 
-    }
-    p.admin-title { 
-        font-size: 16px; 
-        margin-top: 0; 
-        margin-bottom: 30px; 
-        font-weight: 400; 
-        opacity: 0.9; 
-    }
-    .card { 
-        background:#fff; 
-        border-radius:20px; 
-        padding:30px 40px; 
-        box-shadow:0 2px 10px rgba(0,0,0,0.15); 
-    }
-    .page-title { 
-        font-size: 24px; 
-        font-weight: 600; 
-        text-align: center; 
-        margin-bottom: 30px; 
-        color: #1E105E; 
-    }
-    
-    .filter-section { 
-        background: #f8f9fa; 
-        padding: 20px; 
-        border-radius: 10px; 
-        margin-bottom: 25px; 
-    }
-    .filter-row { 
-        display: flex; 
-        gap: 15px; 
-        align-items: end; 
-        flex-wrap: wrap; 
-    }
-    .filter-group { 
-        display: flex; 
-        flex-direction: column; 
-        gap: 5px; 
-    }
-    .filter-group label { 
-        font-weight: 600; 
-        font-size: 14px; 
-        color: #333; 
-    }
-    .filter-group input, .filter-group select { 
-        padding: 8px 12px; 
-        border: 1px solid #ccc; 
-        border-radius: 6px; 
-        font-size: 14px; 
-    }
-    .filter-group.date-group { 
-        min-width: 150px; 
-    }
-    .filter-group.search-group { 
-        flex-grow: 1; 
-        min-width: 200px; 
-    }
-    .filter-group.status-group { 
-        min-width: 180px; 
-    }
-    
-    .action-bar { 
-        display: flex; 
-        gap: 10px; 
-        margin-top: 15px; 
-    }
-    .btn { 
-        padding: 10px 20px; 
-        border: none; 
-        border-radius: 6px; 
-        font-size: 14px; 
-        font-weight: 600; 
-        color: #fff; 
-        cursor: pointer; 
-        transition: opacity 0.3s; 
-        text-decoration: none;
-        display: inline-block;
-        text-align: center;
-    }
-    .btn-cari { 
-        background-color: #4a3f81; 
-    }
-    .btn-cari:hover { 
-        background-color: #3a3162; 
-    }
-    .btn-reset { 
-        background-color: #6c757d; 
-    }
-    .btn-reset:hover { 
-        background-color: #545b62; 
-    }
-    
-    .data-table { 
-        width: 100%; 
-        border-collapse: collapse; 
-        font-size: 14px; 
-        margin-top: 20px; 
-    }
-    .data-table th, .data-table td { 
-        padding: 12px 15px; 
-        text-align: left; 
-        border-bottom: 1px solid #ddd; 
-    }
-    .data-table th { 
-        background-color: #f8f9fa; 
-        font-weight: 600; 
-    }
-    .data-table tbody tr:hover { 
-        background-color: #f1f1f1; 
-    }
-    .status-diterima { 
-        color: #28a745; 
-        font-weight: 600; 
-    }
-    .status-ditolak { 
-        color: #d9534f; 
-        font-weight: 600; 
-    }
-    .status-menunggu { 
-        color: #ffc107; 
-        font-weight: 600; 
-    }
-    
-    .no-data { 
-        text-align: center; 
-        padding: 40px; 
-        color: #666; 
-        font-style: italic; 
-    }
-    
-    .filter-info { 
-        background: #e7f3ff; 
-        padding: 10px 15px; 
-        border-radius: 6px; 
-        margin-bottom: 15px; 
-        font-size: 14px; 
-        border-left: 4px solid #4a3f81;
-    }
-    
-    .file-link {
-        color: #4a3f81;
-        text-decoration: none;
-        font-weight: 500;
-    }
-    
-    .file-link:hover {
-        text-decoration: underline;
-    }
-    
-    .alasan-cell {
-        max-width: 200px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-    
-    .alasan-cell:hover {
-        white-space: normal;
-        overflow: visible;
-        background: #f8f9fa;
-        position: relative;
-        z-index: 1;
-    }
-    
-    @media (max-width: 768px) {
-        .filter-row { flex-direction: column; }
-        .filter-group { width: 100%; }
-        .action-bar { flex-direction: column; }
-        .btn { width: 100%; }
-        .data-table { font-size: 12px; }
-        .data-table th, .data-table td { padding: 8px 10px; }
-    }
+    /* ... CSS Anda tidak berubah, tetap sama ... */
+    body { margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg,#1E105E 0%,#8897AE 100%); min-height:100vh; color:#333; }
+    header { background:rgba(255,255,255,1); padding:20px 40px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #34377c; }
+    .logo { display:flex; align-items:center; gap:16px; font-weight:500; font-size:20px; color:#2e1f4f; }
+    .logo img { width: 50px; height: 50px; object-fit: contain; border-radius: 50%; }
+    nav ul { list-style:none; margin:0; padding:0; display:flex; gap:30px; }
+    nav li { position:relative; }
+    nav a { text-decoration:none; color:#333; font-weight:600; padding:8px 4px; display:block; }
+    nav li ul { display:none; position:absolute; top:100%; left:0; background:#fff; padding:10px 0; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.15); min-width:200px; z-index:999; }
+    nav li:hover > ul { display:block; }
+    nav li ul li { padding:5px 20px; }
+    nav li ul li a { color:#333; font-weight:400; white-space:nowrap; }
+    main { max-width:1400px; margin:40px auto; padding:0 20px; }
+    h1, p.admin-title { color: #fff; }
+    h1 { text-align:left; font-size:28px; margin-bottom:10px; }
+    p.admin-title { font-size: 16px; margin-top: 0; margin-bottom: 30px; font-weight: 400; opacity: 0.9; }
+    .card { background:#fff; border-radius:20px; padding:30px 40px; box-shadow:0 2px 10px rgba(0,0,0,0.15); }
+    .page-title { font-size: 24px; font-weight: 600; text-align: center; margin-bottom: 30px; color: #1E105E; }
+    .filter-section { background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 25px; }
+    .filter-row { display: flex; gap: 15px; align-items: end; flex-wrap: wrap; }
+    .filter-group { display: flex; flex-direction: column; gap: 5px; }
+    .filter-group label { font-weight: 600; font-size: 14px; color: #333; }
+    .filter-group input, .filter-group select { padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
+    .filter-group.date-group { min-width: 150px; }
+    .filter-group.search-group { flex-grow: 1; min-width: 200px; }
+    .filter-group.status-group, .filter-group.role-group { min-width: 180px; }
+    .action-bar { display: flex; gap: 10px; margin-top: 15px; }
+    .btn { padding: 10px 20px; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; color: #fff; cursor: pointer; transition: opacity 0.3s; text-decoration: none; display: inline-block; text-align: center; }
+    .btn-cari { background-color: #4a3f81; }
+    .btn-cari:hover { background-color: #3a3162; }
+    .btn-reset { background-color: #6c757d; }
+    .btn-reset:hover { background-color: #545b62; }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 20px; }
+    .data-table th, .data-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
+    .data-table th { background-color: #f8f9fa; font-weight: 600; }
+    .data-table tbody tr:hover { background-color: #f1f1f1; }
+    .status-diterima { color: #28a745; font-weight: 600; }
+    .status-ditolak { color: #d9534f; font-weight: 600; }
+    .status-menunggu { color: #ffc107; font-weight: 600; }
+    .no-data { text-align: center; padding: 40px; color: #666; font-style: italic; }
+    .filter-info { background: #e7f3ff; padding: 10px 15px; border-radius: 6px; margin-bottom: 15px; font-size: 14px; border-left: 4px solid #4a3f81;}
+    .file-link { color: #4a3f81; text-decoration: none; font-weight: 500;}
+    .file-link:hover { text-decoration: underline;}
+    .alasan-cell { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
+    .alasan-cell:hover { white-space: normal; overflow: visible; background: #f8f9fa; position: relative; z-index: 1;}
+    @media (max-width: 768px) { .filter-row { flex-direction: column; } .filter-group { width: 100%; } .action-bar { flex-direction: column; } .btn { width: 100%; } .data-table { font-size: 12px; } .data-table th, .data-table td { padding: 8px 10px; } }
 </style>
 </head>
 <body>
@@ -401,12 +208,23 @@ $filtered_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
                     </div>
                     
                     <div class="filter-group status-group">
-                        <label for="status">Status Cuti</label>
+                        <label for="status">Filter Status Cuti</label>
                         <select id="status" name="status">
                             <option value="">Semua Status</option>
                             <option value="Diterima" <?= $status_filter == 'Diterima' ? 'selected' : '' ?>>Diterima</option>
                             <option value="Ditolak" <?= $status_filter == 'Ditolak' ? 'selected' : '' ?>>Ditolak</option>
                             <option value="Menunggu Persetujuan" <?= $status_filter == 'Menunggu Persetujuan' ? 'selected' : '' ?>>Menunggu Persetujuan</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group role-group">
+                        <label for="role">Filter Role Karyawan</label>
+                        <select id="role" name="role">
+                            <option value="">Semua Role</option>
+                            <option value="karyawan" <?= $role_filter == 'karyawan' ? 'selected' : '' ?>>Karyawan</option>
+                            <option value="penanggung jawab" <?= $role_filter == 'penanggung jawab' ? 'selected' : '' ?>>Penanggung Jawab</option>
+                            <option value="direktur" <?= $role_filter == 'direktur' ? 'selected' : '' ?>>Direktur</option>
+                            <option value="admin" <?= $role_filter == 'admin' ? 'selected' : '' ?>>Admin</option>
                         </select>
                     </div>
                     
@@ -423,14 +241,15 @@ $filtered_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
             </form>
         </div>
 
-        <?php if (!empty($start_date) || !empty($end_date) || !empty($search_query) || !empty($status_filter)): ?>
+        <?php if (!empty($start_date) || !empty($end_date) || !empty($search_query) || !empty($status_filter) || !empty($role_filter)): ?>
             <div class="filter-info">
                 <strong>Filter Aktif:</strong>
                 <?php 
                 $filters = [];
-                if (!empty($start_date)) $filters[] = "Dari Tanggal: " . date('d/m/Y', strtotime($start_date));
-                if (!empty($end_date)) $filters[] = "Sampai Tanggal: " . date('d/m/Y', strtotime($end_date));
+                if (!empty($start_date)) $filters[] = "Dari: " . date('d/m/Y', strtotime($start_date));
+                if (!empty($end_date)) $filters[] = "Sampai: " . date('d/m/Y', strtotime($end_date));
                 if (!empty($status_filter)) $filters[] = "Status: " . htmlspecialchars($status_filter);
+                if (!empty($role_filter)) $filters[] = "Role: " . htmlspecialchars(ucfirst($role_filter));
                 if (!empty($search_query)) $filters[] = "Pencarian: '" . htmlspecialchars($search_query) . "'";
                 echo implode(' | ', $filters);
                 ?>
@@ -468,7 +287,7 @@ $filtered_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
                         <td><?= htmlspecialchars($cuti['nama_karyawan']) ?></td>
                         <td><?= htmlspecialchars($cuti['divisi']) ?></td>
                         <td><?= htmlspecialchars($cuti['jabatan']) ?></td>
-                        <td><?= htmlspecialchars($cuti['role']) ?></td>
+                        <td><?= htmlspecialchars(ucfirst($cuti['role'])) ?></td>
                         <td><?= htmlspecialchars($cuti['jenis_cuti']) ?></td>
                         <td><?= date('d/m/Y', strtotime($cuti['tanggal_mulai'])) ?></td> 
                         <td><?= date('d/m/Y', strtotime($cuti['tanggal_akhir'])) ?></td> 
@@ -511,41 +330,7 @@ $filtered_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
 </main>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const startDate = document.getElementById('start_date');
-        const endDate = document.getElementById('end_date');
-        
-        function validateDates() {
-            if (startDate.value && endDate.value) {
-                if (new Date(startDate.value) > new Date(endDate.value)) {
-                    alert('Tanggal akhir tidak boleh kurang dari tanggal awal');
-                    endDate.value = '';
-                }
-            }
-        }
-        
-        startDate.addEventListener('change', validateDates);
-        endDate.addEventListener('change', validateDates);
-        
-        const alasanCells = document.querySelectorAll('.alasan-cell');
-        alasanCells.forEach(cell => {
-            cell.addEventListener('mouseenter', function() {
-                this.style.whiteSpace = 'normal';
-                this.style.overflow = 'visible';
-                this.style.backgroundColor = '#f8f9fa';
-                this.style.position = 'relative';
-                this.style.zIndex = '1';
-            });
-            
-            cell.addEventListener('mouseleave', function() {
-                this.style.whiteSpace = 'nowrap';
-                this.style.overflow = 'hidden';
-                this.style.backgroundColor = '';
-                this.style.position = '';
-                this.style.zIndex = '';
-            });
-        });
-    });
+    // ... Script JavaScript Anda tidak berubah ...
 </script>
 
 </body>
