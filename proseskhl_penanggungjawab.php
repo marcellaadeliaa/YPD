@@ -319,7 +319,6 @@ mysqli_close($conn);
 </style>
 </head>
 <body>
-    <!-- HEADER/NAVIGASI SAMA PERSIS DENGAN DASHBOARD -->
     <header>
         <div class="logo"><img src="image/namayayasan.png" alt="Logo"><span>Yayasan Purba Danarta</span></div>
         <nav>

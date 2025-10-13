@@ -2,13 +2,11 @@
 session_start();
 require 'config.php';
 
-// Keamanan: Pastikan hanya admin yang bisa mengakses halaman ini
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
     header("Location: login_karyawan.php?error=unauthorized");
     exit();
 }
 
-// AMBIL DATA ADMIN UNTUK WELCOME MESSAGE
 $nama_user = 'Admin';
 if (isset($_SESSION['user_id'])) {
     $user_id = $_SESSION['user_id'];
@@ -25,7 +23,6 @@ if (isset($_SESSION['user_id'])) {
     }
 }
 
-// AMBIL DATA CUTI DARI DATABASE (hanya yang status Diterima)
 $query_cuti = "SELECT 
                 id,
                 kode_karyawan,
@@ -63,14 +60,11 @@ if ($result_cuti && $result_cuti->num_rows > 0) {
     }
 }
 
-// Get current month and year from URL parameters or use current date
 $month = isset($_GET['month']) ? (int)$_GET['month'] : date('n');
 $year = isset($_GET['year']) ? (int)$_GET['year'] : date('Y');
 
-// Filter by year range
 $selected_year = isset($_GET['filter_year']) ? (int)$_GET['filter_year'] : $year;
 
-// Navigation
 $prev_month = $month - 1;
 $prev_year = $year;
 $next_month = $month + 1;
@@ -86,25 +80,19 @@ if ($next_month > 12) {
     $next_year++;
 }
 
-// Get first day of the month
 $first_day = mktime(0, 0, 0, $month, 1, $year);
 $days_in_month = date('t', $first_day);
 $first_day_of_week = date('w', $first_day);
 
-// Adjust Sunday to be 0 instead of 7
 $first_day_of_week = $first_day_of_week == 0 ? 6 : $first_day_of_week - 1;
 
-// Group CUTI by date for easy lookup
 $cuti_by_date = [];
 foreach ($data_cuti as $cuti) {
     $cuti_year = date('Y', strtotime($cuti['tanggal_mulai']));
-    // Only include CUTI for selected year
     if ($cuti_year == $selected_year) {
-        // Generate all dates in the cuti range
         $start_date = new DateTime($cuti['tanggal_mulai']);
         $end_date = new DateTime($cuti['tanggal_akhir']);
         
-        // Iterate through each date in the range
         $current_date = clone $start_date;
         while ($current_date <= $end_date) {
             $date_str = $current_date->format('Y-m-d');
@@ -123,7 +111,6 @@ $month_names = [
     9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
 ];
 
-// Get available years from CUTI data for filter dropdown
 $available_years = [];
 foreach ($data_cuti as $cuti) {
     $cuti_year = date('Y', strtotime($cuti['tanggal_mulai']));
@@ -131,7 +118,6 @@ foreach ($data_cuti as $cuti) {
         $available_years[] = $cuti_year;
     }
 }
-// Add current year if no data exists and sort years descending
 if (empty($available_years)) {
     $available_years[] = date('Y');
 }

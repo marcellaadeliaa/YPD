@@ -68,27 +68,22 @@ $judul_pengumuman = '';
 $isi_pengumuman = '';
 $tanggal_pengumuman = '';
 
-// Logika pengumuman berdasarkan status
 if ($status == 'Tidak Lolos') {
-    // Untuk status Tidak Lolos, tampilkan pesan khusus
     $judul_pengumuman = "Hasil Seleksi";
     $isi_pengumuman = "Terima kasih telah berpartisipasi dalam proses seleksi di Yayasan Purba Danarta. Setelah melalui tahap penilaian yang teliti, kami menyampaikan bahwa Anda belum dapat melanjutkan ke tahap selanjutnya pada kesempatan ini.\n\nKami sangat menghargai waktu dan usaha yang telah Anda berikan. Jangan berkecil hati, karena setiap proses adalah pembelajaran berharga untuk kesempatan di masa depan.\n\nKami berharap Anda terus bersemangat dalam mengembangkan potensi diri dan mencari kesempatan lainnya yang sesuai dengan kemampuan Anda.";
     $tanggal_pengumuman = date('d/m/Y');
     $show_pengumuman = true;
 } elseif ($pengumumanPelamar) {
-    // Untuk status lain yang memiliki pengumuman personal
     $judul_pengumuman = "Update Status - " . ($pengumumanPelamar['tahap'] ?? '');
     $isi_pengumuman = $pengumumanPelamar['pesan'] ?? '';
     $tanggal_pengumuman = !empty($pengumumanPelamar['tanggal']) ? date('d/m/Y', strtotime($pengumumanPelamar['tanggal'])) : '';
     $show_pengumuman = true;
 } elseif ($pengumumanUmum && $status == 'Menunggu Proses') {
-    // Untuk status Menunggu Proses dengan pengumuman umum
     $judul_pengumuman = $pengumumanUmum['judul'] ?? 'Pengumuman';
     $isi_pengumuman = $pengumumanUmum['isi'] ?? '';
     $tanggal_pengumuman = !empty($pengumumanUmum['tanggal']) ? date('d/m/Y', strtotime($pengumumanUmum['tanggal'])) : '';
     $show_pengumuman = true;
 } else {
-    // Default ketika tidak ada pengumuman
     $show_pengumuman = false;
     $judul_pengumuman = 'Tidak ada pengumuman';
     $isi_pengumuman = 'Belum ada pengumuman terbaru untuk Anda saat ini.';

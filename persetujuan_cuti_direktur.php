@@ -2,7 +2,6 @@
 session_start();
 require 'config.php';
 
-// Memeriksa sesi dan peran pengguna (direktur)
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'direktur') {
     header("Location: login_direktur.php");
     exit();
@@ -11,23 +10,17 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'direktur') {
 $user = $_SESSION['user'];
 $nama_direktur = $user['nama_lengkap'];
 
-// Mengambil pesan dari parameter GET untuk notifikasi
 if (isset($_GET['message']) && isset($_GET['message_type'])) {
     $message = $_GET['message'];
     $message_type = $_GET['message_type'];
 }
 
-// ==============================================================================
-// === BLOK KODE YANG DIPERBAIKI (START) ===
-// ==============================================================================
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['action']) && isset($_POST['id_cuti'])) {
         $id_cuti = $_POST['id_cuti'];
         $action = $_POST['action'];
-        // Gunakan null sebagai default jika tidak ada alasan, lebih bersih dari string kosong
         $alasan = isset($_POST['alasan']) ? trim($_POST['alasan']) : null;
         
-        // Cek dulu apakah cuti ini valid untuk diproses (belum diproses dan bukan milik direktur)
         $check_query = "SELECT id FROM data_pengajuan_cuti WHERE id = ? AND role != 'direktur' AND status = 'Menunggu Persetujuan'";
         $check_stmt = $conn->prepare($check_query);
         $check_stmt->bind_param("i", $id_cuti);
@@ -35,47 +28,36 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $check_result = $check_stmt->get_result();
         
         if ($check_result->num_rows > 0) {
-            // Logika untuk menentukan status baru dan pesan sukses berdasarkan aksi
             if ($action == 'approve') {
                 $new_status = 'Disetujui';
-                $alasan = null; // Kosongkan alasan jika disetujui
+                $alasan = null; 
                 $message_success = "Cuti berhasil disetujui";
             } elseif ($action == 'reject') {
-                // Validasi: Pastikan alasan penolakan diisi saat menolak
                 if (empty($alasan)) {
-                    // Redirect kembali dengan pesan error jika alasan kosong
                     header("Location: persetujuan_cuti_direktur.php?message=Harap berikan alasan penolakan&message_type=error");
                     exit();
                 }
                 $new_status = 'Ditolak';
                 $message_success = "Cuti berhasil ditolak";
             } else {
-                // Jika aksi bukan 'approve' atau 'reject'
                 $message = "Tindakan tidak valid.";
                 $message_type = "error";
             }
 
-            // Jika status baru sudah ditentukan, lakukan proses update ke database
             if (isset($new_status)) {
-                // Query UPDATE yang efisien, hanya ditulis satu kali
                 $update_query = "UPDATE data_pengajuan_cuti SET status = ?, alasan = ? WHERE id = ?";
                 $update_stmt = $conn->prepare($update_query);
                 
-                // === PENANGANAN ERROR PENTING ===
-                // Cek apakah $conn->prepare() berhasil atau mengembalikan 'false'
                 if ($update_stmt === false) {
-                    // Jika gagal, ini akan menampilkan error SQL yang sebenarnya, membantu debugging
                     $message = "Gagal mempersiapkan statement update: " . htmlspecialchars($conn->error);
                     $message_type = "error";
                 } else {
                     $update_stmt->bind_param("ssi", $new_status, $alasan, $id_cuti);
                     
                     if ($update_stmt->execute()) {
-                        // Jika berhasil, redirect dengan pesan sukses
                         header("Location: persetujuan_cuti_direktur.php?message=" . urlencode($message_success) . "&message_type=success");
                         exit();
                     } else {
-                        // Jika eksekusi gagal, tampilkan pesan error
                         $message = "Gagal memperbarui status cuti: " . htmlspecialchars($update_stmt->error);
                         $message_type = "error";
                     }
@@ -83,7 +65,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 }
             }
         } else {
-            // Jika data cuti tidak ditemukan atau statusnya bukan 'Menunggu Persetujuan'
             $message = "Data pengajuan cuti tidak ditemukan atau sudah diproses.";
             $message_type = "error";
         }
@@ -91,12 +72,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $check_stmt->close();
     }
 }
-// ==============================================================================
-// === BLOK KODE YANG DIPERBAIKI (END) ===
-// ==============================================================================
 
 
-// Query untuk mengambil semua pengajuan cuti yang masih menunggu persetujuan
+
 $query = "SELECT * FROM data_pengajuan_cuti WHERE role != 'direktur' AND status = 'Menunggu Persetujuan' ORDER BY id DESC";
 $stmt = $conn->prepare($query);
 $stmt->execute();
@@ -680,7 +658,6 @@ $result = $stmt->get_result();
         document.getElementById('alasan').value = '';
     }
     
-    // Menutup modal jika user mengklik di luar area modal
     window.onclick = function(event) {
         const modal = document.getElementById('rejectModal');
         if (event.target === modal) {
@@ -688,15 +665,13 @@ $result = $stmt->get_result();
         }
     }
     
-    // Validasi form penolakan sebelum submit
     document.getElementById('rejectForm').addEventListener('submit', function(e) {
         const alasan = document.getElementById('alasan').value.trim();
         if (!alasan) {
-            e.preventDefault(); // Mencegah form dikirim
+            e.preventDefault();
             alert('Harap berikan alasan penolakan.');
             return false;
         }
-        // Konfirmasi sebelum menolak
         if (!confirm('Apakah Anda yakin ingin menolak cuti ini?')) {
             e.preventDefault();
         }
@@ -706,7 +681,6 @@ $result = $stmt->get_result();
 </html>
 
 <?php
-// Menutup statement dan koneksi database
 $stmt->close();
 $conn->close();
 ?>

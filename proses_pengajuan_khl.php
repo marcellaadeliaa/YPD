@@ -2,12 +2,10 @@
 require 'config.php';
 session_start();
 
-// --- Simulasi user login sebagai direktur (sementara, nanti diganti sistem login asli) ---
 $role_direktur = 'direktur';
-$kode_direktur = 'YPD001'; // kode_karyawan direktur utama dari tabel data_karyawan
+$kode_direktur = 'YPD001'; 
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Ambil data dari form
     $kode_karyawan     = trim($_POST['kode_karyawan'] ?? '');
     $proyek            = trim($_POST['proyek'] ?? '');
     $tanggal_mulai     = $_POST['tanggal_mulai'] ?? '';
@@ -17,14 +15,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $jam_mulai_libur   = $_POST['jam_mulai_libur'] ?? '';
     $jam_akhir_libur   = $_POST['jam_akhir_libur'] ?? '';
 
-    // Validasi dasar
     if (empty($kode_karyawan) || empty($proyek) || empty($tanggal_mulai) || empty($jam_mulai_normal) || empty($jam_akhir_normal)) {
         $_SESSION['error'] = "Semua field wajib diisi (kecuali tanggal akhir & jam libur).";
         header("Location: pengajuan_khl_direktur.php");
         exit();
     }
 
-    // Ambil data karyawan berdasarkan kode_karyawan
     $stmt = $conn->prepare("SELECT * FROM data_karyawan WHERE kode_karyawan = ?");
     $stmt->bind_param("s", $kode_karyawan);
     $stmt->execute();
@@ -33,12 +29,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($result && $result->num_rows > 0) {
         $data = $result->fetch_assoc();
 
-        // Ambil data jabatan, divisi, role dari tabel data_karyawan
         $jabatan = $data['jabatan'];
         $divisi  = $data['divisi'];
         $role    = $data['role'];
 
-        // Siapkan query INSERT
         $insert = $conn->prepare("
             INSERT INTO data_pengajuan_khl (
                 kode_karyawan, divisi, jabatan, role, proyek, 

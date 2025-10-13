@@ -346,12 +346,10 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
     </main>
 
     <script>
-        // Generate kode karyawan otomatis berdasarkan input nama
         document.getElementById('nama_lengkap').addEventListener('blur', function() {
             const kodeInput = document.getElementById('kode_karyawan');
             const namaInput = document.getElementById('nama_lengkap');
             
-            // Jika kode karyawan masih kosong, generate otomatis
             if (kodeInput.value === '' && namaInput.value !== '') {
                 const nama = namaInput.value.toUpperCase();
                 const inisial = nama.split(' ').map(word => word[0]).join('').substring(0, 3);
@@ -359,27 +357,22 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
             }
         });
 
-        // Generate email otomatis berdasarkan nama
         document.getElementById('nama_lengkap').addEventListener('blur', function() {
             const emailInput = document.getElementById('email');
             const namaInput = document.getElementById('nama_lengkap');
             
-            // Jika email masih kosong, generate otomatis
             if (emailInput.value === '' && namaInput.value !== '') {
                 const nama = namaInput.value.toLowerCase().replace(/\s+/g, '.');
                 emailInput.value = nama + '@ypd.com';
             }
         });
 
-        // Generate password default
         document.addEventListener('DOMContentLoaded', function() {
             const passwordInput = document.getElementById('password');
-            // Generate password default 8 karakter
             const defaultPassword = Math.random().toString(36).slice(-8);
             passwordInput.value = defaultPassword;
         });
 
-        // Toggle show/hide password
         document.getElementById('togglePassword').addEventListener('click', function() {
             const passwordInput = document.getElementById('password');
             const icon = this.querySelector('i');

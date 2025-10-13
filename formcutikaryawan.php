@@ -198,7 +198,6 @@ if (empty($divisi) || empty($jabatan)) {
     text-align: center;
   }
 
-  /* Style untuk input conditional */
   .conditional-input {
     display: none;
     margin-top: 10px;
@@ -434,7 +433,6 @@ if (empty($divisi) || empty($jabatan)) {
     const sakitInput = document.getElementById('bukti_surat_dokter');
     const maxDaysInfo = document.getElementById('maxDaysInfo');
     
-    // Reset semua input conditional
     khususInputContainer.classList.remove('show');
     khususInput.required = false;
     sakitInputContainer.classList.remove('show');
@@ -442,11 +440,9 @@ if (empty($divisi) || empty($jabatan)) {
     maxDaysInfo.style.display = 'none';
     currentMaxDays = 0;
     
-    // Reset file validation messages
     document.getElementById('fileError').style.display = 'none';
     document.getElementById('fileSuccess').style.display = 'none';
     
-    // Tampilkan input yang sesuai dengan pilihan
     if (jenisCutiSelect.value === 'Khusus') {
       khususInputContainer.classList.add('show');
       khususInput.required = true;
@@ -476,33 +472,29 @@ if (empty($divisi) || empty($jabatan)) {
     const fileError = document.getElementById('fileError');
     const fileSuccess = document.getElementById('fileSuccess');
     
-    // Reset messages
     fileError.style.display = 'none';
     fileSuccess.style.display = 'none';
     
     if (input.files.length > 0) {
       const file = input.files[0];
-      const fileSize = file.size / 1024 / 1024; // in MB
+      const fileSize = file.size / 1024 / 1024; 
       const fileType = file.type;
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
       
-      // Validasi tipe file
       if (!allowedTypes.includes(fileType)) {
         fileError.textContent = 'Format file tidak didukung. Harap unggah file JPG, PNG, atau PDF.';
         fileError.style.display = 'block';
-        input.value = ''; // Clear the file input
+        input.value = ''; 
         return false;
       }
       
-      // Validasi ukuran file (maks 5MB)
       if (fileSize > 5) {
         fileError.textContent = 'Ukuran file terlalu besar. Maksimal 5MB.';
         fileError.style.display = 'block';
-        input.value = ''; // Clear the file input
+        input.value = ''; 
         return false;
       }
       
-      // File valid
       fileSuccess.textContent = 'File berhasil diunggah.';
       fileSuccess.style.display = 'block';
       return true;
@@ -573,7 +565,6 @@ if (empty($divisi) || empty($jabatan)) {
     
     while (current <= end) {
       const dayOfWeek = current.getDay();
-      // Hanya hitung hari Senin-Jumat (1-5)
       if (dayOfWeek !== 0 && dayOfWeek !== 6) {
         count++;
       }
@@ -592,7 +583,6 @@ if (empty($divisi) || empty($jabatan)) {
     const totalHariInfo = document.getElementById('totalHariInfo');
     const submitButton = document.getElementById('submitButton');
     
-    // Reset messages
     sisaCutiInfo.style.display = 'none';
     warningMessage.style.display = 'none';
     totalHariInfo.style.display = 'none';
@@ -602,11 +592,9 @@ if (empty($divisi) || empty($jabatan)) {
       const startDate = new Date(tanggalMulai.value);
       const endDate = new Date(tanggalAkhir.value);
       
-      // Hitung total hari cuti (termasuk weekend)
       const timeDiff = endDate.getTime() - startDate.getTime();
       const totalDays = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
       
-      // Hitung hari kerja (Senin-Jumat)
       const workingDays = calculateWorkingDays(startDate, endDate);
       
       totalHariInfo.innerHTML = `Total hari cuti: ${totalDays} hari (${workingDays} hari kerja)`;
@@ -646,7 +634,6 @@ if (empty($divisi) || empty($jabatan)) {
     const tanggalMulai = document.getElementById('tanggal_mulai');
     const tanggalAkhir = document.getElementById('tanggal_akhir');
     
-    // Validasi dasar
     if (jenisCutiSelect.value === 'Khusus' && !khususInput.value.trim()) {
       e.preventDefault();
       alert('Silakan pilih jenis cuti khusus');
@@ -654,7 +641,6 @@ if (empty($divisi) || empty($jabatan)) {
       return;
     }
     
-    // Validasi khusus untuk cuti sakit - wajib upload file
     if (jenisCutiSelect.value === 'Sakit') {
       if (!sakitInput.value) {
         e.preventDefault();
@@ -663,7 +649,6 @@ if (empty($divisi) || empty($jabatan)) {
         return;
       }
       
-      // Validasi file yang sudah diupload
       if (!validateFileUpload(sakitInput)) {
         e.preventDefault();
         alert('File surat dokter tidak valid. Pastikan format JPG, PNG, atau PDF dan ukuran maksimal 5MB.');
@@ -678,7 +663,6 @@ if (empty($divisi) || empty($jabatan)) {
       return;
     }
     
-    // Validasi cuti khusus
     if (jenisCutiSelect.value === 'Khusus' && khususInput.value.trim()) {
       const selectedOption = khususInput.options[khususInput.selectedIndex];
       const maxDays = parseInt(selectedOption.getAttribute('data-max-days'));
@@ -697,7 +681,6 @@ if (empty($divisi) || empty($jabatan)) {
       }
     }
     
-    // Validasi sisa cuti tahunan dan lustrum
     if (jenisCutiSelect.value === 'Tahunan' || jenisCutiSelect.value === 'Lustrum') {
       if (tanggalMulai.value && tanggalAkhir.value) {
         const startDate = new Date(tanggalMulai.value);
@@ -725,7 +708,6 @@ if (empty($divisi) || empty($jabatan)) {
 </script>
 
 <?php
-// Tutup koneksi database
 if(isset($conn)) {
     mysqli_close($conn);
 }

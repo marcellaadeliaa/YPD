@@ -1,13 +1,11 @@
 <?php
 session_start();
-require_once 'config.php'; // Memanggil file koneksi database
+require_once 'config.php'; 
 
-// Inisialisasi variabel
 $display_data = false;
 $error_msg = '';
 $file_surat_path = null;
 
-// Fungsi untuk menangani upload file
 function handleFileUpload($file) {
     if (!isset($file) || $file['error'] !== UPLOAD_ERR_OK) {
         return null;
@@ -25,21 +23,18 @@ function handleFileUpload($file) {
     }
 }
 
-// Cek apakah user sudah login sebagai direktur
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'direktur') {
     header("Location: login_direktur.php");
     exit();
 }
 
-// Hanya proses jika metode request adalah POST
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Ambil data dari session dan form
     $user = $_SESSION['user'];
     $kode_karyawan = $user['kode_karyawan'];
     $nama_karyawan = $user['nama_lengkap'];
     $divisi = $user['divisi'];
     $jabatan = $user['jabatan'];
-    $role = 'direktur'; // Set role secara eksplisit
+    $role = 'direktur';
 
     $jenis_cuti_raw = $_POST['jenis_cuti'];
     $tanggal_mulai = $_POST['tanggal_mulai'];
@@ -47,17 +42,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $alasan = $_POST['alasan_cuti'];
     $jenis_cuti = $jenis_cuti_raw;
 
-    // Handle jika jenis cuti adalah 'Khusus'
     if ($jenis_cuti_raw === 'Khusus' && !empty($_POST['jenis_cuti_khusus'])) {
         $jenis_cuti = 'Khusus - ' . $_POST['jenis_cuti_khusus'];
     }
 
-    // Validasi tanggal
     if ($tanggal_akhir < $tanggal_mulai) {
         $error_msg = "Tanggal akhir tidak boleh lebih awal dari tanggal mulai.";
     }
 
-    // Validasi untuk cuti khusus
     if ($jenis_cuti_raw === 'Khusus' && !empty($_POST['jenis_cuti_khusus'])) {
         $max_days = 0;
         switch($_POST['jenis_cuti_khusus']) {
@@ -75,7 +67,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 break;
         }
         
-        // Hitung jumlah hari cuti
         $start_date = new DateTime($tanggal_mulai);
         $end_date = new DateTime($tanggal_akhir);
         $interval = $start_date->diff($end_date);
@@ -86,7 +77,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
-    // Handle upload file untuk cuti sakit
     if ($jenis_cuti_raw === 'Sakit') {
         if (!isset($_FILES['bukti_surat_dokter']) || $_FILES['bukti_surat_dokter']['error'] === UPLOAD_ERR_NO_FILE) {
             $error_msg = "Untuk cuti sakit, wajib mengunggah bukti surat keterangan dokter.";
@@ -100,14 +90,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
-    // Validasi dasar
     if (empty($kode_karyawan) || empty($jenis_cuti) || empty($tanggal_mulai) || empty($tanggal_akhir) || empty($alasan)) {
         $error_msg = "Semua field wajib diisi.";
     }
 
-    // Jika tidak ada error, lanjutkan proses ke database
     if (empty($error_msg)) {
-        // Untuk direktur, status langsung "Disetujui"
         $status = 'Disetujui';
         
         $sql = "INSERT INTO data_pengajuan_cuti (kode_karyawan, nama_karyawan, divisi, jabatan, role, jenis_cuti, tanggal_mulai, tanggal_akhir, alasan, file_surat_dokter, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -116,16 +103,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($stmt) {
             mysqli_stmt_bind_param($stmt, "sssssssssss", $kode_karyawan, $nama_karyawan, $divisi, $jabatan, $role, $jenis_cuti, $tanggal_mulai, $tanggal_akhir, $alasan, $file_surat_path, $status);
             if (mysqli_stmt_execute($stmt)) {
-                $display_data = true; // Set flag untuk menampilkan data di HTML
+                $display_data = true;
                 
-                // Update sisa cuti jika cuti tahunan atau lustrum
                 if ($jenis_cuti_raw === 'Tahunan' || $jenis_cuti_raw === 'Lustrum') {
                     updateSisaCuti($conn, $kode_karyawan, $jenis_cuti_raw, $tanggal_mulai, $tanggal_akhir);
                 }
                 
             } else {
                 $error_msg = "Gagal menyimpan data: " . mysqli_error($conn);
-                // Hapus file yang sudah diupload jika insert gagal
                 if (!empty($file_surat_path)) {
                     @unlink($file_surat_path);
                 }
@@ -133,21 +118,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             mysqli_stmt_close($stmt);
         } else {
             $error_msg = "Gagal mempersiapkan statement: " . mysqli_error($conn);
-            // Hapus file yang sudah diupload jika insert gagal
             if (!empty($file_surat_path)) {
                 @unlink($file_surat_path);
             }
         }
     }
 } else {
-    // Jika bukan metode POST, langsung tampilkan halaman error
     $display_data = false;
     $error_msg = "Metode request tidak valid.";
 }
 
-// Fungsi untuk update sisa cuti
 function updateSisaCuti($conn, $kode_karyawan, $jenis_cuti, $tanggal_mulai, $tanggal_akhir) {
-    // Hitung hari kerja
     $start_date = new DateTime($tanggal_mulai);
     $end_date = new DateTime($tanggal_akhir);
     $working_days = 0;
@@ -155,13 +136,12 @@ function updateSisaCuti($conn, $kode_karyawan, $jenis_cuti, $tanggal_mulai, $tan
     
     while ($current <= $end_date) {
         $day_of_week = $current->format('w');
-        if ($day_of_week != 0 && $day_of_week != 6) { // Bukan Minggu (0) dan Sabtu (6)
+        if ($day_of_week != 0 && $day_of_week != 6) { 
             $working_days++;
         }
         $current->modify('+1 day');
     }
     
-    // Update sisa cuti di database
     if ($jenis_cuti === 'Tahunan') {
         $update_sql = "UPDATE data_karyawan SET sisa_cuti_tahunan = sisa_cuti_tahunan - ? WHERE kode_karyawan = ?";
     } else if ($jenis_cuti === 'Lustrum') {

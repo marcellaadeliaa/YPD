@@ -6,16 +6,12 @@
     <title>Selamat Datang di Yayasan Purba Danarta</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Dancing+Script:wght@700&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        /* Reset ringan */
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
-        /* Font family:
-           - Montserrat untuk teks pendukung
-           - Playfair Display untuk judul serif
-           - Dancing Script untuk tulisan bergaya tangan (subtitle) */
+
         :root{
-          --bg-top: #24104a;      /* ungu gelap */
-          --bg-bottom: #8690a6;   /* abu kebiruan lembut */
+          --bg-top: #24104a;   
+          --bg-bottom: #8690a6;  
           --card-top: rgba(47,18,76,0.95);
           --card-bottom: rgba(54,35,93,0.95);
           --pill-bg: rgba(255,255,255,0.18);
@@ -33,7 +29,6 @@
           -moz-osx-font-smoothing: grayscale;
         }
 
-        /* Layout utama dengan penyesuaian tata letak */
         .main-container {
           display: flex;
           width: 1200px;
@@ -43,7 +38,6 @@
           justify-content: space-between;
         }
 
-        /* Kolom kiri - Visual */
         .visual-column {
           flex: 1;
           display: flex;
@@ -73,7 +67,6 @@
           transform: translateY(-8px);
         }
 
-        /* Kolom kanan - Konten */
         .content-column {
           flex: 1;
           display: flex;
@@ -92,7 +85,6 @@
           overflow: hidden;
         }
 
-        /* Efek dekoratif pada card - diperbesar */
         .welcome-card::after{
           content: "";
           position: absolute;
@@ -118,7 +110,6 @@
           text-align: center;
         }
 
-        /* Area Selamat Datang yang diperbesar */
         .welcome-section {
           margin-bottom: 15px;
         }
@@ -151,7 +142,6 @@
           text-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
 
-        /* Deskripsi yang lebih besar */
         .description-container{
           width: 90%;
           background: var(--pill-bg);
@@ -171,7 +161,6 @@
           text-align: center;
         }
 
-        /* Tombol yang lebih menonjol */
         .cta-button{
           width: 200px;
           height: 70px;
@@ -197,7 +186,6 @@
           box-shadow: 0 18px 35px rgba(0,0,0,0.4);
         }
 
-        /* Responsif dengan penyesuaian tata letak */
         @media (max-width: 1100px){
           .main-container {
             flex-direction: column;
@@ -281,13 +269,11 @@
 </head>
 <body>
     <div class="main-container">
-        <!-- Kolom Visual -->
         <div class="visual-column">
             <img src="image/namayayasan.png" alt="Logo Yayasan Purba Danarta" class="logo">
             <img src="image/gedungyayasan.png" alt="Gedung Yayasan Purba Danarta" class="building-image">
         </div>
         
-        <!-- Kolom Konten -->
         <div class="content-column">
             <div class="welcome-card">
                 <div class="card-content">

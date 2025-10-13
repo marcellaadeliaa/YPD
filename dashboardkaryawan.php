@@ -48,11 +48,10 @@ $sql_cuti = "SELECT * FROM data_pengajuan_cuti WHERE kode_karyawan = ? ORDER BY 
 $stmt_cuti = mysqli_prepare($conn, $sql_cuti);
 
 if ($stmt_cuti) {
-    mysqli_stmt_bind_param($stmt_cuti, "s", $kode_karyawan); // Gunakan kode_karyawan
+    mysqli_stmt_bind_param($stmt_cuti, "s", $kode_karyawan); 
     mysqli_stmt_execute($stmt_cuti);
     $result_cuti = mysqli_stmt_get_result($stmt_cuti);
     if ($cuti = $result_cuti->fetch_assoc()) {
-        // Menampilkan rentang tanggal jika tanggal akhir berbeda, atau satu tanggal jika sama
         if ($cuti['tanggal_mulai'] == $cuti['tanggal_akhir']) {
             $tanggal_cuti = date('d/m/Y', strtotime($cuti['tanggal_mulai']));
         } else {
@@ -337,7 +336,6 @@ h1 {text-align:center;font-size:26px;margin-bottom:30px;}
     <?php if ($status_cuti): ?>
       <div style="margin-top: 15px;">
         <?php
-            // Mengganti spasi dengan strip agar cocok dengan nama class di CSS
             $status_class = str_replace(' ', '-', $status_cuti);
         ?>
         <span class="status-<?= htmlspecialchars($status_class) ?>">

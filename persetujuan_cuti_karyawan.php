@@ -2,13 +2,11 @@
 session_start();
 require 'config.php';
 
-// Pastikan pengguna memiliki role direktur sebelum mengakses halaman
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'direktur') {
-    // header("Location: login.php");
-    // exit();
+    header("Location: login_direktur.php");
+    exit();
 }
 
-// Mengambil semua riwayat cuti dari database
 $query_riwayat_cuti = "SELECT * FROM pengajuan_cuti ORDER BY created_at DESC";
 $result_riwayat_cuti = $conn->query($query_riwayat_cuti);
 

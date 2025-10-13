@@ -49,14 +49,17 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
                 if ($next_stage == 'psikotes') {
                     $newStatus = 'Seleksi Psikotes';
                     $status_psikotes = 'Lolos'; 
+                    $status_kesehatan = NULL; 
                     if (empty($custom_message)) $custom_message = "Selamat! Anda lolos wawancara. Tahap selanjutnya adalah Psikotes.";
                 } elseif ($next_stage == 'kesehatan') {
                     $newStatus = 'Seleksi Kesehatan';
+                    $status_psikotes = NULL; 
                     $status_kesehatan = 'Lolos'; 
                     if (empty($custom_message)) $custom_message = "Selamat! Anda lolos wawancara. Tahap selanjutnya adalah Tes Kesehatan.";
                 } elseif ($next_stage == 'keduanya') {
                     $newStatus = 'Seleksi Psikotes & Kesehatan';
                     $status_psikotes = 'Lolos'; 
+                    $status_kesehatan = 'Lolos'; 
                     if (empty($custom_message)) $custom_message = "Selamat! Anda lolos wawancara. Tahap selanjutnya adalah Psikotes dan Tes Kesehatan.";
                 }
                 break;
@@ -66,6 +69,7 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
                 $status_admin = 'Lolos'; 
                 $status_wawancara = 'Lolos'; 
                 $status_psikotes = 'Lolos';
+                $status_kesehatan = NULL; 
                 $status_final = 'Diterima'; 
                 if (empty($custom_message)) $custom_message = "Selamat! Anda telah lolos seluruh rangkaian seleksi dan dinyatakan DITERIMA.";
                 break;
@@ -75,7 +79,7 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
                 $status_admin = 'Lolos'; 
                 $status_wawancara = 'Lolos';
                 $status_psikotes = 'Lolos'; 
-                $status_kesehatan = 'Lolos'; 
+                $status_kesehatan = NULL; 
                 if (empty($custom_message)) $custom_message = "Selamat! Anda lolos Psikotes. Tahap selanjutnya adalah Tes Kesehatan.";
                 break;
                 
@@ -83,7 +87,6 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
                 $newStatus = 'Diterima';
                 $status_admin = 'Lolos';
                 $status_wawancara = 'Lolos';
-                $status_psikotes = 'Lolos';
                 $status_kesehatan = 'Lolos'; 
                 $status_final = 'Diterima';
                 if (empty($custom_message)) $custom_message = "Selamat! Anda telah lolos seluruh rangkaian seleksi dan dinyatakan DITERIMA.";
@@ -182,8 +185,6 @@ function getApplicantsByStatus($conn, $status, $search_keyword = '') {
     $stmt->execute();
     return $stmt->get_result();
 }
-
-$pengumuman_umum = $conn->query("SELECT * FROM pengumuman_umum WHERE status = 'active' ORDER BY tanggal DESC, id DESC");
 
 $pelamarMenunggu = getApplicantsByStatus($conn, 'Menunggu Proses', $search_keyword);
 $pelamarAdministrasi = getApplicantsByStatus($conn, 'Seleksi Administratif', $search_keyword);

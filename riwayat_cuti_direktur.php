@@ -11,7 +11,6 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'direktur') {
 $user = $_SESSION['user'];
 $nama_direktur = $user['nama_lengkap'];
 
-// Mengambil nilai dari form filter
 $start_date = $_GET['start_date'] ?? ''; 
 $end_date = $_GET['end_date'] ?? '';
 $search_query = $_GET['search'] ?? '';
@@ -20,21 +19,14 @@ $role_filter = $_GET['role'] ?? '';
 
 $where_clauses = []; 
 
-// ### BAGIAN YANG DIUBAH ###
-// Logika filter status disederhanakan.
-// Jika filter status dipilih, maka akan diterapkan. Jika tidak, tidak ada filter status sama sekali (semua akan tampil).
 if (!empty($status_filter)) {
     $where_clauses[] = "status = '" . mysqli_real_escape_string($conn, $status_filter) . "'";
 }
-// DIHAPUS: Blok "else" yang sebelumnya menyembunyikan status 'Menunggu Persetujuan' telah dihapus.
-// ### AKHIR BAGIAN YANG DIUBAH ###
 
-// Filter berdasarkan role (jika dipilih)
 if (!empty($role_filter)) {
     $where_clauses[] = "role = '" . mysqli_real_escape_string($conn, $role_filter) . "'";
 }
 
-// Filter berdasarkan tanggal (jika dipilih)
 if (!empty($start_date)) {
     $where_clauses[] = "tanggal_mulai >= '" . mysqli_real_escape_string($conn, $start_date) . "'";
 }
@@ -42,7 +34,6 @@ if (!empty($end_date)) {
     $where_clauses[] = "tanggal_akhir <= '" . mysqli_real_escape_string($conn, $end_date) . "'";
 }
 
-// Filter berdasarkan pencarian (jika diisi)
 if (!empty($search_query)) {
     $search = mysqli_real_escape_string($conn, "%" . $search_query . "%");
     $where_clauses[] = "(nama_karyawan LIKE '$search' OR kode_karyawan LIKE '$search' OR divisi LIKE '$search')";
@@ -53,7 +44,6 @@ if (!empty($where_clauses)) {
     $where_sql = " WHERE " . implode(" AND ", $where_clauses);
 }
 
-// Query ini akan mengambil semua data jika tidak ada filter yang aktif
 $sql = "
     SELECT 
         id,
@@ -93,7 +83,6 @@ $filtered_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Riwayat Cuti Pegawai - Direktur</title>
 <style>
-    /* ... CSS Anda tidak berubah, tetap sama ... */
     body { margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg,#1E105E 0%,#8897AE 100%); min-height:100vh; color:#333; }
     header { background:rgba(255,255,255,1); padding:20px 40px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #34377c; }
     .logo { display:flex; align-items:center; gap:16px; font-weight:500; font-size:20px; color:#2e1f4f; }
@@ -330,7 +319,6 @@ $filtered_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
 </main>
 
 <script>
-    // ... Script JavaScript Anda tidak berubah ...
 </script>
 
 </body>

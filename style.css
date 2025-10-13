@@ -1,13 +1,8 @@
-/* Reset ringan */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* Font family:
-   - Montserrat untuk teks pendukung
-   - Playfair Display untuk judul serif
-   - Dancing Script untuk tulisan bergaya tangan (subtitle) */
 :root{
-  --bg-top: #24104a;      /* ungu gelap */
-  --bg-bottom: #8690a6;   /* abu kebiruan lembut */
+  --bg-top: #24104a;      
+  --bg-bottom: #8690a6;  
   --card-top: rgba(47,18,76,0.95);
   --card-bottom: rgba(54,35,93,0.95);
   --pill-bg: rgba(255,255,255,0.18);
@@ -25,16 +20,14 @@ body{
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Wrapper menampung dua kolom */
 .page-wrapper{
-  width: 1100px;            /* cocok untuk tampilan desktop serupa screenshot */
+  width: 1100px;            
   max-width: calc(100% - 60px);
   display: flex;
   gap: 48px;
   align-items: flex-start;
 }
 
-/* Kiri */
 .left-col{
   flex: 1;
   display: flex;
@@ -43,16 +36,13 @@ body{
   align-items: flex-start;
 }
 
-/* Logo - sesuai posisi pada screenshot */
 .logo{
   width: 360px;
   object-fit: contain;
   background: transparent;
-  /* sedikit margin kiri agar posisinya agak menjorok ke kanan seperti reference */
   margin-left: 8px;
 }
 
-/* Foto gedung */
 .foto{
   width: 420px;
   height: 240px;
@@ -62,7 +52,6 @@ body{
   margin-top: 4px;
 }
 
-/* Kanan - kartu besar */
 .right-col{
   width: 480px;
   display: flex;
@@ -70,7 +59,6 @@ body{
   justify-content: center;
 }
 
-/* Card */
 .card{
   width: 100%;
   background: linear-gradient(180deg, rgba(42,22,92,0.95) 0%, rgba(50,30,110,0.95) 100%);
@@ -81,7 +69,6 @@ body{
   overflow: hidden;
 }
 
-/* varian sudut lebih bulat di bagian bawah kiri agar mirip referensi */
 .card::after{
   content: "";
   position: absolute;
@@ -94,7 +81,6 @@ body{
   pointer-events: none;
 }
 
-/* Konten di dalam kartu */
 .card-inner{
   position: relative;
   z-index: 2;
@@ -107,7 +93,6 @@ body{
   padding: 12px 8px;
 }
 
-/* "Selamat Datang di" */
 .welcome{
   font-size: 14px;
   color: rgba(255,255,255,0.9);
@@ -115,7 +100,6 @@ body{
   margin-top: 6px;
 }
 
-/* "Yayasan" (serif besar) */
 .title{
   font-family: 'Playfair Display', serif;
   font-size: 44px;
@@ -125,7 +109,6 @@ body{
   line-height: 1;
 }
 
-/* "Purba Danarta" (script) */
 .subtitle{
   font-family: 'Dancing Script', cursive;
   font-size: 34px;
@@ -135,7 +118,6 @@ body{
   color: #e9e6ff;
 }
 
-/* Pill deskripsi */
 .desc-pill{
   width: 82%;
   background: var(--pill-bg);
@@ -154,7 +136,6 @@ body{
   text-align: center;
 }
 
-/* Tombol - dua pill putih */
 .btn-row{
   display: flex;
   gap: 28px;
@@ -183,7 +164,6 @@ body{
   box-shadow: 0 14px 26px rgba(0,0,0,0.32);
 }
 
-/* sedikit penyesuaian tampilan kecil */
 @media (max-width: 1200px){
   .page-wrapper{ width: 96%; gap: 28px; }
   .logo{ width: 320px; }
@@ -192,7 +172,6 @@ body{
 }
 
 @media (max-width: 880px){
-  /* tumpuk kolom jadi satu untuk layar sempit */
   body{ padding: 24px; }
   .page-wrapper{ flex-direction: column; align-items: center; gap: 22px; width: 100%; }
   .left-col, .right-col{ width: 100%; display: flex; justify-content: center; }

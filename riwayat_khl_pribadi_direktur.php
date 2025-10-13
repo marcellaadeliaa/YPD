@@ -2,7 +2,6 @@
 session_start();
 require 'config.php';
 
-// 🔒 Batasi hanya untuk role direktur
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'direktur') {
     header("Location: login_karyawan.php");
     exit();
@@ -10,14 +9,12 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'direktur') {
 
 $user = $_SESSION['user'];
 $nama_direktur = $user['nama_lengkap'];
-$kode_direktur = $user['kode_karyawan']; // Pastikan ini ada di session
+$kode_direktur = $user['kode_karyawan']; 
 
-// ====== FILTER ======
 $start_date = $_GET['start_date'] ?? '';
 $end_date = $_GET['end_date'] ?? '';
 $status_filter = $_GET['status'] ?? '';
 
-// ====== QUERY KHUSUS DIREKTUR ======
 $query = "SELECT dk.nama_lengkap, dpk.* 
           FROM data_pengajuan_khl dpk
           JOIN data_karyawan dk ON dpk.kode_karyawan = dk.kode_karyawan

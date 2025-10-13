@@ -2,16 +2,15 @@
 session_start();
 require 'config.php';
 
-// Halaman ini untuk direktur, jadi pastikan role-nya direktur
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'direktur') {
-    // header("Location: login.php");
-    // exit();
+    header("Location: login_direktur.php");
+    exit();
 }
 
-// LOGIKA PERSETUJUAN / PENOLAKAN
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id_pengajuan = $_POST['id_pengajuan'];
-    $status_baru = $_POST['status']; // Nilai: 'Disetujui Direktur' atau 'Ditolak'
+    $status_baru = $_POST['status']; 
     
     $stmt = $conn->prepare("UPDATE pengajuan_khl SET status = ? WHERE id = ?");
     $stmt->bind_param("si", $status_baru, $id_pengajuan);
@@ -23,13 +22,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     $stmt->close();
-    // Redirect untuk refresh halaman
     echo "<script>window.location.href='persetujuan_khl_karyawan.php';</script>";
     exit();
 }
 
-// MENGAMBIL DATA KHL DARI KARYAWAN (YANG PERLU PERSETUJUAN)
-// Asumsi statusnya adalah 'Menunggu HRD'. Sesuaikan jika berbeda.
 $query = "SELECT * FROM pengajuan_khl WHERE status = 'Menunggu HRD' ORDER BY created_at ASC";
 $result = $conn->query($query);
 ?>

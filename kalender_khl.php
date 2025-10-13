@@ -148,7 +148,6 @@ $conn->close();
     .btn-reset { background-color: #6c757d; }
     .btn-reset:hover { background-color: #545b62; }
     
-    /* Calendar Styles */
     .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px; }
     .calendar-nav { display: flex; gap: 10px; align-items: center; }
     .calendar-title { font-size: 24px; font-weight: 600; color: #1E105E; }
@@ -192,7 +191,6 @@ $conn->close();
     .legend-color { width: 20px; height: 20px; border-radius: 4px; }
     .legend-khl { background: #4ecdc4; }
     
-    /* Modal Styles */
     .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
     .modal-content { background-color: white; margin: 5% auto; padding: 20px; border-radius: 10px; width: 80%; max-width: 600px; }
     .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }

@@ -2,13 +2,11 @@
 session_start();
 require_once 'config.php';
 
-// Cek apakah user sudah login sebagai penanggung jawab
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'penanggung jawab') {
     header("Location: login_penanggungjawab.php");
     exit();
 }
 
-// Ambil data dari session
 $user = $_SESSION['user'];
 $nik = $user['kode_karyawan'];
 $nama_lengkap = $user['nama_lengkap'];
@@ -16,7 +14,6 @@ $divisi = $user['divisi'];
 $jabatan = $user['jabatan'];
 $role = $user['role'];
 
-// Hitung statistik untuk header (sama seperti dashboard)
 $stmt_cuti = $conn->prepare("SELECT COUNT(id) as total FROM pengajuan_cuti WHERE divisi = ? AND status = 'Menunggu'");
 $stmt_cuti->bind_param("s", $divisi);
 $stmt_cuti->execute();
@@ -35,7 +32,6 @@ $stmt_karyawan->execute();
 $total_karyawan_divisi = $stmt_karyawan->get_result()->fetch_assoc()['total'] ?? 0;
 $stmt_karyawan->close();
 
-// Jika ada data yang kosong, ambil dari database
 if (empty($divisi) || empty($jabatan)) {
     $query_karyawan = "SELECT divisi, jabatan FROM data_karyawan WHERE kode_karyawan = ?";
     $stmt = mysqli_prepare($conn, $query_karyawan);
@@ -47,7 +43,6 @@ if (empty($divisi) || empty($jabatan)) {
     if ($karyawan_detail) {
         $divisi = $karyawan_detail['divisi'];
         $jabatan = $karyawan_detail['jabatan'];
-        // Update session
         $_SESSION['user']['divisi'] = $divisi;
         $_SESSION['user']['jabatan'] = $jabatan;
     }
