@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 13 Okt 2025 pada 19.03
+-- Waktu pembuatan: 14 Okt 2025 pada 15.35
 -- Versi server: 10.4.22-MariaDB
 -- Versi PHP: 7.3.33
 
@@ -102,7 +102,7 @@ INSERT INTO `data_karyawan` (`id_karyawan`, `kode_karyawan`, `nama_lengkap`, `em
 (5, 'YPD004', 'Dani', 'dani.pj@ypd.com', 'hashed_password_dani', 'Staf Keuangan', 'Keuangan', 'karyawan', '081234567894', 12, 5, 'aktif', '2025-09-30 23:45:32'),
 (6, 'YPD005', 'Budi', 'budibudi@gmail.com', 'hashed_password_budi', 'Penanggung Jawab Konsultasi', 'Konsultasi', 'penanggung jawab', '12345677654', 12, 5, 'aktif', '2025-10-02 08:30:16'),
 (7, 'YPD006', 'Cica', 'cica@ypd.com', 'hashed_password_cica', 'Penanggung Jawab Wisma', 'Wisma', 'penanggung jawab', '085918347914', 12, 5, 'aktif', '2025-10-02 14:01:16'),
-(8, 'YPD007', 'Dian', 'didi@gmail.com', 'hashed_password_dian', 'Penanggung Jawab SDM', 'SDM', 'penanggung jawab', '5981731412', 12, 5, 'aktif', '2025-10-02 15:10:28'),
+(8, 'YPD007', 'Dian', 'didi@gmail.com', 'hashed_password_dian', 'Penanggung Jawab SDM', 'SDM', 'penanggung jawab', '5981731413', 12, 5, 'aktif', '2025-10-02 15:10:28'),
 (9, 'YPD008', 'Jasmine', 'minminja@gmail.com', 'hashed_password_jasmine', 'Penanggung Jawab Sekretariat', 'Sekretariat', 'penanggung jawab', '123415654312', 12, 5, 'aktif', '2025-10-02 15:24:59'),
 (10, 'YPD009', 'Mega', 'gamega@gmail.com', 'hashed_password_mega', 'Penanggung Jawab Keuangan', 'Keuangan', 'penanggung jawab', '584937383', 12, 5, 'aktif', '2025-10-02 15:46:27'),
 (11, 'YPD011', 'Lala Marcella', 'lala.marcella@ypd.com', 'hashed_password_lala', 'Staf Keuangan', 'Keuangan', 'karyawan', '08186845699', 4, 0, 'aktif', '2025-10-04 05:27:28'),
@@ -117,7 +117,8 @@ INSERT INTO `data_karyawan` (`id_karyawan`, `kode_karyawan`, `nama_lengkap`, `em
 (20, 'YPD020', 'Lyra', 'lyra@ypd.com', 'hashed_password_lyra', 'Staf SDM', 'SDM', 'karyawan', '081868456987', 5, 0, 'aktif', '2025-10-04 06:47:18'),
 (21, 'YPD021', 'Yovan', 'yovan@ypd.com', 'hashed_password_yovan', 'Staf SDM', 'SDM', 'karyawan', '081868456985', 4, 0, 'aktif', '2025-10-04 06:48:16'),
 (22, 'YPD022', 'Marcella', 'marcella@ypd.com', 'hashed_password_marcella', 'Staf Keuangan', 'Keuangan', 'karyawan', '081868456988', 0, 0, 'aktif', '2025-10-12 05:21:51'),
-(23, 'YPD023', 'Sasa', 'sasa@ypd.com', 'hashed_password_sasa', 'Staf SDM', 'SDM', 'karyawan', '081868456988', 0, 0, 'aktif', '2025-10-13 17:01:55');
+(23, 'YPD023', 'Sasa', 'sasa@ypd.com', 'hashed_password_sasa', 'Staf SDM', 'SDM', 'karyawan', '081868456988', 0, 0, 'aktif', '2025-10-13 17:01:55'),
+(24, 'YPD024', 'Nindya', 'nindya@ypd.com', 'hashed_password_nindya', 'Staf SDM', 'SDM', 'karyawan', '081868456989', 0, 0, 'aktif', '2025-10-14 13:12:05');
 
 -- --------------------------------------------------------
 
@@ -176,10 +177,11 @@ INSERT INTO `data_pelamar` (`id`, `user_id`, `nama_lengkap`, `posisi_dilamar`, `
 (16, 25, 'Yovan', 'SDM', 'Laki-laki', 'Malang', '2001-02-21', '1234512346', 'Jl. Mawar Malang', 'Jl. Pawiyatan Luhur Semarang', '081868456985', 'yovan1234@gmail.com', 'Katholik', '081258962812', 'Sarjana', 'uploads/1759560300-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560300-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560300-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560300-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759560300-Pernyataan_Penyelesaian_Proyek.docx', NULL, 'Diterima', 'Proses seleksi sedang berlangsung', 'Belum ada pengumuman saat ini.', '2025-10-04 06:45:00'),
 (17, 26, 'Feli ', 'Konsultasi', 'Perempuan', 'Tangerang', '2000-01-30', '1234512349', 'Tangerang', 'Jl. Pawiyatan Luhur Semarang', '08186889755', 'feli1234@gmail.com', 'Buddha', '081256478988', 'Sarjana', 'uploads/1759668945-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759668945-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759668945-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759668945-Pernyataan_Penyelesaian_Proyek.docx', 'uploads/1759668945-Pernyataan_Penyelesaian_Proyek.docx', NULL, 'Diterima', 'Proses seleksi sedang berlangsung', 'Belum ada pengumuman saat ini.', '2025-10-05 12:55:45'),
 (18, 27, 'Dicky', 'Wisma', 'Laki-laki', 'Medan', '2001-11-11', '1234512349', 'Medan', 'Jl. Pawiyatan Luhur II Semarang', '08186889777', 'dicky1234@gmail.com', 'Buddha', '081256478988', 'Sarjana', 'uploads/1759853623-ChatGPT Image 5 Okt 2025, 00.02.09.png', 'uploads/1759853623-ChatGPT Image 5 Okt 2025, 00.02.09.png', 'uploads/1759853623-ChatGPT Image 5 Okt 2025, 00.02.09.png', 'uploads/1759853623-ChatGPT Image 5 Okt 2025, 00.02.09.png', 'uploads/1759853623-ChatGPT Image 5 Okt 2025, 00.02.09.png', 'uploads/1759853623-ChatGPT Image 5 Okt 2025, 00.02.09.png', 'Diterima', 'Proses seleksi sedang berlangsung', 'Belum ada pengumuman saat ini.', '2025-10-07 16:13:43'),
-(19, 28, 'Nindya', 'SDM', 'Perempuan', 'Jakarta', '2002-02-02', '1234512348', 'Jl. Anggrek Jakarta', 'Jl. Pawiyatan Luhur Semarang', '081868456988', 'nindya123@gmail.com', 'Islam', '081258962815', 'Sarjana', 'uploads/1759855931-ChatGPT Image 5 Okt 2025, 00.02.09.png', 'uploads/1759855931-ChatGPT Image 5 Okt 2025, 00.02.09.png', 'uploads/1759855931-ChatGPT Image 5 Okt 2025, 00.02.09.png', 'uploads/1759855931-ChatGPT Image 5 Okt 2025, 00.02.09.png', 'uploads/1759855931-ChatGPT Image 5 Okt 2025, 00.02.09.png', NULL, 'Seleksi Psikotes & Kesehatan', 'Proses seleksi sedang berlangsung', 'Belum ada pengumuman saat ini.', '2025-10-07 16:52:11'),
+(19, 28, 'Nindya', 'SDM', 'Perempuan', 'Jakarta', '2002-02-02', '1234512348', 'Jl. Anggrek Jakarta', 'Jl. Pawiyatan Luhur Semarang', '081868456988', 'nindya123@gmail.com', 'Islam', '081258962815', 'Sarjana', 'uploads/1759855931-ChatGPT Image 5 Okt 2025, 00.02.09.png', 'uploads/1759855931-ChatGPT Image 5 Okt 2025, 00.02.09.png', 'uploads/1759855931-ChatGPT Image 5 Okt 2025, 00.02.09.png', 'uploads/1759855931-ChatGPT Image 5 Okt 2025, 00.02.09.png', 'uploads/1759855931-ChatGPT Image 5 Okt 2025, 00.02.09.png', NULL, 'Diterima', 'Proses seleksi sedang berlangsung', 'Belum ada pengumuman saat ini.', '2025-10-07 16:52:11'),
 (20, 30, 'Cece', 'Sekretariat', 'Perempuan', 'Tegal', '2006-03-10', '33587425695841', 'Tegal', 'Semarang', '084569875321', 'adeliamarcellaa@gmail.com', 'Katholik', '084569875321', 'Diploma', 'uploads/1760004826-ChatGPT Image 5 Okt 2025, 00.02.09.png', 'uploads/1760004826-ChatGPT Image 5 Okt 2025, 00.02.09.png', 'uploads/1760004826-ChatGPT Image 5 Okt 2025, 00.02.09.png', 'uploads/1760004826-ChatGPT Image 5 Okt 2025, 00.02.09.png', 'uploads/1760004826-ChatGPT Image 5 Okt 2025, 00.02.09.png', NULL, 'Diterima', 'Proses seleksi sedang berlangsung', 'Belum ada pengumuman saat ini.', '2025-10-09 10:13:46'),
 (21, 1, 'Sasa', 'SDM', 'Perempuan', 'Jakarta', '2000-12-12', '1234512348', 'Tegal', 'Tegal', '081868456988', 'marcellaadelia06@gmail.com', 'Katholik', '081258962815', 'Diploma', 'uploads/1760109541-ChatGPT Image 5 Okt 2025, 00.02.09.png', 'uploads/1760109541-ChatGPT Image 5 Okt 2025, 00.02.09.png', 'uploads/1760109541-ChatGPT Image 5 Okt 2025, 00.02.09.png', 'uploads/1760109541-ChatGPT Image 5 Okt 2025, 00.02.09.png', 'uploads/1760109541-ChatGPT Image 5 Okt 2025, 00.02.09.png', NULL, 'Diterima', 'Proses seleksi sedang berlangsung', 'Belum ada pengumuman saat ini.', '2025-10-10 15:19:01'),
-(22, 31, 'Marcella', 'Keuangan', 'Perempuan', 'Tegal', '2006-03-10', '1122334455', 'Jl. Residence Tegal', 'Jl. Pawiyatan Luhur II Semarang', '081868456988', '24n10004@student.unika.ac.id', 'Katholik', '081256478987', 'Diploma', 'uploads/1760245662-Tabel Jarkom.docx', 'uploads/1760245662-Tabel Jarkom.docx', 'uploads/1760245662-Tabel Jarkom.docx', 'uploads/1760245662-Tabel Jarkom.docx', 'uploads/1760245662-Tabel Jarkom.docx', NULL, 'Diterima', 'Proses seleksi sedang berlangsung', 'Belum ada pengumuman saat ini.', '2025-10-12 05:07:42');
+(22, 31, 'Marcella', 'Keuangan', 'Perempuan', 'Tegal', '2006-03-10', '1122334455', 'Jl. Residence Tegal', 'Jl. Pawiyatan Luhur II Semarang', '081868456988', '24n10004@student.unika.ac.id', 'Katholik', '081256478987', 'Diploma', 'uploads/1760245662-Tabel Jarkom.docx', 'uploads/1760245662-Tabel Jarkom.docx', 'uploads/1760245662-Tabel Jarkom.docx', 'uploads/1760245662-Tabel Jarkom.docx', 'uploads/1760245662-Tabel Jarkom.docx', NULL, 'Diterima', 'Proses seleksi sedang berlangsung', 'Belum ada pengumuman saat ini.', '2025-10-12 05:07:42'),
+(23, 32, 'Gege', 'Sekretariat', 'Laki-laki', 'Jakarta', '2004-04-14', '1234512349', 'Jl. Anggrek Jakarta', 'Jl. Pawiyatan Luhur II Semarang', '081868456987', 'gege1234@gmail.com', 'Buddha', '081256478988', 'Sarjana', 'uploads/1760448178-UTS IBD.png', 'uploads/1760448178-UTS IBD.png', 'uploads/1760448178-UTS IBD.png', 'uploads/1760448178-UTS IBD.png', 'uploads/1760448178-UTS IBD.png', NULL, 'Diterima', 'Proses seleksi sedang berlangsung', 'Belum ada pengumuman saat ini.', '2025-10-14 13:22:58');
 
 -- --------------------------------------------------------
 
@@ -214,7 +216,7 @@ INSERT INTO `data_pengajuan_cuti` (`id`, `kode_karyawan`, `nama_karyawan`, `divi
 (3, 'YPD021', 'Yovan', 'SDM', 'Staf SDM', 'karyawan', 'Sakit', '2025-10-07', '2025-10-09', 'nono ya', 'uploads/surat_sakit/1759816970_ChatGPT Image 5 Okt 2025, 00.02.09.png', 'Ditolak', '2025-10-07 06:02:50', '2025-10-07 08:04:59'),
 (4, 'YPD011', 'Lala Marcella', 'Keuangan', 'Staf Keuangan', 'karyawan', 'Tahunan', '2025-12-28', '2026-01-04', 'mau holiday', NULL, 'Diterima', '2025-10-07 06:07:58', '2025-10-07 08:28:27'),
 (5, 'YPD014', 'Cici', 'Keuangan', 'Staf Keuangan', 'karyawan', 'Lustrum', '2025-10-17', '2025-10-17', 'Mau ke luar kota', NULL, 'Diterima', '2025-10-07 06:11:46', '2025-10-07 08:27:27'),
-(6, 'YPD010', 'Adrian', 'Training', 'Staf Training', 'karyawan', 'Lustrum', '2025-10-15', '2025-10-15', 'Pergi 1 hari', NULL, 'Diterima', '2025-10-07 06:48:59', '2025-10-07 08:51:02'),
+(6, 'YPD010', 'Adrian', 'Training', 'Staf Training', 'karyawan', 'Lustrum', '2025-10-27', '2025-10-27', 'Pergi 1 hari', NULL, 'Diterima', '2025-10-07 06:48:59', '2025-10-07 08:51:02'),
 (7, 'YPD015', 'Leonardo', 'Training', 'Staf Training', 'karyawan', 'Tahunan', '2025-11-10', '2025-11-17', 'pergi holiday ke LN hehe', NULL, 'Diterima', '2025-10-07 06:49:55', '2025-10-07 08:50:45'),
 (8, 'YPD003', 'Ria', 'Training', 'Penanggung Jawab Training', 'penanggung jawab', 'Tahunan', '2025-10-09', '2025-10-09', 'sakit', NULL, 'Menunggu Persetujuan', '2025-10-07 07:57:10', NULL),
 (9, 'YPD020', 'Lyra', 'SDM', 'Staf SDM', 'karyawan', 'Tahunan', '2025-10-07', '2025-10-07', 'gaboleh, kerja', NULL, 'Ditolak', '2025-10-07 13:17:58', '2025-10-07 15:45:25'),
@@ -236,7 +238,10 @@ INSERT INTO `data_pengajuan_cuti` (`id`, `kode_karyawan`, `nama_karyawan`, `divi
 (25, 'YPD021', 'Yovan', 'SDM', 'Staf SDM', 'karyawan', 'Tahunan', '2025-11-27', '2025-11-28', 'pergi ke luar kota', NULL, 'Menunggu Persetujuan', '2025-10-12 07:39:44', NULL),
 (26, 'YPD010', 'Adrian', 'Training', 'Staf Training', 'karyawan', 'Lustrum', '2025-10-14', '2025-10-15', 'pergi', NULL, 'Diterima', '2025-10-13 16:42:47', '2025-10-13 18:43:36'),
 (27, 'YPD003', 'Ria', 'Training', 'Penanggung Jawab Training', 'penanggung jawab', 'Tahunan', '2025-10-29', '2025-10-30', 'ga boleh', NULL, 'Ditolak', '2025-10-13 16:44:43', NULL),
-(28, 'YPD001', 'Pico', 'Direksi', 'Direktur Utama', 'direktur', 'DiluarTanggungan', '2025-11-27', '2025-11-27', 'pergi', NULL, '', '2025-10-13 16:49:26', NULL);
+(28, 'YPD001', 'Pico', 'Direksi', 'Direktur Utama', 'direktur', 'DiluarTanggungan', '2025-11-27', '2025-11-27', 'pergi', NULL, '', '2025-10-13 16:49:26', NULL),
+(29, 'YPD024', 'Nindya', 'SDM', 'Staf SDM', 'karyawan', 'Diluar Tanggungan', '2025-11-27', '2025-11-28', 'belum bisa', NULL, 'Ditolak', '2025-10-14 13:25:46', '2025-10-14 15:27:11'),
+(30, 'YPD007', 'Dian', 'SDM', 'Penanggung Jawab SDM', 'penanggung jawab', 'Lustrum', '2025-12-17', '2025-12-18', NULL, NULL, '', '2025-10-14 13:27:54', NULL),
+(31, 'YPD001', 'Pico', 'Direksi', 'Direktur Utama', 'direktur', 'DiluarTanggungan', '2025-12-19', '2025-12-19', 'pergi', NULL, '', '2025-10-14 13:33:31', NULL);
 
 --
 -- Trigger `data_pengajuan_cuti`
@@ -292,17 +297,10 @@ INSERT INTO `data_pengajuan_khl` (`id_khl`, `kode_karyawan`, `divisi`, `jabatan`
 (5, 'YPD007', 'SDM', 'Penanggung Jawab SDM', 'penanggung jawab', 'Projek Training SDM baru oawkok', '2025-10-15', '10:00:00', '16:00:00', '2025-10-30', '08:00:00', '17:00:00', 'disetujui', '', '2025-10-05 06:27:52'),
 (6, 'YPD007', 'SDM', 'Penanggung Jawab SDM', 'penanggung jawab', 'projekan2', '2025-10-06', '09:00:00', '18:00:00', '2025-11-08', '08:00:00', '17:00:00', 'ditolak', 'Tidak Boleh', '2025-10-05 06:48:08'),
 (7, 'YPD001', 'Direksi', 'Direktur Utama', 'direktur', 'bandungan', '2025-11-06', '15:35:00', '16:35:00', '2025-11-06', '17:35:00', '18:35:00', 'disetujui', NULL, '2025-10-05 08:35:46'),
-(8, 'YPD001', 'Direksi', '', 'direktur', 'bandungan', '2025-10-07', '00:11:00', '01:11:00', '2025-10-07', '03:11:00', '04:11:00', 'disetujui', NULL, '2025-10-05 17:11:49'),
-(9, 'YPD001', 'Direksi', '', 'direktur', 'bandungan', '2025-10-06', '00:18:00', '01:19:00', '2025-10-06', '03:19:00', '04:19:00', 'disetujui', NULL, '2025-10-05 17:19:13'),
-(10, 'YPD001', 'Direksi', '', 'direktur', 'bandungan', '2025-10-06', '00:22:00', '01:22:00', '2025-10-06', '02:22:00', '03:22:00', 'disetujui', NULL, '2025-10-05 17:22:19'),
-(11, 'YPD001', 'Direksi', '', 'direktur', 'Tugu Muda', '2025-10-06', '01:35:00', '02:35:00', '2025-10-06', '03:35:00', '04:36:00', 'disetujui', NULL, '2025-10-05 17:36:05'),
 (12, 'YPD001', 'Direksi', '', 'direktur', 'Tugu Muda', '2025-10-07', '00:37:00', '01:37:00', '2025-10-07', '02:37:00', '03:37:00', 'disetujui', NULL, '2025-10-05 17:37:58'),
-(13, 'YPD001', 'Direktsi', 'Direktur Utama', 'direktur', 'proyek baru', '2025-10-06', '01:04:00', '02:04:00', '2025-10-06', '04:04:00', '05:04:00', 'disetujui', NULL, '2025-10-05 18:04:55'),
 (14, 'YPD001', 'Direktsi', 'Direktur Utama', 'direktur', 'proyek baru', '2025-10-06', '01:04:00', '02:04:00', '2025-10-06', '04:04:00', '05:04:00', 'disetujui', NULL, '2025-10-05 18:05:33'),
-(15, 'YPD001', 'Direktsi', 'Direktur Utama', 'direktur', 'proyek desa', '2025-10-06', '01:23:00', '02:23:00', '2025-10-06', '03:23:00', '04:23:00', 'disetujui', NULL, '2025-10-05 18:23:32'),
 (19, 'YPD007', 'SDM', 'Penanggung Jawab SDM', 'penanggung jawab', 'projek baru', '2025-10-07', '09:00:00', '18:00:00', '2025-10-22', '08:00:00', '17:00:00', 'pending', NULL, '2025-10-07 13:29:49'),
 (20, 'YPD007', 'SDM', 'Penanggung Jawab SDM', 'penanggung jawab', 'projekprojek', '2025-10-28', '09:00:00', '17:00:00', '2025-10-29', '08:00:00', '16:00:00', 'pending', NULL, '2025-10-07 13:30:22'),
-(21, 'YPD007', 'SDM', 'Penanggung Jawab SDM', 'penanggung jawab', 'projek lagi', '2025-10-15', '08:00:00', '17:00:00', '2025-10-17', '09:00:00', '17:00:00', 'disetujui', '', '2025-10-07 13:42:16'),
 (22, 'YPD014', 'Keuangan', 'Staf Keuangan', 'karyawan', 'projeksekai', '2025-10-16', '09:00:00', '16:00:00', '2025-10-30', '08:00:00', '17:00:00', 'ditolak', 'no no', '2025-10-07 14:57:39'),
 (23, 'YPD019', 'Wisma', 'Staf Wisma', 'karyawan', 'Projek Training Karyawan Baru', '2025-10-08', '08:00:00', '18:00:00', '2025-10-20', '08:00:00', '17:00:00', 'disetujui', '', '2025-10-07 17:26:35'),
 (24, 'YPD018', 'Wisma', 'Staf Wisma', 'karyawan', 'Projek Training Karyawan Wisma', '2025-10-20', '08:00:00', '18:00:00', '2025-10-30', '08:00:00', '17:00:00', 'pending', NULL, '2025-10-07 17:45:24'),
@@ -314,7 +312,9 @@ INSERT INTO `data_pengajuan_khl` (`id_khl`, `kode_karyawan`, `divisi`, `jabatan`
 (30, 'YPD021', 'SDM', 'Staf SDM', 'karyawan', 'Projek Training Karyawan SDM', '2025-11-17', '08:00:00', '18:00:00', '2025-11-25', '08:00:00', '16:00:00', 'pending', NULL, '2025-10-12 07:32:50'),
 (31, 'YPD010', 'Training', 'Staf Training', 'karyawan', 'Projek Training Karyawan Baru', '2025-10-16', '08:00:00', '18:00:00', '2025-10-30', '08:00:00', '17:00:00', 'ditolak', 'belum bisa', '2025-10-13 16:43:05'),
 (32, 'YPD003', 'Training', 'Penanggung Jawab Training', 'penanggung jawab', 'Projek Training Karyawan Baru', '2025-11-17', '08:00:00', '18:00:00', '2025-11-28', '08:00:00', '17:00:00', 'disetujui', '', '2025-10-13 16:47:18'),
-(33, 'YPD001', 'Direksi', 'Direktur Utama', 'direktur', 'Projek Training Karyawan Baru', '2025-11-18', '11:00:00', '19:00:00', '2025-12-04', '08:00:00', '16:00:00', 'disetujui', NULL, '2025-10-13 16:50:05');
+(33, 'YPD001', 'Direksi', 'Direktur Utama', 'direktur', 'Projek Training Karyawan Baru', '2025-11-18', '11:00:00', '19:00:00', '2025-12-04', '08:00:00', '16:00:00', 'disetujui', NULL, '2025-10-13 16:50:05'),
+(34, 'YPD024', 'SDM', 'Staf SDM', 'karyawan', 'Mengikuti Training Karyawan Baru', '2025-12-08', '10:00:00', '18:00:00', '2025-12-22', '08:00:00', '17:00:00', 'disetujui', '', '2025-10-14 13:26:19'),
+(35, 'YPD007', 'SDM', 'Penanggung Jawab SDM', 'penanggung jawab', 'Projek Training Karyawan Baru', '2025-12-08', '08:00:00', '18:00:00', '2025-12-23', '08:00:00', '17:00:00', 'ditolak', 'ganti tanggal saja', '2025-10-14 13:29:24');
 
 -- --------------------------------------------------------
 
@@ -538,7 +538,13 @@ INSERT INTO `pengumuman_pelamar` (`id`, `pelamar_id`, `tahap`, `pesan`, `tanggal
 (115, 21, 'Menunggu Proses', 'Selamat! Lamaran Anda telah diterima dan masuk ke tahap seleksi administratif.', '2025-10-13', '2025-10-13 16:56:45'),
 (116, 21, 'Seleksi Administratif', 'Selamat! Anda lolos seleksi administratif. Tahap selanjutnya adalah wawancara.', '2025-10-13', '2025-10-13 16:59:19'),
 (117, 21, 'Seleksi Wawancara', 'Selamat! Anda lolos wawancara. Tahap selanjutnya adalah Tes Kesehatan.', '2025-10-13', '2025-10-13 16:59:29'),
-(118, 21, 'Seleksi Kesehatan', 'Selamat! Anda telah lolos seluruh rangkaian seleksi dan dinyatakan DITERIMA.', '2025-10-14', '2025-10-13 17:00:35');
+(118, 21, 'Seleksi Kesehatan', 'Selamat! Anda telah lolos seluruh rangkaian seleksi dan dinyatakan DITERIMA.', '2025-10-14', '2025-10-13 17:00:35'),
+(119, 19, 'Seleksi Psikotes & Kesehatan', 'Selamat! Anda lolos Psikotes. Tahap selanjutnya adalah Tes Kesehatan.', '2025-10-14', '2025-10-14 13:11:06'),
+(120, 19, 'Seleksi Kesehatan', 'Selamat! Anda telah lolos seluruh rangkaian seleksi dan dinyatakan DITERIMA.', '2025-10-14', '2025-10-14 13:11:08'),
+(121, 23, 'Menunggu Proses', 'Selamat! Lamaran Anda telah diterima dan masuk ke tahap seleksi administratif.', '2025-10-14', '2025-10-14 13:23:35'),
+(122, 23, 'Seleksi Administratif', 'Selamat! Anda lolos seleksi administratif. Tahap selanjutnya adalah wawancara.', '2025-10-14', '2025-10-14 13:23:42'),
+(123, 23, 'Seleksi Wawancara', 'Selamat! Anda lolos wawancara. Tahap selanjutnya adalah Psikotes.', '2025-10-14', '2025-10-14 13:24:05'),
+(124, 23, 'Seleksi Psikotes', 'Selamat! Anda telah lolos seluruh rangkaian seleksi dan dinyatakan DITERIMA.', '2025-10-14', '2025-10-14 13:24:12');
 
 -- --------------------------------------------------------
 
@@ -580,10 +586,11 @@ INSERT INTO `riwayat_pelamar` (`id`, `pelamar_id`, `status_administratif`, `stat
 (56, 16, 'Lolos', 'Lolos', 'Lolos', NULL, 'Diterima', '2025-10-04 06:45:16'),
 (60, 17, 'Lolos', 'Lolos', 'Lolos', 'Lolos', 'Diterima', '2025-10-05 12:56:02'),
 (65, 18, 'Lolos', 'Lolos', 'Lolos', NULL, 'Diterima', '2025-10-07 16:30:13'),
-(69, 19, 'Lolos', 'Lolos', 'Lolos', NULL, NULL, '2025-10-12 05:11:21'),
+(69, 19, 'Lolos', 'Lolos', 'Lolos', 'Lolos', 'Diterima', '2025-10-14 13:11:08'),
 (70, 20, 'Lolos', 'Lolos', 'Lolos', NULL, 'Diterima', '2025-10-09 10:14:28'),
 (75, 22, 'Lolos', 'Lolos', 'Lolos', NULL, 'Diterima', '2025-10-12 05:17:26'),
-(80, 21, 'Lolos', 'Lolos', NULL, 'Lolos', 'Diterima', '2025-10-13 17:00:35');
+(80, 21, 'Lolos', 'Lolos', NULL, 'Lolos', 'Diterima', '2025-10-13 17:00:35'),
+(86, 23, 'Lolos', 'Lolos', 'Lolos', NULL, 'Diterima', '2025-10-14 13:24:12');
 
 -- --------------------------------------------------------
 
@@ -631,7 +638,8 @@ INSERT INTO `users` (`id`, `nama_lengkap`, `email`, `password`, `created_at`) VA
 (28, '', 'nindya123@gmail.com', '$2y$10$Gx6RfcZR3qowXM54GSH4W.Y7YyiVaajscGYgTqEsp6Odidni8qI6m', '2025-10-07 16:50:23'),
 (29, '', 'indah123@gmail.com', '$2y$10$1k3a35hJD6G/rq2KwKg9SOuiO5Wbu.4zqAtru0Kv67qCXHkXCUoDa', '2025-10-09 09:59:35'),
 (30, 'Marcella Adelia', 'adeliamarcellaa@gmail.com', '', '2025-10-09 10:00:36'),
-(31, 'MARCELLA ADELIA PUTRI', '24n10004@student.unika.ac.id', '', '2025-10-12 05:04:02');
+(31, 'MARCELLA ADELIA PUTRI', '24n10004@student.unika.ac.id', '', '2025-10-12 05:04:02'),
+(32, '', 'gege1234@gmail.com', '$2y$10$PIABgvpbvsnAmRntNaoGMuYQrBElexx/YA/0Atpvzw6/q.oKdDST2', '2025-10-14 13:21:26');
 
 --
 -- Indexes for dumped tables
@@ -714,25 +722,25 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT untuk tabel `data_karyawan`
 --
 ALTER TABLE `data_karyawan`
-  MODIFY `id_karyawan` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
+  MODIFY `id_karyawan` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT untuk tabel `data_pelamar`
 --
 ALTER TABLE `data_pelamar`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- AUTO_INCREMENT untuk tabel `data_pengajuan_cuti`
 --
 ALTER TABLE `data_pengajuan_cuti`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 
 --
 -- AUTO_INCREMENT untuk tabel `data_pengajuan_khl`
 --
 ALTER TABLE `data_pengajuan_khl`
-  MODIFY `id_khl` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=34;
+  MODIFY `id_khl` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
 
 --
 -- AUTO_INCREMENT untuk tabel `pengajuan_cuti`
@@ -756,19 +764,19 @@ ALTER TABLE `pengajuan_khl`
 -- AUTO_INCREMENT untuk tabel `pengumuman_pelamar`
 --
 ALTER TABLE `pengumuman_pelamar`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=119;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=125;
 
 --
 -- AUTO_INCREMENT untuk tabel `riwayat_pelamar`
 --
 ALTER TABLE `riwayat_pelamar`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=84;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=90;
 
 --
 -- AUTO_INCREMENT untuk tabel `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=33;
 
 --
 -- Ketidakleluasaan untuk tabel pelimpahan (Dumped Tables)
