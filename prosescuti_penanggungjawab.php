@@ -25,7 +25,7 @@ function handleFileUpload($file) {
 }
 
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'penanggung jawab') {
-    header("Location: login_penanggungjawab.php");
+    header("Location: login_karyawan.php");
     exit();
 }
 
