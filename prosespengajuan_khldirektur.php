@@ -6,7 +6,7 @@ $display_data = false;
 $error_msg = '';
 
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'direktur') {
-    header("Location: login_direktur.php");
+    header("Location: login_karyawan.php");
     exit();
 }
 

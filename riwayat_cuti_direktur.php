@@ -180,55 +180,13 @@ $filtered_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
     <h1>Welcome, <?php echo htmlspecialchars($nama_direktur); ?>!</h1>
     <p class="admin-title">Direktur</p>
 
-    <div class="card">
-        <h2 class="page-title">Riwayat Cuti Pegawai</h2>
-        
-        <div class="filter-section">
-            <form method="GET" action="riwayat_cuti_direktur.php"> 
-                <div class="filter-row">
-                    <div class="filter-group date-group">
-                        <label for="start_date">Dari Tanggal Cuti</label>
-                        <input type="date" id="start_date" name="start_date" value="<?= htmlspecialchars($start_date) ?>">
-                    </div>
-                    
-                    <div class="filter-group date-group">
-                        <label for="end_date">Sampai Tanggal Cuti</label>
-                        <input type="date" id="end_date" name="end_date" value="<?= htmlspecialchars($end_date) ?>">
-                    </div>
-                    
-                    <div class="filter-group status-group">
-                        <label for="status">Filter Status Cuti</label>
-                        <select id="status" name="status">
-                            <option value="">Semua Status</option>
-                            <option value="Diterima" <?= $status_filter == 'Diterima' ? 'selected' : '' ?>>Diterima</option>
-                            <option value="Ditolak" <?= $status_filter == 'Ditolak' ? 'selected' : '' ?>>Ditolak</option>
-                            <option value="Menunggu Persetujuan" <?= $status_filter == 'Menunggu Persetujuan' ? 'selected' : '' ?>>Menunggu Persetujuan</option>
-                        </select>
-                    </div>
-                    
-                    <div class="filter-group role-group">
-                        <label for="role">Filter Role Karyawan</label>
-                        <select id="role" name="role">
-                            <option value="">Semua Role</option>
-                            <option value="karyawan" <?= $role_filter == 'karyawan' ? 'selected' : '' ?>>Karyawan</option>
-                            <option value="penanggung jawab" <?= $role_filter == 'penanggung jawab' ? 'selected' : '' ?>>Penanggung Jawab</option>
-                            <option value="direktur" <?= $role_filter == 'direktur' ? 'selected' : '' ?>>Direktur</option>
-                            <option value="admin" <?= $role_filter == 'admin' ? 'selected' : '' ?>>Admin</option>
-                        </select>
-                    </div>
-                    
-                    <div class="filter-group search-group">
-                        <label for="search">Cari (Nama/Kode/Divisi)</label>
-                        <input type="text" id="search" name="search" placeholder="Cari berdasarkan nama, NIK, atau divisi..." value="<?= htmlspecialchars($search_query) ?>">
-                    </div>
-                </div>
-                
-                <div class="action-bar">
-                    <button type="submit" class="btn btn-cari">Terapkan Filter</button>
-                    <a href="riwayat_cuti_direktur.php" class="btn btn-reset">Reset Filter</a>
-                </div>
-            </form>
-        </div>
+    <div class="card"> <h2 class="page-title">Riwayat Cuti Pegawai</h2> 
+    <div class="filter-section"> <form method="GET" action="riwayat_cuti_direktur.php"> 
+    <div class="filter-row">
+    <div class="filter-group date-group"> 
+        <label for="start_date">Dari Tanggal Cuti</label> 
+        <input type="date" id="start_date" name="start_date" value="<?= htmlspecialchars($start_date) ?>"> 
+    </div> <div class="filter-group date-group"> <label for="end_date">Sampai Tanggal Cuti</label> <input type="date" id="end_date" name="end_date" value="<?= htmlspecialchars($end_date) ?>"> </div> <div class="filter-group status-group"> <label for="status">Filter Status Cuti</label> <select id="status" name="status"> <option value="">Semua Status</option> <option value="Diterima" <?= $status_filter == 'Diterima' ? 'selected' : '' ?>>Diterima</option> <option value="Ditolak" <?= $status_filter == 'Ditolak' ? 'selected' : '' ?>>Ditolak</option> <option value="Menunggu Persetujuan" <?= $status_filter == 'Menunggu Persetujuan' ? 'selected' : '' ?>>Menunggu Persetujuan</option> </select> </div> <div class="filter-group role-group"> <label for="role">Filter Role Karyawan</label> <select id="role" name="role"> <option value="">Semua Role</option> <option value="karyawan" <?= $role_filter == 'karyawan' ? 'selected' : '' ?>>Karyawan</option> <option value="penanggung jawab" <?= $role_filter == 'penanggung jawab' ? 'selected' : '' ?>>Penanggung Jawab</option> <option value="direktur" <?= $role_filter == 'direktur' ? 'selected' : '' ?>>Direktur</option> <option value="admin" <?= $role_filter == 'admin' ? 'selected' : '' ?>>Admin</option> </select> </div> <div class="filter-group search-group"> <label for="search">Cari (Nama/Kode/Divisi)</label> <input type="text" id="search" name="search" placeholder="Cari berdasarkan nama, NIK, atau divisi..." value="<?= htmlspecialchars($search_query) ?>"> </div> </div> <div class="action-bar"> <button type="submit" class="btn btn-cari">Terapkan Filter</button> <a href="riwayat_cuti_direktur.php" class="btn btn-reset">Reset Filter</a> </div> </form> </div>
 
         <?php if (!empty($start_date) || !empty($end_date) || !empty($search_query) || !empty($status_filter) || !empty($role_filter)): ?>
             <div class="filter-info">
@@ -248,74 +206,7 @@ $filtered_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
             </div>
         <?php endif; ?>
 
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>No</th>
-                    <th>Kode Karyawan</th>
-                    <th>Nama Karyawan</th>
-                    <th>Divisi</th>
-                    <th>Jabatan</th>
-                    <th>Role</th>
-                    <th>Jenis Cuti</th>
-                    <th>Tanggal Mulai</th>
-                    <th>Tanggal Akhir</th>
-                    <th>Alasan</th>
-                    <th>File Surat</th>
-                    <th>Status</th>
-                    <th>Waktu Persetujuan</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (!empty($filtered_data)): ?>
-                    <?php $no = 1; ?>
-                    <?php foreach($filtered_data as $cuti): ?>
-                    <tr>
-                        <td><?= $no++ ?></td>
-                        <td><?= htmlspecialchars($cuti['kode_karyawan']) ?></td>
-                        <td><?= htmlspecialchars($cuti['nama_karyawan']) ?></td>
-                        <td><?= htmlspecialchars($cuti['divisi']) ?></td>
-                        <td><?= htmlspecialchars($cuti['jabatan']) ?></td>
-                        <td><?= htmlspecialchars(ucfirst($cuti['role'])) ?></td>
-                        <td><?= htmlspecialchars($cuti['jenis_cuti']) ?></td>
-                        <td><?= date('d/m/Y', strtotime($cuti['tanggal_mulai'])) ?></td> 
-                        <td><?= date('d/m/Y', strtotime($cuti['tanggal_akhir'])) ?></td> 
-                        <td class="alasan-cell" title="<?= htmlspecialchars($cuti['alasan']) ?>">
-                            <?= htmlspecialchars($cuti['alasan']) ?>
-                        </td>
-                        <td>
-                            <?php if (!empty($cuti['file_surat_dokter'])): ?>
-                                <a href="<?= htmlspecialchars($cuti['file_surat_dokter']) ?>" class="file-link" target="_blank">Lihat</a>
-                            <?php else: ?>
-                                <span style="color: #999;">-</span>
-                            <?php endif; ?>
-                        </td>
-                        <td>
-                            <?php if ($cuti['status'] == 'Diterima'): ?>
-                                <span class="status-diterima"><?= htmlspecialchars($cuti['status']) ?></span>
-                            <?php elseif ($cuti['status'] == 'Ditolak'): ?>
-                                <span class="status-ditolak"><?= htmlspecialchars($cuti['status']) ?></span>
-                            <?php elseif ($cuti['status'] == 'Menunggu Persetujuan'): ?>
-                                <span class="status-menunggu"><?= htmlspecialchars($cuti['status']) ?></span>
-                            <?php else: ?>
-                                <?= htmlspecialchars($cuti['status']) ?>
-                            <?php endif; ?>
-                        </td>
-                        <td>
-                            <?php 
-                                echo $cuti['waktu_persetujuan'] ? date('d/m/Y H:i', strtotime($cuti['waktu_persetujuan'])) : '-'; 
-                            ?>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <tr>
-                        <td colspan="13" class="no-data">Tidak ada data cuti yang ditemukan</td>
-                    </tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
-    </div>
+        <table class="data-table"> <thead> <tr> <th>No</th> <th>Kode Karyawan</th> <th>Nama Karyawan</th> <th>Divisi</th> <th>Jabatan</th> <th>Role</th> <th>Jenis Cuti</th> <th>Tanggal Mulai</th> <th>Tanggal Akhir</th> <th>Alasan</th> <th>File Surat</th> <th>Status</th> </tr> </thead> <tbody> <?php if (!empty($filtered_data)): ?> <?php $no = 1; foreach ($filtered_data as $cuti): ?> <tr> <td><?= $no++ ?></td> <td><?= htmlspecialchars($cuti['kode_karyawan']) ?></td> <td><?= htmlspecialchars($cuti['nama_karyawan']) ?></td> <td><?= htmlspecialchars($cuti['divisi']) ?></td> <td><?= htmlspecialchars($cuti['jabatan']) ?></td> <td><?= htmlspecialchars(ucfirst($cuti['role'])) ?></td> <td><?= htmlspecialchars($cuti['jenis_cuti']) ?></td> <td><?= date('d/m/Y', strtotime($cuti['tanggal_mulai'])) ?></td> <td><?= date('d/m/Y', strtotime($cuti['tanggal_akhir'])) ?></td> <td class="alasan-cell" title="<?= htmlspecialchars($cuti['alasan']) ?>"><?= htmlspecialchars($cuti['alasan']) ?></td> <td> <?php if (!empty($cuti['file_surat_dokter'])): ?> <a href="<?= htmlspecialchars($cuti['file_surat_dokter']) ?>" class="file-link" target="_blank">Lihat</a> <?php else: ?> <span style="color:#999;">-</span> <?php endif; ?> </td> <td> <?php $status = strtolower(trim($cuti['status'])); if ($status === 'diterima') { echo '<span class="status-diterima">Diterima</span>'; } elseif ($status === 'ditolak') { echo '<span class="status-ditolak">Ditolak</span>'; } elseif ($status === 'menunggu persetujuan') { echo '<span class="status-menunggu">Menunggu Persetujuan</span>'; } else { echo htmlspecialchars($cuti['status'] ?: '-'); } ?> </td> </tr> <?php endforeach; ?> <?php else: ?> <tr><td colspan="12" class="no-data">Tidak ada data cuti yang ditemukan</td></tr> <?php endif; ?> </tbody> </table> </div>
 </main>
 
 <script>

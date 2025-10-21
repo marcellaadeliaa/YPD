@@ -250,7 +250,7 @@ $conn->close();
             <thead>
                 <tr>
                     <th>No</th>
-                    <th>Kode</th>
+                    <th>Kode Karyawan</th>
                     <th>Nama Karyawan</th>
                     <th>Divisi</th>
                     <th>Proyek</th>
@@ -265,7 +265,7 @@ $conn->close();
                     <?php $no=1; foreach($data_khl as $row): ?>
                     <tr>
                         <td><?= $no++ ?></td>
-                        <td><?= htmlspecialchars($row['id_khl']) ?></td>
+                        <td><?= htmlspecialchars($row['kode_karyawan']) ?></td>
                         <td><?= htmlspecialchars($row['nama_lengkap']) ?></td>
                         <td><?= htmlspecialchars($row['divisi']) ?></td>
                         <td><?= htmlspecialchars($row['proyek']) ?></td>

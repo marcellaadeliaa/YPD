@@ -2,8 +2,11 @@
 session_start();
 require_once 'config.php';
 
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'direktur') {
-    header("Location: login_direktur.php");
+    header("Location: login_karyawan.php");
     exit();
 }
 
@@ -388,6 +391,17 @@ if (empty($divisi) || empty($jabatan)) {
             text-align: center;
             margin: 10px 0;
         }
+        
+        .debug-info {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            color: #495057;
+        }
     </style>
 </head>
 <body>
@@ -442,6 +456,18 @@ if (empty($divisi) || empty($jabatan)) {
             <h2>Pengajuan Cuti - Direktur</h2>
             
             <?php
+            // Debug info
+            if (isset($_GET['debug'])) {
+                echo '<div class="debug-info">';
+                echo '<strong>Debug Info:</strong><br>';
+                echo 'Koneksi DB: ' . (isset($conn) ? 'OK' : 'FAILED') . '<br>';
+                echo 'Session User: ' . (isset($_SESSION['user']) ? 'SET' : 'NOT SET') . '<br>';
+                if (isset($_SESSION['user'])) {
+                    echo 'User Data: ' . print_r($_SESSION['user'], true) . '<br>';
+                }
+                echo '</div>';
+            }
+
             if (isset($_GET['status'])) {
                 if ($_GET['status'] == 'success') {
                     $success_message = isset($_GET['message']) ? 
@@ -459,8 +485,6 @@ if (empty($divisi) || empty($jabatan)) {
             }
             ?>
 
-            
-
             <div class="user-info">
                 <p><strong>Kode Karyawan:</strong> <?php echo htmlspecialchars($nik); ?></p>
                 <p><strong>Nama:</strong> <?php echo htmlspecialchars($nama_lengkap); ?></p>
@@ -471,9 +495,8 @@ if (empty($divisi) || empty($jabatan)) {
                 <p><strong>Sisa Cuti Lustrum:</strong> <?php echo htmlspecialchars($sisa_cuti_lustrum); ?> hari</p>
             </div>
 
-           
-            
             <form method="post" action="proses_pengajuan_cuti_direktur.php" id="formCuti" enctype="multipart/form-data">
+                <input type="hidden" name="submitted" value="1">
                 
                 <label>No. Induk Karyawan</label>
                 <input type="text" name="nik" value="<?php echo htmlspecialchars($nik); ?>" readonly>
@@ -534,6 +557,10 @@ if (empty($divisi) || empty($jabatan)) {
 
                 <label class="required">Alasan Cuti</label>
                 <textarea name="alasan_cuti" id="alasan_cuti" placeholder="Tuliskan alasan cuti Anda..." required></textarea>
+
+                <div class="auto-approved-badge">
+                    ✅ PENGAJUAN INI AKAN OTOMATIS DISETUJUI
+                </div>
 
                 <button type="submit" id="submitButton">Ajukan Cuti (Auto Approved)</button>
             </form>

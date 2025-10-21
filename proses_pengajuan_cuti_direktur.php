@@ -1,21 +1,32 @@
 <?php
 session_start();
-require_once 'config.php'; 
+require_once 'config.php';
+
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+if (!$conn) {
+    die("Koneksi database gagal: " . mysqli_connect_error());
+}
 
 $display_data = false;
 $error_msg = '';
 $file_surat_path = null;
+$insert_success = false;
 
 function handleFileUpload($file) {
     if (!isset($file) || $file['error'] !== UPLOAD_ERR_OK) {
         return null;
     }
+    
     $uploadDir = 'uploads/surat_sakit/';
     if (!is_dir($uploadDir)) {
         mkdir($uploadDir, 0777, true);
     }
+    
     $fileName = time() . '_' . basename($file['name']);
     $targetPath = $uploadDir . $fileName;
+    
     if (move_uploaded_file($file['tmp_name'], $targetPath)) {
         return $targetPath;
     } else {
@@ -24,11 +35,12 @@ function handleFileUpload($file) {
 }
 
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'direktur') {
-    header("Location: login_direktur.php");
+    header("Location: login_karyawan.php");
     exit();
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    
     $user = $_SESSION['user'];
     $kode_karyawan = $user['kode_karyawan'];
     $nama_karyawan = $user['nama_lengkap'];
@@ -36,14 +48,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $jabatan = $user['jabatan'];
     $role = 'direktur';
 
-    $jenis_cuti_raw = $_POST['jenis_cuti'];
-    $tanggal_mulai = $_POST['tanggal_mulai'];
-    $tanggal_akhir = $_POST['tanggal_akhir'];
-    $alasan = $_POST['alasan_cuti'];
+    $jenis_cuti_raw = isset($_POST['jenis_cuti']) ? $_POST['jenis_cuti'] : '';
+    $tanggal_mulai = isset($_POST['tanggal_mulai']) ? $_POST['tanggal_mulai'] : '';
+    $tanggal_akhir = isset($_POST['tanggal_akhir']) ? $_POST['tanggal_akhir'] : '';
+    $alasan = isset($_POST['alasan_cuti']) ? $_POST['alasan_cuti'] : '';
     $jenis_cuti = $jenis_cuti_raw;
 
     if ($jenis_cuti_raw === 'Khusus' && !empty($_POST['jenis_cuti_khusus'])) {
         $jenis_cuti = 'Khusus - ' . $_POST['jenis_cuti_khusus'];
+    }
+
+    if (empty($kode_karyawan) || empty($jenis_cuti) || empty($tanggal_mulai) || empty($tanggal_akhir) || empty($alasan)) {
+        $error_msg = "Semua field wajib diisi.";
     }
 
     if ($tanggal_akhir < $tanggal_mulai) {
@@ -61,7 +77,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             case 'Suami istri, anak/menantu, orangtua/mertua meninggal':
                 $max_days = 2;
                 break;
-            case 'Anggota keluarga dalam satu rumah meningdal':
+            case 'Anggota keluarga dalam satu rumah meninggal':
             case 'Pemeriksaan Kesehatan/Pindah Rumah':
                 $max_days = 1;
                 break;
@@ -90,19 +106,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
-    if (empty($kode_karyawan) || empty($jenis_cuti) || empty($tanggal_mulai) || empty($tanggal_akhir) || empty($alasan)) {
-        $error_msg = "Semua field wajib diisi.";
-    }
-
     if (empty($error_msg)) {
-        $status = 'Disetujui';
+        $status = 'Diterima';
         
-        $sql = "INSERT INTO data_pengajuan_cuti (kode_karyawan, nama_karyawan, divisi, jabatan, role, jenis_cuti, tanggal_mulai, tanggal_akhir, alasan, file_surat_dokter, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO data_pengajuan_cuti 
+                (kode_karyawan, nama_karyawan, divisi, jabatan, role, jenis_cuti, tanggal_mulai, tanggal_akhir, alasan, file_surat_dokter, status) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        
         $stmt = mysqli_prepare($conn, $sql);
         
         if ($stmt) {
-            mysqli_stmt_bind_param($stmt, "sssssssssss", $kode_karyawan, $nama_karyawan, $divisi, $jabatan, $role, $jenis_cuti, $tanggal_mulai, $tanggal_akhir, $alasan, $file_surat_path, $status);
+            mysqli_stmt_bind_param($stmt, "sssssssssss", 
+                $kode_karyawan, $nama_karyawan, $divisi, $jabatan, $role, 
+                $jenis_cuti, $tanggal_mulai, $tanggal_akhir, $alasan, $file_surat_path, $status);
+            
             if (mysqli_stmt_execute($stmt)) {
+                $insert_success = true;
                 $display_data = true;
                 
                 if ($jenis_cuti_raw === 'Tahunan' || $jenis_cuti_raw === 'Lustrum') {
@@ -110,7 +129,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
                 
             } else {
-                $error_msg = "Gagal menyimpan data: " . mysqli_error($conn);
+                $error_msg = "Gagal execute statement: " . mysqli_error($conn);
+                
                 if (!empty($file_surat_path)) {
                     @unlink($file_surat_path);
                 }
@@ -118,13 +138,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             mysqli_stmt_close($stmt);
         } else {
             $error_msg = "Gagal mempersiapkan statement: " . mysqli_error($conn);
+            
             if (!empty($file_surat_path)) {
                 @unlink($file_surat_path);
             }
         }
     }
 } else {
-    $display_data = false;
     $error_msg = "Metode request tidak valid.";
 }
 
@@ -158,7 +178,6 @@ function updateSisaCuti($conn, $kode_karyawan, $jenis_cuti, $tanggal_mulai, $tan
     }
 }
 
-mysqli_close($conn);
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -359,6 +378,7 @@ mysqli_close($conn);
     .status-approved { 
         color: #28a745; 
         font-weight: bold; 
+        font-size: 18px;
     }
     
     .note-box { 
@@ -381,6 +401,17 @@ mysqli_close($conn);
         margin: 15px 0;
         font-size: 16px;
     }
+    
+    .debug-info {
+        background-color: #fff3cd;
+        color: #856404;
+        padding: 10px;
+        border-radius: 5px;
+        margin: 10px 0;
+        border: 1px solid #ffeaa7;
+        font-size: 12px;
+        font-family: monospace;
+    }
 </style>
 </head>
 <body>
@@ -388,24 +419,33 @@ mysqli_close($conn);
         <div class="logo"><img src="image/namayayasan.png" alt="Logo"><span>Yayasan Purba Danarta</span></div>
         <nav>
             <ul>
-                <li><a href="dashboard_direktur.php">Beranda</a></li>
+                <li><a href="dashboarddirektur.php">Beranda</a></li>
                 <li><a href="#">Cuti ▾</a>
                     <ul>
-                        <li><a href="riwayat_cuti_direktur.php">Riwayat Cuti Perusahaan</a></li>
-                        <li><a href="pengajuancuti_direktur.php">Ajukan Cuti Pribadi</a></li>
-                        <li><a href="kalender_cuti_direktur.php">Kalender Cuti Perusahaan</a></li>
+                        <li><a href="persetujuan_cuti_direktur.php">Persetujuan Cuti</a></li>
+                        <li><a href="riwayat_cuti_direktur.php">Riwayat Semua Cuti</a></li>
                         <li><a href="riwayat_cuti_pribadi_direktur.php">Riwayat Cuti Pribadi</a></li>
+                        <li><a href="kalender_cuti_direktur.php">Kalender Cuti</a></li>
                     </ul>
                 </li>
                 <li><a href="#">KHL ▾</a>
                     <ul>
-                        <li><a href="riwayat_khl_direktur.php">Riwayat KHL Perusahaan</a></li>
-                        <li><a href="pengajuankhl_direktur.php">Ajukan KHL Pribadi</a></li>
-                        <li><a href="kalender_khl_direktur.php">Kalender KHL Perusahaan</a></li>
+                        <li><a href="persetujuan_khl_direktur.php">Persetujuan KHL</a></li>
+                        <li><a href="riwayat_khl_direktur.php">Riwayat Semua KHL</a></li>
                         <li><a href="riwayat_khl_pribadi_direktur.php">Riwayat KHL Pribadi</a></li>
+                        <li><a href="kalender_khl_direktur.php">Kalender KHL</a></li>
                     </ul>
                 </li>
-                <li><a href="data_karyawan.php">Data Karyawan</a></li>
+                <li><a href="#">Karyawan ▾</a>
+                    <ul>
+                        <li><a href="data_karyawan_direktur.php">Data Karyawan</a></li>
+                    </ul>
+                </li>
+                <li><a href="#">Pelamar ▾</a>
+                    <ul>
+                        <li><a href="riwayat_pelamar_direktur.php">Riwayat Pelamar</a></li>
+                        </ul>
+                </li>
                 <li><a href="#">Profil ▾</a>
                     <ul>
                         <li><a href="profil_direktur.php">Profil Saya</a></li>
@@ -420,7 +460,7 @@ mysqli_close($conn);
         <div class="container">
             <h2>Status Pengajuan Cuti - Direktur</h2>
 
-            <?php if ($display_data): ?>
+            <?php if ($insert_success && $display_data): ?>
                 <div class="auto-approved-badge">
                     ✅ PENGAJUAN OTOMATIS DISETUJUI
                 </div>
@@ -448,13 +488,22 @@ mysqli_close($conn);
                     <?php if ($file_surat_path): ?>
                         <p><strong>Bukti Surat Dokter:</strong> Berkas Terlampir</p>
                     <?php endif; ?>
-                    <p><strong>Status:</strong> <span class="status-approved">Disetujui (Auto Approved)</span></p>
+                    <p><strong>Status:</strong> <span class="status-approved">DISETUJUI (Auto Approved)</span></p>
                 </div>
 
             <?php else: ?>
                 <div class="message error-message">
                     <?php echo !empty($error_msg) ? htmlspecialchars($error_msg) : 'Terjadi kesalahan saat memproses pengajuan Anda.'; ?>
                 </div>
+                
+                <?php if (isset($kode_karyawan)): ?>
+                <div class="debug-info">
+                    <strong>Debug Info:</strong><br>
+                    Kode: <?php echo htmlspecialchars($kode_karyawan); ?><br>
+                    Jenis Cuti: <?php echo htmlspecialchars($jenis_cuti); ?><br>
+                    Tanggal: <?php echo htmlspecialchars($tanggal_mulai); ?> s/d <?php echo htmlspecialchars($tanggal_akhir); ?>
+                </div>
+                <?php endif; ?>
             <?php endif; ?>
 
             <div class="action-buttons">
@@ -466,3 +515,8 @@ mysqli_close($conn);
     </main>
 </body>
 </html>
+<?php
+if(isset($conn)) {
+    mysqli_close($conn);
+}
+?>

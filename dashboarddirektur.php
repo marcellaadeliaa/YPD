@@ -4,7 +4,7 @@ session_start();
 require 'config.php';
 
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'direktur') {
-    header("Location: login_karyawan.php?error=unauthorized");
+    header("Location: login_karyawan.php?");
     exit();
 }
 
