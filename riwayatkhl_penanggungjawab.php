@@ -683,6 +683,8 @@ $rows_for_current_page = array_slice($filtered_rows, $offset, $limit);
     unset($query_params['page']);
     $base_url = http_build_query($query_params);
     $ampersand = !empty($base_url) ? '&' : '';
+    
+    $range = 2; 
 
     if ($page > 1) {
         echo '<a href="?' . $base_url . $ampersand . 'page=' . ($page - 1) . '">‹ Sebelumnya</a>';
@@ -737,6 +739,10 @@ $rows_for_current_page = array_slice($filtered_rows, $offset, $limit);
 </html>
 
 <?php
-$stmt->close();
-$conn->close();
+if (isset($stmt)) {
+    $stmt->close();
+}
+if (isset($conn)) {
+    $conn->close();
+}
 ?>

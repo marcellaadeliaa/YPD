@@ -39,9 +39,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $alasan_penolakan = isset($_POST['alasan_penolakan']) ? trim($_POST['alasan_penolakan']) : '';
         
         $check_query = "SELECT dpc.*, dk.sisa_cuti_tahunan, dk.sisa_cuti_lustrum, dk.divisi, dk.role 
-                       FROM data_pengajuan_cuti dpc 
-                       JOIN data_karyawan dk ON dpc.kode_karyawan = dk.kode_karyawan 
-                       WHERE dpc.id = ? AND dk.divisi = ? AND dk.role = 'karyawan'";
+                          FROM data_pengajuan_cuti dpc 
+                          JOIN data_karyawan dk ON dpc.kode_karyawan = dk.kode_karyawan 
+                          WHERE dpc.id = ? AND dk.divisi = ? AND dk.role = 'karyawan'";
         $check_stmt = $conn->prepare($check_query);
         $check_stmt->bind_param("is", $id_cuti, $divisi_penanggung_jawab);
         $check_stmt->execute();
@@ -70,6 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     }
                     
                     if (isset($message) && $message_type == 'error') {
+                        // Do nothing, message will be displayed
                     } else {
                         $new_status = 'Diterima';
                         $waktu_persetujuan = date('Y-m-d H:i:s');
@@ -91,13 +92,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         
                         $update_stmt->close();
                     }
-                } else {
+                } else { // Ini adalah blok 'reject'
                     $new_status = 'Ditolak';
                     $waktu_persetujuan = date('Y-m-d H:i:s');
                     
-                    $update_query = "UPDATE data_pengajuan_cuti SET status = ?, alasan = ?, waktu_persetujuan = ? WHERE id = ?";
+                    // --- PERUBAHAN DI SINI ---
+                    // Kolom 'alasan' diubah menjadi 'alasan_penolakan'
+                    $update_query = "UPDATE data_pengajuan_cuti SET status = ?, alasan_penolakan = ?, waktu_persetujuan = ? WHERE id = ?";
                     $update_stmt = $conn->prepare($update_query);
                     
+                    // Bind param sudah benar, menggunakan $alasan_penolakan
                     $update_stmt->bind_param("sssi", $new_status, $alasan_penolakan, $waktu_persetujuan, $id_cuti);
                     
                     if ($update_stmt->execute()) {

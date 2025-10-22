@@ -264,7 +264,7 @@ function hitungHariKerja($tanggal_mulai, $tanggal_akhir) {
         }
         
         main { 
-            max-width: 1600px; 
+            max-width: 1800px; 
             margin: 40px auto; 
             padding: 0 20px; 
         }
@@ -445,17 +445,25 @@ function hitungHariKerja($tanggal_mulai, $tanggal_akhir) {
             background: var(--accent-color);
         }
         
-        .alasan-cuti {
-            max-width: 300px;
+        .alasan-cuti, .alasan-penolakan {
+            max-width: 200px;
             word-wrap: break-word;
             font-size: 0.85rem;
             color: #666;
             line-height: 1.4;
         }
         
-        .alasan-cuti.empty {
+        .alasan-cuti.empty, .alasan-penolakan.empty {
             color: #999;
             font-style: italic;
+        }
+        
+        .alasan-penolakan {
+            background-color: #fff5f5;
+            padding: 8px;
+            border-radius: 4px;
+            border-left: 3px solid #f44336;
+            color: #721c24;
         }
         
         .role-badge {
@@ -653,7 +661,8 @@ function hitungHariKerja($tanggal_mulai, $tanggal_akhir) {
                         <th>Jenis Cuti</th>
                         <th>Tanggal Mulai</th>
                         <th>Tanggal Akhir</th>
-                        <th>Alasan</th>
+                        <th>Alasan Cuti</th>
+                        <th>Alasan Penolakan</th>
                         <th>File Surat Dokter</th>
                         <th>Status</th>
                         <th>Waktu Persetujuan</th>
@@ -666,6 +675,9 @@ function hitungHariKerja($tanggal_mulai, $tanggal_akhir) {
                     foreach ($rows_for_current_page as $row): 
                         $jumlah_hari_kerja = hitungHariKerja($row['tanggal_mulai'], $row['tanggal_akhir']);
                         $total_hari_kalender = (strtotime($row['tanggal_akhir']) - strtotime($row['tanggal_mulai'])) / (60 * 60 * 24) + 1;
+                        
+                        // Check if there's alasan_penolakan in the row
+                        $alasan_penolakan = isset($row['alasan_penolakan']) ? $row['alasan_penolakan'] : '';
                     ?>
                         <tr>
                             <td><?php echo $no++; ?></td>
@@ -691,6 +703,15 @@ function hitungHariKerja($tanggal_mulai, $tanggal_akhir) {
                                 <div class="alasan-cuti" title="<?php echo htmlspecialchars($row['alasan']); ?>">
                                     <?php echo htmlspecialchars($row['alasan']); ?>
                                 </div>
+                            </td>
+                            <td>
+                                <?php if (!empty($alasan_penolakan) && $row['status'] == 'Ditolak'): ?>
+                                    <div class="alasan-penolakan" title="<?php echo htmlspecialchars($alasan_penolakan); ?>">
+                                        <?php echo htmlspecialchars($alasan_penolakan); ?>
+                                    </div>
+                                <?php else: ?>
+                                    <div class="alasan-penolakan empty">-</div>
+                                <?php endif; ?>
                             </td>
                             <td>
                                 <?php if (!empty($row['file_surat_dokter'])): ?>

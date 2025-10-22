@@ -42,12 +42,12 @@ $total_data = $result_total->fetch_assoc()['total'];
 $total_pages = ceil($total_data / $limit);
 
 $sql_stats = "SELECT 
-              COUNT(*) as total,
-              SUM(CASE WHEN status = 'Diterima' THEN 1 ELSE 0 END) as diterima,
-              SUM(CASE WHEN status = 'Ditolak' THEN 1 ELSE 0 END) as ditolak,
-              SUM(CASE WHEN status = 'Menunggu Persetujuan' THEN 1 ELSE 0 END) as menunggu
-              FROM data_pengajuan_cuti 
-              WHERE kode_karyawan = ?";
+                 COUNT(*) as total,
+                 SUM(CASE WHEN status = 'Diterima' THEN 1 ELSE 0 END) as diterima,
+                 SUM(CASE WHEN status = 'Ditolak' THEN 1 ELSE 0 END) as ditolak,
+                 SUM(CASE WHEN status = 'Menunggu Persetujuan' THEN 1 ELSE 0 END) as menunggu
+                 FROM data_pengajuan_cuti 
+                 WHERE kode_karyawan = ?";
 $stmt_stats = $conn->prepare($sql_stats);
 $stmt_stats->bind_param("s", $kode_karyawan);
 $stmt_stats->execute();
@@ -550,7 +550,11 @@ $conn->close();
                             <th>Jenis Cuti</th>
                             <th>Periode Cuti</th>
                             <th>Hari Kerja</th>
-                            <th>Alasan</th>
+                            
+                            <th>Alasan Pengajuan</th>
+                            
+                            <th>Alasan Penolakan</th>
+                            
                             <th>File Surat Dokter</th>
                             <th>Status</th>
                             <th>Waktu Persetujuan</th>
@@ -629,6 +633,17 @@ $conn->close();
                                         <?= htmlspecialchars($cuti['alasan']) ?>
                                     </div>
                                 </td>
+                                
+                                <td>
+                                    <?php if (!empty($cuti['alasan_penolakan'])): ?>
+                                        <div class="alasan-text" title="<?= htmlspecialchars($cuti['alasan_penolakan']) ?>" style="color: var(--status-ditolak); font-weight: 500;">
+                                            <?= htmlspecialchars($cuti['alasan_penolakan']) ?>
+                                        </div>
+                                    <?php else: ?>
+                                        <span style="color: #999; font-size: 0.8rem;">-</span>
+                                    <?php endif; ?>
+                                </td>
+                                
                                 <td>
                                     <?php if (!empty($cuti['file_surat_dokter'])): ?>
                                         <a href="<?= htmlspecialchars($cuti['file_surat_dokter']) ?>" class="file-link" target="_blank">Lihat File</a>
@@ -638,9 +653,9 @@ $conn->close();
                                 </td>
                                 <td>
                                     <span class="status-badge <?= $status_class ?>"><?= $status_text ?></span>
-                                    <?php if ($cuti['status'] == 'Ditolak' && !empty($cuti['alasan'])): ?>
-                                        <br><small style="color: #dc3545; font-size: 0.7rem;"><?= htmlspecialchars($cuti['alasan']) ?></small>
-                                    <?php endif; ?>
+                                    
+                                    <?php // --- PERUBAHAN --- (Menghapus tampilan alasan dari bawah status) ?>
+                                    
                                 </td>
                                 <td>
                                     <?php if (!empty($cuti['waktu_persetujuan'])): ?>
