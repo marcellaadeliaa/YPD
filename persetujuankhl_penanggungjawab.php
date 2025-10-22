@@ -51,7 +51,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $message = "Gagal memperbarui status KHL";
                     $message_type = "error";
                 }
-                
                 $update_stmt->close();
             }
         } else {
