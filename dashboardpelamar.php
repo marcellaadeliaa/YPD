@@ -60,9 +60,6 @@ if (isset($pelamar_id)) {
     }
 }
 
-$queryPengumumanUmum = $conn->query("SELECT judul, isi, tanggal FROM pengumuman_umum WHERE status = 'active' ORDER BY tanggal DESC, id DESC LIMIT 1");
-$pengumumanUmum = $queryPengumumanUmum ? $queryPengumumanUmum->fetch_assoc() : null;
-
 $show_pengumuman = false;
 $judul_pengumuman = '';
 $isi_pengumuman = '';
