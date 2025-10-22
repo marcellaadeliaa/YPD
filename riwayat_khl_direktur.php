@@ -114,7 +114,7 @@ $conn->close();
     nav li:hover > ul { display:block; }
     nav li ul li { padding:5px 20px; }
     nav li ul li a { color:#333; font-weight:400; white-space:nowrap; }
-    main { max-width:1400px; margin:40px auto; padding:0 20px; }
+    main { max-width:1600px; margin:40px auto; padding:0 20px; }
     h1, p.admin-title { color:#fff; }
     h1 { font-size:28px; margin-bottom:10px; }
     p.admin-title { font-size:16px; margin-top:0; margin-bottom:30px; opacity:0.9; }
@@ -139,16 +139,73 @@ $conn->close();
     .btn-reset { background-color:#6c757d; }
     .btn-reset:hover { background-color:#545b62; }
 
-    .data-table { width:100%; border-collapse:collapse; font-size:14px; margin-top:20px; }
-    .data-table th, .data-table td { padding:12px 15px; border-bottom:1px solid #ddd; }
-    .data-table th { background-color:#f8f9fa; font-weight:600; }
-    .data-table tbody tr:hover { background-color:#f1f1f1; }
+    .data-table { 
+        width:100%; 
+        border-collapse: collapse; 
+        font-size:14px; 
+        margin-top:20px; 
+        border: 2px solid #34377c;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .data-table th, .data-table td { 
+        padding:12px 15px; 
+        text-align: left; 
+        border: 1px solid #ddd;
+        border-bottom: 1px solid #ddd;
+        border-right: 1px solid #ddd;
+    }
+    .data-table th { 
+        background-color:#4a3f81; 
+        font-weight:600; 
+        color: white;
+        border-bottom: 2px solid #34377c;
+        text-align: center;
+    }
+    .data-table th:last-child {
+        border-right: 1px solid #34377c;
+    }
+    .data-table td {
+        background-color: white;
+        border-bottom: 1px solid #ddd;
+    }
+    .data-table tbody tr:hover { 
+        background-color:#f1f1f1; 
+    }
+    .data-table tbody tr:nth-child(even) td {
+        background-color: #f8f9fa;
+    }
+    .data-table tbody tr:nth-child(even):hover td {
+        background-color: #e9ecef;
+    }
 
     .status-diterima { color:#28a745; font-weight:600; }
     .status-ditolak { color:#d9534f; font-weight:600; }
     .status-menunggu { color:#ffc107; font-weight:600; }
 
-    .no-data { text-align:center; padding:40px; color:#666; font-style:italic; }
+    .no-data { 
+        text-align:center; 
+        padding:40px; 
+        color:#666; 
+        font-style:italic; 
+    }
+
+    .alasan-penolakan-cell { 
+        color: #d9534f; 
+        font-style: italic;
+        font-size: 13px;
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .alasan-penolakan-cell:hover { 
+        white-space: normal;
+        overflow: visible;
+        background: #f8f9fa;
+        position: relative;
+        z-index: 1;
+    }
 
     @media (max-width:768px) {
         .filter-row { flex-direction:column; }
@@ -157,6 +214,8 @@ $conn->close();
         .btn { width:100%; }
         .data-table { font-size:12px; }
         .data-table th, .data-table td { padding:8px 10px; }
+        .card { padding:20px; }
+        main { max-width: 1400px; }
     }
 </style>
 </head>
@@ -186,7 +245,7 @@ $conn->close();
             <li><a href="#">Karyawan ▾</a>
                 <ul>
                     <li><a href="data_karyawan_direktur.php">Data Karyawan</a></li>
-                </ul>
+                    </ul>
             </li>
             <li><a href="#">Pelamar ▾</a>
                 <ul>
@@ -258,21 +317,22 @@ $conn->close();
                     <th>Jam Mulai</th>
                     <th>Jam Selesai</th>
                     <th>Status</th>
+                    <th>Alasan Penolakan</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (!empty($data_khl)): ?>
                     <?php $no=1; foreach($data_khl as $row): ?>
                     <tr>
-                        <td><?= $no++ ?></td>
+                        <td style="text-align: center;"><?= $no++ ?></td>
                         <td><?= htmlspecialchars($row['kode_karyawan']) ?></td>
                         <td><?= htmlspecialchars($row['nama_lengkap']) ?></td>
                         <td><?= htmlspecialchars($row['divisi']) ?></td>
                         <td><?= htmlspecialchars($row['proyek']) ?></td>
                         <td><?= date('d/m/Y', strtotime($row['tanggal_khl'])) ?></td>
-                        <td><?= $row['jam_mulai_kerja'] ? date('H:i', strtotime($row['jam_mulai_kerja'])) : '-' ?></td>
-                        <td><?= $row['jam_akhir_kerja'] ? date('H:i', strtotime($row['jam_akhir_kerja'])) : '-' ?></td>
-                        <td>
+                        <td style="text-align: center;"><?= $row['jam_mulai_kerja'] ? date('H:i', strtotime($row['jam_mulai_kerja'])) : '-' ?></td>
+                        <td style="text-align: center;"><?= $row['jam_akhir_kerja'] ? date('H:i', strtotime($row['jam_akhir_kerja'])) : '-' ?></td>
+                        <td style="text-align: center;">
                             <?php
                             $status = strtolower($row['status_khl']);
                             if ($status=='disetujui') echo "<span class='status-diterima'>Diterima</span>";
@@ -280,10 +340,13 @@ $conn->close();
                             else echo "<span class='status-menunggu'>Menunggu</span>";
                             ?>
                         </td>
+                        <td class="alasan-penolakan-cell" title="<?= htmlspecialchars($row['alasan_penolakan'] ?? '') ?>">
+                            <?= !empty($row['alasan_penolakan']) ? htmlspecialchars($row['alasan_penolakan']) : '<span style="color:#999;">-</span>' ?>
+                        </td>
                     </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <tr><td colspan="9" class="no-data">Tidak ada data KHL ditemukan</td></tr>
+                    <tr><td colspan="10" class="no-data">Tidak ada data KHL ditemukan</td></tr>
                 <?php endif; ?>
             </tbody>
         </table>

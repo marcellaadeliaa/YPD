@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($check_result->num_rows > 0) {
             if ($action == 'approve') {
                 $new_status = 'Disetujui';
-                $alasan = null; 
+                $alasan_penolakan = null; // Kosongkan alasan penolakan jika disetujui
                 $message_success = "Cuti berhasil disetujui";
             } elseif ($action == 'reject') {
                 if (empty($alasan)) {
@@ -38,6 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     exit();
                 }
                 $new_status = 'Ditolak';
+                $alasan_penolakan = $alasan; // Simpan alasan penolakan
                 $message_success = "Cuti berhasil ditolak";
             } else {
                 $message = "Tindakan tidak valid.";
@@ -45,14 +46,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
 
             if (isset($new_status)) {
-                $update_query = "UPDATE data_pengajuan_cuti SET status = ?, alasan = ? WHERE id = ?";
+                // Update query dengan kolom alasan_penolakan
+                $update_query = "UPDATE data_pengajuan_cuti SET status = ?, alasan_penolakan = ? WHERE id = ?";
                 $update_stmt = $conn->prepare($update_query);
                 
                 if ($update_stmt === false) {
                     $message = "Gagal mempersiapkan statement update: " . htmlspecialchars($conn->error);
                     $message_type = "error";
                 } else {
-                    $update_stmt->bind_param("ssi", $new_status, $alasan, $id_cuti);
+                    $update_stmt->bind_param("ssi", $new_status, $alasan_penolakan, $id_cuti);
                     
                     if ($update_stmt->execute()) {
                         header("Location: persetujuan_cuti_direktur.php?message=" . urlencode($message_success) . "&message_type=success");
@@ -72,8 +74,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $check_stmt->close();
     }
 }
-
-
 
 $query = "SELECT * FROM data_pengajuan_cuti WHERE role != 'direktur' AND status = 'Menunggu Persetujuan' ORDER BY id DESC";
 $stmt = $conn->prepare($query);

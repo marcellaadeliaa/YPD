@@ -77,244 +77,186 @@ $result = $stmt->get_result();
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Persetujuan KHL - Direktur</title>
 <style>
-    :root {
-        --primary-color: #1E105E;
-        --secondary-color: #8897AE;
-        --accent-color: #4a3f81;
-        --card-bg: #fff;
-        --text-dark: #2e1f4f; 
-        --text-light: #fff;
-        --shadow-light: rgba(0,0,0,0.15);
-    }
-
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-
-    body {
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        background: linear-gradient(180deg, var(--primary-color) 0%, #a29bb8 100%);
-        min-height: 100vh;
-        color: var(--text-dark); 
-        padding-bottom: 40px; 
-    }
-
-    header { 
-        background: var(--card-bg); 
-        padding: 20px 40px; 
-        display: flex; 
-        justify-content: space-between; 
-        align-items: center; 
-        box-shadow: 0 4px 15px var(--shadow-light); 
-    }
+    body { margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg,#1E105E 0%,#8897AE 100%); min-height:100vh; color:#333; }
+    header { background:rgba(255,255,255,1); padding:20px 40px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #34377c; }
+    .logo { display:flex; align-items:center; gap:16px; font-weight:500; font-size:20px; color:#2e1f4f; }
+    .logo img { width: 50px; height: 50px; object-fit: contain; border-radius: 50%; }
+    nav ul { list-style:none; margin:0; padding:0; display:flex; gap:30px; }
+    nav li { position:relative; }
+    nav a { text-decoration:none; color:#333; font-weight:600; padding:8px 4px; display:block; }
+    nav li ul { display:none; position:absolute; top:100%; left:0; background:#fff; padding:10px 0; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.15); min-width:200px; z-index:999; }
+    nav li:hover > ul { display:block; }
+    nav li ul li { padding:5px 20px; }
+    nav li ul li a { color:#333; font-weight:400; white-space:nowrap; }
+    main { max-width:1600px; margin:40px auto; padding:0 20px; }
+    h1, p.admin-title { color: #fff; }
+    h1 { text-align:left; font-size:28px; margin-bottom:10px; }
+    p.admin-title { font-size: 16px; margin-top: 0; margin-bottom: 30px; font-weight: 400; opacity: 0.9; }
+    .card { background:#fff; border-radius:20px; padding:30px 40px; box-shadow:0 2px 10px rgba(0,0,0,0.15); }
+    .page-title { font-size: 24px; font-weight: 600; text-align: center; margin-bottom: 30px; color: #1E105E; }
     
-    .logo { 
-        display: flex; 
-        align-items: center; 
-        gap: 16px; 
-        font-weight: 500; 
-        font-size: 20px; 
-        color: var(--text-dark); 
-    }
-    
-    .logo img { 
-        width: 50px; 
-        height: 50px; 
-        object-fit: contain; 
-        border-radius: 50%; 
-    }
-    
-    nav ul { 
-        list-style: none; 
-        margin: 0; 
-        padding: 0; 
-        display: flex; 
-        gap: 40px; 
-    }
-    
-    nav li { 
-        position: relative; 
-    }
-    
-    nav a { 
-        text-decoration: none; 
-        color: var(--text-dark); 
-        font-weight: 600; 
-        padding: 8px 4px; 
-        display: block; 
-    }
-    
-    nav li ul { 
-        display: none; 
-        position: absolute; 
-        top: 100%; 
-        left: 0; 
-        background: var(--card-bg); 
-        padding: 15px 0; 
-        border-radius: 8px; 
-        box-shadow: 0 2px 10px var(--shadow-light); 
-        min-width: 220px; 
-        z-index: 999; 
-    }
-    
-    nav li:hover > ul { 
-        display: block; 
-    }
-    
-    nav li ul li { 
-        margin-bottom: 7px; 
-        padding: 0; 
-    }
-
-    nav li ul li:last-child {
-        margin-bottom: 0; 
-    }
-    
-    nav li ul li a { 
-        color: var(--text-dark); 
-        font-weight: 400; 
-        white-space: nowrap; 
-        padding: 10px 25px;
-    }
-
-    main {
-        max-width: 1300px;
-        margin: 40px auto;
-        background: var(--card-bg);
-        color: var(--text-dark);
-        border-radius: 20px;
-        padding: 30px;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-    }
-
-    h1 {
-        color: var(--primary-color);
-        margin-bottom: 10px;
-        font-size: 28px;
-    }
-
-    .subtitle {
-        color: #666;
-        margin-bottom: 20px;
-        font-size: 16px;
-    }
-
-    .director-info {
-        background: #f8f9fa;
-        padding: 15px;
-        border-radius: 10px;
-        margin-bottom: 25px;
-        border-left: 4px solid var(--accent-color);
-    }
-
-    .director-info strong {
-        color: var(--primary-color);
-    }
-
-    table {
+    /* Container untuk tabel scrollable */
+    .table-container {
         width: 100%;
-        border-collapse: collapse;
+        overflow-x: auto;
         margin-top: 20px;
-        background: var(--card-bg);
+        border: 2px solid #34377c;
+        border-radius: 8px;
+        background: white;
     }
-
-    th, td {
-        padding: 12px 15px;
-        border-bottom: 1px solid #e0e0e0;
-        text-align: left;
+    
+    .data-table { 
+        width: 100%;
+        min-width: 1300px; /* Diperkecil karena hapus 1 kolom */
+        border-collapse: collapse; 
+        font-size: 14px; 
     }
-
-    th {
-        background-color: var(--primary-color);
-        color: var(--text-light);
-        font-weight: 600;
+    
+    .data-table th, .data-table td { 
+        padding: 12px 15px; 
+        text-align: left; 
+        border: 1px solid #ddd;
+        white-space: nowrap;
+    }
+    
+    .data-table th { 
+        background-color: #4a3f81; 
+        font-weight: 600; 
+        color: white;
+        border-bottom: 2px solid #34377c;
+        text-align: center;
         position: sticky;
         top: 0;
+        z-index: 10;
     }
-
-    tr:hover {
-        background: #f8f9fa;
+    
+    .data-table td {
+        background-color: white;
     }
-
-    .status-pending {
-        background: #fff3cd;
-        color: #856404;
+    
+    .data-table tbody tr:hover { 
+        background-color: #f1f1f1; 
+    }
+    
+    .data-table tbody tr:nth-child(even) td {
+        background-color: #f8f9fa;
+    }
+    
+    .data-table tbody tr:nth-child(even):hover td {
+        background-color: #e9ecef;
+    }
+    
+    /* Kolom dengan teks panjang bisa wrap */
+    .data-table td.proyek-cell,
+    .data-table td.alasan-penolakan-cell {
+        white-space: normal;
+        min-width: 200px;
+        max-width: 300px;
+        word-wrap: break-word;
+    }
+    
+    /* Styling untuk status */
+    .status-pending { color: #ffc107; font-weight: 600; }
+    .status-disetujui { color: #28a745; font-weight: 600; }
+    .status-ditolak { color: #d9534f; font-weight: 600; }
+    
+    /* Styling untuk tombol aksi */
+    .btn-action {
         padding: 6px 12px;
-        border-radius: 15px;
-        font-weight: 600;
-        font-size: 0.8rem;
-        display: inline-block;
-    }
-
-    .btn {
-        padding: 8px 16px;
         border: none;
-        border-radius: 6px;
+        border-radius: 4px;
         color: #fff;
         cursor: pointer;
-        font-size: 0.85rem;
+        font-size: 12px;
         font-weight: 600;
-        transition: all 0.3s ease;
+        transition: all 0.3s;
         margin: 2px;
     }
-
+    
     .btn-approve {
         background: #28a745;
     }
-
+    
     .btn-approve:hover {
         background: #218838;
-        transform: translateY(-1px);
     }
-
+    
     .btn-reject {
         background: #dc3545;
     }
-
+    
     .btn-reject:hover {
         background: #c82333;
-        transform: translateY(-1px);
     }
-
-    .btn-cancel {
-        background: #6c757d;
+    
+    .no-data { text-align: center; padding: 40px; color: #666; font-style: italic; }
+    
+    /* Styling untuk kolom proyek */
+    .proyek-cell {
+        max-width: 300px;
+        word-wrap: break-word;
+        line-height: 1.4;
     }
-
-    .btn-cancel:hover {
-        background: #545b62;
+    
+    /* Styling untuk alasan penolakan */
+    .alasan-penolakan-cell { 
+        color: #d9534f; 
+        font-style: italic;
+        font-size: 13px;
+        max-width: 300px;
+        word-wrap: break-word;
+        line-height: 1.4;
     }
-
+    
+    /* Message styling */
     .message {
         padding: 15px 20px;
         border-radius: 8px;
         margin-bottom: 20px;
         border: 1px solid transparent;
     }
-
+    
     .success {
         background: #d4edda;
         color: #155724;
         border-color: #c3e6cb;
     }
-
+    
     .error {
         background: #f8d7da;
         color: #721c24;
         border-color: #f5c6cb;
     }
-
-    .no-data {
-        text-align: center;
-        color: #6c757d;
-        padding: 40px 20px;
-        font-style: italic;
-        background: #f8f9fa;
-        border-radius: 10px;
-        margin-top: 20px;
+    
+    /* Scrollbar styling */
+    .table-container::-webkit-scrollbar {
+        height: 12px;
     }
-
+    
+    .table-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 0 0 6px 6px;
+    }
+    
+    .table-container::-webkit-scrollbar-thumb {
+        background: #4a3f81;
+        border-radius: 6px;
+    }
+    
+    .table-container::-webkit-scrollbar-thumb:hover {
+        background: #3a3162;
+    }
+    
+    /* Indikator scroll */
+    .scroll-indicator {
+        text-align: center;
+        color: #666;
+        font-size: 12px;
+        margin-top: 5px;
+        font-style: italic;
+    }
+    
+    /* Modal styling */
     .modal {
         display: none;
         position: fixed;
@@ -324,9 +266,8 @@ $result = $stmt->get_result();
         height: 100%;
         background: rgba(0,0,0,0.5);
         z-index: 2000;
-        backdrop-filter: blur(5px);
     }
-
+    
     .modal-content {
         background: #fff;
         color: #333;
@@ -337,20 +278,20 @@ $result = $stmt->get_result();
         border-radius: 15px;
         box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     }
-
+    
     .modal h3 {
-        color: var(--primary-color);
+        color: #1E105E;
         margin-bottom: 15px;
         font-size: 1.3rem;
     }
-
+    
     .modal label {
         display: block;
         margin-bottom: 8px;
         font-weight: 600;
         color: #555;
     }
-
+    
     .modal textarea {
         width: 100%;
         height: 120px;
@@ -361,12 +302,12 @@ $result = $stmt->get_result();
         font-family: inherit;
         font-size: 14px;
     }
-
+    
     .modal textarea:focus {
         outline: none;
-        border-color: var(--accent-color);
+        border-color: #4a3f81;
     }
-
+    
     .modal-actions {
         margin-top: 20px;
         text-align: right;
@@ -374,49 +315,71 @@ $result = $stmt->get_result();
         gap: 10px;
         justify-content: flex-end;
     }
-
-    @media (max-width: 768px) {
-        header { 
-            flex-direction: column; 
-            padding: 15px 20px; 
-            gap: 15px; 
-        }
     
-        nav ul { 
-            flex-direction: column; 
-            gap: 10px; 
-            width: 100%; 
-        }
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #fff;
+        cursor: pointer;
+        transition: opacity 0.3s;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+    }
     
-        nav li ul { 
-            position: static; 
-            box-shadow: none; 
-            border: 1px solid #e0e0e0; 
-            padding: 5px 0; 
+    .btn-cancel {
+        background: #6c757d;
+    }
+    
+    .btn-cancel:hover {
+        background: #545b62;
+    }
+    
+    .btn-reject-modal {
+        background: #dc3545;
+    }
+    
+    .btn-reject-modal:hover {
+        background: #c82333;
+    }
+    
+    @media (max-width: 768px) { 
+        .data-table { font-size: 12px; } 
+        .data-table th, .data-table td { padding: 8px 10px; }
+        .card { padding: 20px; }
+        main { max-width: 1400px; }
+        
+        .data-table {
+            min-width: 1100px; /* Diperkecil untuk mobile */
         }
         
-        nav li ul li a {
-            padding: 8px 25px;
+        .table-container::-webkit-scrollbar {
+            height: 14px;
         }
-
-        main {
-            margin: 15px;
-            padding: 20px;
-        }
-
-        table {
-            display: block;
-            overflow-x: auto;
-        }
-
+        
         .modal-content {
             width: 95%;
             margin: 10% auto;
         }
     }
+    
+    @media (max-width: 480px) {
+        .data-table {
+            min-width: 900px; /* Diperkecil untuk mobile kecil */
+        }
+        
+        .data-table th, .data-table td {
+            padding: 6px 8px;
+            font-size: 11px;
+        }
+    }
 </style>
 </head>
 <body>
+
 <header>
     <div class="logo">
         <img src="image/namayayasan.png" alt="Logo Yayasan">
@@ -460,71 +423,84 @@ $result = $stmt->get_result();
         </ul>
     </nav>
 </header>
+
 <main>
-    <h1>Persetujuan Kehadiran Harian Lepas (KHL)</h1>
-    <p class="subtitle">Kelola dan verifikasi pengajuan KHL dari seluruh karyawan.</p>
+    <h1>Welcome, <?php echo htmlspecialchars($nama_direktur); ?>!</h1>
+    <p class="admin-title">Direktur</p>
 
-    <div class="director-info">
-        <strong>Direktur:</strong> <?php echo htmlspecialchars($nama_direktur); ?>
+    <div class="card"> 
+        <h2 class="page-title">Persetujuan Kehadiran Harian Lepas (KHL)</h2> 
+        
+        <?php if (isset($message)): ?>
+            <div class="message <?php echo $message_type; ?>">
+                <?php echo htmlspecialchars($message); ?>
+            </div>
+        <?php endif; ?>
+
+        <!-- Container untuk tabel scrollable -->
+        <div class="table-container">
+            <table class="data-table"> 
+                <thead> 
+                    <tr> 
+                        <th>No</th> 
+                        <th>Kode Karyawan</th> 
+                        <th>Divisi</th> 
+                        <th>Jabatan</th> 
+                        <th>Role</th> 
+                        <th>Proyek</th> 
+                        <th>Tanggal KHL</th> 
+                        <th>Jam Kerja</th> 
+                        <th>Tanggal Cuti KHL</th> 
+                        <th>Jam Cuti</th> 
+                        <th>Status</th>
+                        <th>Alasan Penolakan</th>
+                        <th>Aksi</th>
+                    </tr> 
+                </thead> 
+                <tbody> 
+                    <?php if ($result->num_rows > 0): ?> 
+                        <?php $no = 1; while ($row = $result->fetch_assoc()): ?> 
+                            <tr> 
+                                <td style="text-align: center;"><?= $no++ ?></td> 
+                                <td><?= htmlspecialchars($row['kode_karyawan'] ?? '') ?></td> 
+                                <td><?= htmlspecialchars($row['divisi'] ?? '') ?></td> 
+                                <td><?= htmlspecialchars($row['jabatan'] ?? '') ?></td> 
+                                <td><?= htmlspecialchars(ucfirst($row['role'] ?? '')) ?></td> 
+                                <td class="proyek-cell"><?= htmlspecialchars($row['proyek'] ?? '') ?></td> 
+                                <td><?= htmlspecialchars($row['tanggal_khl'] ?? '') ?></td> 
+                                <td><?= htmlspecialchars(($row['jam_mulai_kerja'] ?? '') . ' - ' . ($row['jam_akhir_kerja'] ?? '')) ?></td> 
+                                <td><?= htmlspecialchars($row['tanggal_cuti_khl'] ?? '') ?></td> 
+                                <td><?= htmlspecialchars(($row['jam_mulai_cuti_khl'] ?? '') . ' - ' . ($row['jam_akhir_cuti_khl'] ?? '')) ?></td> 
+                                <td style="text-align: center;">
+                                    <span class="status-pending"><?= htmlspecialchars($row['status_khl'] ?? '') ?></span>
+                                </td>
+                                <td class="alasan-penolakan-cell">
+                                    <?= !empty($row['alasan_penolakan']) ? htmlspecialchars($row['alasan_penolakan']) : '<span style="color:#999;">-</span>' ?>
+                                </td>
+                                <td style="text-align: center;">
+                                    <form method="POST" style="display:inline;">
+                                        <input type="hidden" name="id_khl" value="<?= $row['id_khl'] ?>">
+                                        <input type="hidden" name="action" value="approve">
+                                        <button type="submit" class="btn-action btn-approve" onclick="return confirm('Setujui data KHL ini?')">Setujui</button>
+                                    </form>
+                                    <button class="btn-action btn-reject" onclick="openRejectModal(<?= $row['id_khl'] ?>)">Tolak</button>
+                                </td>
+                            </tr> 
+                        <?php endwhile; ?> 
+                    <?php else: ?> 
+                        <tr><td colspan="13" class="no-data">Tidak ada pengajuan KHL yang menunggu persetujuan.</td></tr> 
+                    <?php endif; ?> 
+                </tbody> 
+            </table> 
+        </div>
+        
+        <div class="scroll-indicator">
+            ← Geser untuk melihat lebih banyak data →
+        </div>
     </div>
-
-    <?php if (isset($message)): ?>
-        <div class="message <?php echo $message_type; ?>">
-            <?php echo htmlspecialchars($message); ?>
-        </div>
-    <?php endif; ?>
-
-    <?php if ($result->num_rows > 0): ?>
-        <table>
-            <thead>
-                <tr>
-                    <th>No</th>
-                    <th>Kode Karyawan</th>
-                    <th>Divisi</th>
-                    <th>Jabatan</th>
-                    <th>Role</th>
-                    <th>Proyek</th>
-                    <th>Tanggal KHL</th>
-                    <th>Jam Kerja</th>
-                    <th>Tanggal Cuti KHL</th>
-                    <th>Jam Cuti</th>
-                    <th>Status</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-            <?php $no = 1; while ($row = $result->fetch_assoc()): ?>
-                <tr>
-                    <td><?php echo $no++; ?></td>
-                    <td><?php echo htmlspecialchars($row['kode_karyawan']); ?></td>
-                    <td><?php echo htmlspecialchars($row['divisi']); ?></td>
-                    <td><?php echo htmlspecialchars($row['jabatan']); ?></td>
-                    <td><?php echo htmlspecialchars(ucfirst($row['role'])); ?></td>
-                    <td><?php echo htmlspecialchars($row['proyek']); ?></td>
-                    <td><?php echo htmlspecialchars($row['tanggal_khl']); ?></td>
-                    <td><?php echo htmlspecialchars($row['jam_mulai_kerja'] . ' - ' . $row['jam_akhir_kerja']); ?></td>
-                    <td><?php echo htmlspecialchars($row['tanggal_cuti_khl']); ?></td>
-                    <td><?php echo htmlspecialchars($row['jam_mulai_cuti_khl'] . ' - ' . $row['jam_akhir_cuti_khl']); ?></td>
-                    <td><span class="status-pending"><?php echo htmlspecialchars($row['status_khl']); ?></span></td>
-                    <td>
-                        <form method="POST" style="display:inline;">
-                            <input type="hidden" name="id_khl" value="<?php echo $row['id_khl']; ?>">
-                            <input type="hidden" name="action" value="approve">
-                            <button type="submit" class="btn btn-approve" onclick="return confirm('Setujui data KHL ini?')">Setujui</button>
-                        </form>
-                        <button class="btn btn-reject" onclick="openRejectModal(<?php echo $row['id_khl']; ?>)">Tolak</button>
-                    </td>
-                </tr>
-            <?php endwhile; ?>
-            </tbody>
-        </table>
-    <?php else: ?>
-        <div class="no-data">
-            <p>Tidak ada pengajuan KHL yang menunggu persetujuan.</p>
-        </div>
-    <?php endif; ?>
 </main>
 
+<!-- Modal untuk penolakan KHL -->
 <div id="rejectModal" class="modal">
     <div class="modal-content">
         <h3>Alasan Penolakan KHL</h3>
@@ -536,13 +512,33 @@ $result = $stmt->get_result();
                      placeholder="Masukkan alasan penolakan KHL..." required></textarea>
             <div class="modal-actions">
                 <button type="button" onclick="closeRejectModal()" class="btn btn-cancel">Batal</button>
-                <button type="submit" class="btn btn-reject">Tolak KHL</button>
+                <button type="submit" class="btn btn-reject-modal">Tolak KHL</button>
             </div>
         </form>
     </div>
 </div>
 
 <script>
+// Script untuk menangani scroll horizontal dengan keyboard
+document.addEventListener('DOMContentLoaded', function() {
+    const tableContainer = document.querySelector('.table-container');
+    
+    // Fungsi untuk scroll dengan keyboard
+    tableContainer.addEventListener('keydown', function(e) {
+        if (e.key === 'ArrowLeft') {
+            tableContainer.scrollLeft -= 100;
+            e.preventDefault();
+        } else if (e.key === 'ArrowRight') {
+            tableContainer.scrollLeft += 100;
+            e.preventDefault();
+        }
+    });
+    
+    // Fokus pada container tabel agar bisa di-scroll dengan keyboard
+    tableContainer.setAttribute('tabindex', '0');
+});
+
+// Modal functions
 function openRejectModal(id) {
     document.getElementById('modalKhlId').value = id;
     document.getElementById('rejectModal').style.display = 'block';
@@ -578,6 +574,7 @@ document.addEventListener('keydown', function(e) {
     }
 });
 </script>
+
 </body>
 </html>
 
