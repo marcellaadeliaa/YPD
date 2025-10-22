@@ -376,19 +376,15 @@ mysqli_close($conn);
             <h2>Status Pengajuan KHL - Direktur</h2>
 
             <?php if ($display_data): ?>
-                <div class="auto-approved-badge">
-                    ✅ PENGAJUAN OTOMATIS DISETUJUI
-                </div>
                 
-                <div class="message success-message">Pengajuan KHL berhasil dikirim dan otomatis disetujui!</div>
+                
+                <div class="message success-message">Pengajuan KHL berhasil dikirim!</div>
                 
                 <div class="khl-id">
                     ID Pengajuan: KHL-<?php echo htmlspecialchars($id_khl); ?>
                 </div>
                 
-                <div class="note-box">
-                    <strong>Status Khusus Direktur:</strong> Sebagai Direktur, pengajuan KHL Anda <strong>otomatis disetujui</strong> dan langsung tercatat dalam sistem.
-                </div>
+               
                 
                 <div class="info-box">
                     <p><strong>Kode Karyawan:</strong> <?php echo htmlspecialchars($kode_karyawan); ?></p>
@@ -407,7 +403,7 @@ mysqli_close($conn);
                     <p><strong>Tanggal Cuti KHL:</strong> <?php echo htmlspecialchars($tanggal_cuti_khl); ?></p>
                     <p><strong>Jam Mulai Cuti KHL:</strong> <?php echo htmlspecialchars($jam_mulai_cuti_khl); ?></p>
                     <p><strong>Jam Akhir Cuti KHL:</strong> <?php echo htmlspecialchars($jam_akhir_cuti_khl); ?></p>
-                    <p><strong>Status:</strong> <span class="status-approved">Disetujui (Auto Approved)</span></p>
+                    <p><strong>Status:</strong> <span class="status-approved">Disetujui </span></p>
                 </div>
 
             <?php else: ?>

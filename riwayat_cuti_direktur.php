@@ -438,11 +438,9 @@ $filtered_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
 </main>
 
 <script>
-// Script untuk menangani scroll horizontal dengan keyboard
 document.addEventListener('DOMContentLoaded', function() {
     const tableContainer = document.querySelector('.table-container');
     
-    // Fungsi untuk scroll dengan keyboard
     tableContainer.addEventListener('keydown', function(e) {
         if (e.key === 'ArrowLeft') {
             tableContainer.scrollLeft -= 100;
@@ -453,10 +451,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Fokus pada container tabel agar bisa di-scroll dengan keyboard
     tableContainer.setAttribute('tabindex', '0');
     
-    // Highlight row saat hover dengan efek yang lebih smooth
     const tableRows = document.querySelectorAll('.data-table tbody tr');
     tableRows.forEach(row => {
         row.addEventListener('mouseenter', function() {

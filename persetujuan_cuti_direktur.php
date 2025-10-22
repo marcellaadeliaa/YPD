@@ -29,8 +29,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         
         if ($check_result->num_rows > 0) {
             if ($action == 'approve') {
-                $new_status = 'Disetujui';
-                $alasan_penolakan = null; // Kosongkan alasan penolakan jika disetujui
+                $new_status = 'Diterima';
+                $alasan_penolakan = null; 
                 $message_success = "Cuti berhasil disetujui";
             } elseif ($action == 'reject') {
                 if (empty($alasan)) {
@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     exit();
                 }
                 $new_status = 'Ditolak';
-                $alasan_penolakan = $alasan; // Simpan alasan penolakan
+                $alasan_penolakan = $alasan; 
                 $message_success = "Cuti berhasil ditolak";
             } else {
                 $message = "Tindakan tidak valid.";
@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
 
             if (isset($new_status)) {
-                // Update query dengan kolom alasan_penolakan
+                
                 $update_query = "UPDATE data_pengajuan_cuti SET status = ?, alasan_penolakan = ? WHERE id = ?";
                 $update_stmt = $conn->prepare($update_query);
                 

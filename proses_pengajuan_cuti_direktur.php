@@ -461,16 +461,11 @@ function updateSisaCuti($conn, $kode_karyawan, $jenis_cuti, $tanggal_mulai, $tan
             <h2>Status Pengajuan Cuti - Direktur</h2>
 
             <?php if ($insert_success && $display_data): ?>
-                <div class="auto-approved-badge">
-                    ✅ PENGAJUAN OTOMATIS DISETUJUI
-                </div>
                 
-                <div class="message success-message">Pengajuan Cuti berhasil dikirim dan otomatis disetujui!</div>
                 
-                <div class="note-box">
-                    <strong>Status Khusus Direktur:</strong> Sebagai Direktur, pengajuan cuti Anda <strong>otomatis disetujui</strong> dan langsung tercatat dalam sistem.
-                </div>
+                <div class="message success-message">Pengajuan Cuti berhasil dikirim!</div>
                 
+               
                 <div class="info-box">
                     <p><strong>Kode Karyawan:</strong> <?php echo htmlspecialchars($kode_karyawan); ?></p>
                     <p><strong>Nama:</strong> <?php echo htmlspecialchars($nama_karyawan); ?></p>
@@ -488,7 +483,7 @@ function updateSisaCuti($conn, $kode_karyawan, $jenis_cuti, $tanggal_mulai, $tan
                     <?php if ($file_surat_path): ?>
                         <p><strong>Bukti Surat Dokter:</strong> Berkas Terlampir</p>
                     <?php endif; ?>
-                    <p><strong>Status:</strong> <span class="status-approved">DISETUJUI (Auto Approved)</span></p>
+                    <p><strong>Status:</strong> <span class="status-approved">DISETUJUI </span></p>
                 </div>
 
             <?php else: ?>

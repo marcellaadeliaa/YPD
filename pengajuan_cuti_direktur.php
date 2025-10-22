@@ -456,7 +456,6 @@ if (empty($divisi) || empty($jabatan)) {
             <h2>Pengajuan Cuti - Direktur</h2>
             
             <?php
-            // Debug info
             if (isset($_GET['debug'])) {
                 echo '<div class="debug-info">';
                 echo '<strong>Debug Info:</strong><br>';
@@ -558,11 +557,9 @@ if (empty($divisi) || empty($jabatan)) {
                 <label class="required">Alasan Cuti</label>
                 <textarea name="alasan_cuti" id="alasan_cuti" placeholder="Tuliskan alasan cuti Anda..." required></textarea>
 
-                <div class="auto-approved-badge">
-                    ✅ PENGAJUAN INI AKAN OTOMATIS DISETUJUI
-                </div>
+                
 
-                <button type="submit" id="submitButton">Ajukan Cuti (Auto Approved)</button>
+                <button type="submit" id="submitButton">Ajukan Cuti </button>
             </form>
         </div>
     </main>

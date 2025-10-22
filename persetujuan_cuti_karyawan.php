@@ -3,7 +3,7 @@ session_start();
 require 'config.php';
 
 if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'direktur') {
-    header("Location: login_direktur.php");
+    header("Location: login_karyawan.php");
     exit();
 }
 
@@ -34,7 +34,7 @@ $conn->close();
           justify-content:space-between;
           align-items:center;
           border-bottom:2px solid #34377c;
-          flex-wrap:nowrap; /* fix supaya tombol tidak turun */
+          flex-wrap:nowrap; 
         }
         .logo {
           display:flex;
@@ -147,7 +147,6 @@ $conn->close();
           .user-section {margin-top:10px;}
         }
 
-        /* Tambahan tombol Pengajuan Cuti */
         .user-section {
           display: flex;
           align-items: center;
@@ -180,7 +179,7 @@ $conn->close();
       </div>
       <nav>
         <ul>
-          <li><a href="dashboard_direktur.php">Beranda</a></li>
+          <li><a href="dashboarddirektur.php">Beranda</a></li>
           <li><a href="#">Cuti ▾</a>
             <ul>
               <li><a href="persetujuan_cuti_direktur.php">Persetujuan Cuti</a></li>
@@ -202,7 +201,6 @@ $conn->close();
         </ul>
       </nav>
 
-      <!-- Tambahan di kanan -->
       <div class="user-section">
         <span class="welcome-text">Welcome Pico, Direktur</span>
         <a href="pengajuan_cuti.php" class="btn-pengajuan">Pengajuan Cuti</a>
@@ -242,7 +240,6 @@ $conn->close();
                             </tr>
                         <?php endwhile; ?>
                     <?php else: ?>
-                        <!-- Data dummy jika kosong -->
                         <?php for ($i=1; $i<=5; $i++): ?>
                             <tr>
                                 <td>Karyawan <?= $i ?></td>

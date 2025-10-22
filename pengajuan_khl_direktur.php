@@ -437,7 +437,7 @@ if (empty($divisi) || empty($jabatan)) {
                     </div>
                 </div>
 
-                <button type="submit">Ajukan KHL (Auto Approved)</button>
+                <button type="submit">Ajukan KHL </button>
             </form>
         </div>
     </main>
