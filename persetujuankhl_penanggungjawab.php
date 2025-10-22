@@ -43,9 +43,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 }
                 
                 if ($update_stmt->execute()) {
-                    header("Location: riwayatkhl_penanggungjawab.php?status=" . ($action == 'approve' ? 'disetujui' : 'ditolak'));
-                    exit();
+                    // Berhasil: Tetap di halaman ini dan tampilkan pesan sukses
+                    $message = "Status KHL berhasil diperbarui menjadi " . ($new_status == 'disetujui' ? 'Disetujui' : 'Ditolak') . ".";
+                    $message_type = "success"; 
                 } else {
+                    // Gagal: Tampilkan pesan error
                     $message = "Gagal memperbarui status KHL";
                     $message_type = "error";
                 }
