@@ -12,24 +12,6 @@
     $divisi_pj = $user['divisi'];
     $jabatan = "Penanggung Jawab Divisi " . $divisi_pj;
 
-    $stmt_cuti = $conn->prepare("SELECT COUNT(id) as total FROM pengajuan_cuti WHERE divisi = ? AND status = 'Menunggu'");
-    $stmt_cuti->bind_param("s", $divisi_pj);
-    $stmt_cuti->execute();
-    $cuti_menunggu = $stmt_cuti->get_result()->fetch_assoc()['total'] ?? 0;
-    $stmt_cuti->close();
-
-    $stmt_khl = $conn->prepare("SELECT COUNT(id) as total FROM pengajuan_khl WHERE divisi = ? AND status = 'Menunggu'");
-    $stmt_khl->bind_param("s", $divisi_pj);
-    $stmt_khl->execute();
-    $khl_menunggu = $stmt_khl->get_result()->fetch_assoc()['total'] ?? 0;
-    $stmt_khl->close();
-
-    $stmt_karyawan = $conn->prepare("SELECT COUNT(id_karyawan) as total FROM data_karyawan WHERE divisi = ? AND status_aktif = 'aktif'");
-    $stmt_karyawan->bind_param("s", $divisi_pj);
-    $stmt_karyawan->execute();
-    $total_karyawan_divisi = $stmt_karyawan->get_result()->fetch_assoc()['total'] ?? 0;
-    $stmt_karyawan->close();
-
     $karyawan_divisi = [];
     $sql = "SELECT id_karyawan, kode_karyawan, nama_lengkap, email, jabatan, role, no_telp, status_aktif 
             FROM data_karyawan 
