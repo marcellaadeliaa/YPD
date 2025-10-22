@@ -60,8 +60,6 @@ if (isset($pelamar_id)) {
     }
 }
 
-$queryPengumumanUmum = $conn->query("SELECT judul, isi, tanggal FROM pengumuman_umum WHERE status = 'active' ORDER BY tanggal DESC, id DESC LIMIT 1");
-$pengumumanUmum = $queryPengumumanUmum ? $queryPengumumanUmum->fetch_assoc() : null;
 
 $show_pengumuman = false;
 $judul_pengumuman = '';
@@ -77,11 +75,6 @@ if ($status == 'Tidak Lolos') {
     $judul_pengumuman = "Update Status - " . ($pengumumanPelamar['tahap'] ?? '');
     $isi_pengumuman = $pengumumanPelamar['pesan'] ?? '';
     $tanggal_pengumuman = !empty($pengumumanPelamar['tanggal']) ? date('d/m/Y', strtotime($pengumumanPelamar['tanggal'])) : '';
-    $show_pengumuman = true;
-} elseif ($pengumumanUmum && $status == 'Menunggu Proses') {
-    $judul_pengumuman = $pengumumanUmum['judul'] ?? 'Pengumuman';
-    $isi_pengumuman = $pengumumanUmum['isi'] ?? '';
-    $tanggal_pengumuman = !empty($pengumumanUmum['tanggal']) ? date('d/m/Y', strtotime($pengumumanUmum['tanggal'])) : '';
     $show_pengumuman = true;
 } else {
     $show_pengumuman = false;
