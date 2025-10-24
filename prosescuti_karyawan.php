@@ -23,6 +23,22 @@ function handleFileUpload($file) {
     }
 }
 
+function isHoliday($dateString) {
+    $fixedHolidays = [
+        '01-01', // 1 Januari
+        '08-17', // 17 Agustus
+        '12-25'  // 25 Desember
+    ];
+    
+    $monthDay = date('m-d', strtotime($dateString));
+    return in_array($monthDay, $fixedHolidays);
+}
+
+function isWeekend($dateString) {
+    $dayOfWeek = date('w', strtotime($dateString));
+    return $dayOfWeek == 0 || $dayOfWeek == 6; // 0 = Minggu, 6 = Sabtu
+}
+
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'karyawan') {
     header("Location: login_karyawan.php?error=unauthorized");
     exit();
@@ -41,6 +57,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $tanggal_akhir = $_POST['tanggal_akhir'];
     $alasan = $_POST['alasan_cuti'];
     $jenis_cuti = $jenis_cuti_raw;
+
+    // Validasi weekend dan holiday
+    if (isWeekend($tanggal_mulai) || isHoliday($tanggal_mulai)) {
+        $error_msg = "Tanggal mulai tidak boleh pada hari weekend atau hari libur nasional.";
+    }
+    
+    if (isWeekend($tanggal_akhir) || isHoliday($tanggal_akhir)) {
+        $error_msg = "Tanggal akhir tidak boleh pada hari weekend atau hari libur nasional.";
+    }
 
     if ($jenis_cuti_raw === 'Khusus' && !empty($_POST['jenis_cuti_khusus'])) {
         $jenis_cuti = 'Khusus - ' . $_POST['jenis_cuti_khusus'];
@@ -61,6 +86,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if (empty($kode_karyawan) || empty($jenis_cuti) || empty($tanggal_mulai) || empty($tanggal_akhir) || empty($alasan)) {
         $error_msg = "Semua field wajib diisi.";
+    }
+
+    // Validasi tanggal
+    if ($tanggal_akhir < $tanggal_mulai) {
+        $error_msg = "Tanggal akhir tidak boleh lebih awal dari tanggal mulai.";
     }
 
     if (empty($error_msg)) {

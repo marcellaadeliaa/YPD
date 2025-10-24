@@ -187,6 +187,9 @@ $stmt->close();
             .action-buttons {
                 flex-direction: column;
             }
+            .detail-card.full-width {
+                grid-column: 1 / -1;
+            }
         }
     </style>
 </head>
@@ -305,6 +308,50 @@ $stmt->close();
                     <div class="detail-item">
                         <span class="detail-label">Tanggal Dibuat</span>
                         <span class="detail-value"><?php echo date('d-m-Y', strtotime($karyawan['created_at'])); ?></span>
+                    </div>
+                </div>
+
+                <div class="detail-card">
+                    <h4>Informasi Personal</h4>
+                    <div class="detail-item">
+                        <span class="detail-label">Jenis Kelamin</span>
+                        <span class="detail-value"><?php echo htmlspecialchars($karyawan['jenis_kelamin'] ?? '-'); ?></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Tempat Lahir</span>
+                        <span class="detail-value"><?php echo htmlspecialchars($karyawan['tempat_lahir'] ?? '-'); ?></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Tanggal Lahir</span>
+                        <span class="detail-value"><?php echo !empty($karyawan['tanggal_lahir']) ? date('d-m-Y', strtotime($karyawan['tanggal_lahir'])) : '-'; ?></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">NIK</span>
+                        <span class="detail-value"><?php echo htmlspecialchars($karyawan['nik'] ?? '-'); ?></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Agama</span>
+                        <span class="detail-value"><?php echo htmlspecialchars($karyawan['agama'] ?? '-'); ?></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Pendidikan Terakhir</span>
+                        <span class="detail-value"><?php echo htmlspecialchars($karyawan['pendidikan_terakhir'] ?? '-'); ?></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Kontak Darurat</span>
+                        <span class="detail-value"><?php echo htmlspecialchars($karyawan['kontak_darurat'] ?? '-'); ?></span>
+                    </div>
+                </div>
+
+                <div class="detail-card full-width">
+                    <h4>Alamat</h4>
+                    <div class="detail-item">
+                        <span class="detail-label">Alamat Rumah</span>
+                        <span class="detail-value"><?php echo htmlspecialchars($karyawan['alamat_rumah'] ?? '-'); ?></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Alamat Domisili</span>
+                        <span class="detail-value"><?php echo htmlspecialchars($karyawan['alamat_domisili'] ?? '-'); ?></span>
                     </div>
                 </div>
             </div>

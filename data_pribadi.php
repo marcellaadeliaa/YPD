@@ -31,25 +31,74 @@ if (!$karyawan) {
 $stmt->close();
 
 $success_message = '';
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_telepon'])) {
-    $no_telp_baru = $_POST['no_telp'] ?? '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Update data pribadi yang diizinkan
+    $jenis_kelamin = $_POST['jenis_kelamin'] ?? '';
+    $tempat_lahir = $_POST['tempat_lahir'] ?? '';
+    $tanggal_lahir = $_POST['tanggal_lahir'] ?? '';
+    $nik = $_POST['nik'] ?? '';
+    $alamat_rumah = $_POST['alamat_rumah'] ?? '';
+    $alamat_domisili = $_POST['alamat_domisili'] ?? '';
+    $agama = $_POST['agama'] ?? '';
+    $kontak_darurat = $_POST['kontak_darurat'] ?? '';
+    $pendidikan_terakhir = $_POST['pendidikan_terakhir'] ?? '';
+    $no_telp = $_POST['no_telp'] ?? '';
     
-    if (!empty($no_telp_baru)) {
-        $update_sql = "UPDATE data_karyawan SET no_telp = ? WHERE id_karyawan = ?";
-        $update_stmt = $conn->prepare($update_sql);
-        $update_stmt->bind_param("si", $no_telp_baru, $user_id);
-        
-        if ($update_stmt->execute()) {
-            $success_message = "Nomor telepon berhasil diupdate!";
-            $karyawan['no_telp'] = $no_telp_baru;
-            if (isset($_SESSION['user'])) {
-                $_SESSION['user']['no_telp'] = $no_telp_baru;
-            }
-        } else {
-            $success_message = "Gagal mengupdate nomor telepon!";
-        }
-        $update_stmt->close();
+    $update_sql = "UPDATE data_karyawan SET 
+                    jenis_kelamin = ?, 
+                    tempat_lahir = ?, 
+                    tanggal_lahir = ?, 
+                    nik = ?, 
+                    alamat_rumah = ?, 
+                    alamat_domisili = ?, 
+                    agama = ?, 
+                    kontak_darurat = ?, 
+                    pendidikan_terakhir = ?, 
+                    no_telp = ? 
+                   WHERE id_karyawan = ?";
+    
+    $update_stmt = $conn->prepare($update_sql);
+    
+    // Handle tanggal lahir yang kosong
+    if (empty($tanggal_lahir)) {
+        $tanggal_lahir = null;
     }
+    
+    $update_stmt->bind_param("ssssssssssi", 
+        $jenis_kelamin,
+        $tempat_lahir,
+        $tanggal_lahir,
+        $nik,
+        $alamat_rumah,
+        $alamat_domisili,
+        $agama,
+        $kontak_darurat,
+        $pendidikan_terakhir,
+        $no_telp,
+        $user_id
+    );
+    
+    if ($update_stmt->execute()) {
+        $success_message = "Data pribadi berhasil diupdate!";
+        // Update data di session
+        $karyawan['jenis_kelamin'] = $jenis_kelamin;
+        $karyawan['tempat_lahir'] = $tempat_lahir;
+        $karyawan['tanggal_lahir'] = $tanggal_lahir;
+        $karyawan['nik'] = $nik;
+        $karyawan['alamat_rumah'] = $alamat_rumah;
+        $karyawan['alamat_domisili'] = $alamat_domisili;
+        $karyawan['agama'] = $agama;
+        $karyawan['kontak_darurat'] = $kontak_darurat;
+        $karyawan['pendidikan_terakhir'] = $pendidikan_terakhir;
+        $karyawan['no_telp'] = $no_telp;
+        
+        if (isset($_SESSION['user'])) {
+            $_SESSION['user']['no_telp'] = $no_telp;
+        }
+    } else {
+        $success_message = "Gagal mengupdate data pribadi!";
+    }
+    $update_stmt->close();
 }
 ?>
 <!DOCTYPE html>
@@ -98,7 +147,7 @@ main{
 }
 .card{
   width:100%;
-  max-width:600px;
+  max-width:800px;
   background:#fff;
   border-radius:15px;
   padding:30px 40px;
@@ -145,9 +194,19 @@ h2{
   margin-top: 0;
   color: #1E105E;
   font-size: 18px;
+  margin-bottom: 20px;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 20px;
 }
 .form-group {
   margin-bottom: 15px;
+}
+.form-group.full-width {
+  grid-column: 1 / -1;
 }
 .form-group label {
   display: block;
@@ -155,12 +214,22 @@ h2{
   margin-bottom: 8px;
   color: #555;
 }
-.form-group input {
+.form-group input, .form-group select, .form-group textarea {
   width: 100%;
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 6px;
   font-size: 16px;
+  box-sizing: border-box;
+}
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+.readonly-field {
+  background-color: #e9ecef;
+  color: #6c757d;
+  cursor: not-allowed;
 }
 .btn {
   display: inline-block;
@@ -193,10 +262,10 @@ h2{
   margin-bottom: 20px;
   border-left: 4px solid #28a745;
 }
-.readonly-field {
-  background-color: #e9ecef;
-  color: #6c757d;
-  cursor: not-allowed;
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
 }
 @media(max-width:768px){
   header{flex-direction:column;align-items:flex-start;}
@@ -204,6 +273,12 @@ h2{
   nav li ul{position:relative;border:none;box-shadow:none;}
   .info-grid {
     grid-template-columns: 1fr;
+  }
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .action-buttons {
+    flex-direction: column;
   }
 }
 </style>
@@ -250,6 +325,7 @@ h2{
       </div>
     <?php endif; ?>
 
+    <!-- Informasi yang tidak bisa diedit -->
     <div class="info-grid">
       <div class="info-item">
         <span class="info-label">Kode Karyawan</span>
@@ -287,17 +363,99 @@ h2{
       </div>
     </div>
 
+    <!-- Form edit data pribadi yang diizinkan -->
     <div class="edit-form">
-      <h3>Edit Nomor Telepon</h3>
+      <h3>Edit Data Pribadi</h3>
       <form method="POST">
-        <div class="form-group">
-          <label for="no_telp">Nomor Telepon</label>
-          <input type="tel" id="no_telp" name="no_telp" 
-                 value="<?= htmlspecialchars($karyawan['no_telp']) ?>" 
-                 placeholder="Masukkan nomor telepon baru" required>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="jenis_kelamin">Jenis Kelamin</label>
+            <select id="jenis_kelamin" name="jenis_kelamin">
+              <option value="">Pilih Jenis Kelamin</option>
+              <option value="Laki-laki" <?= $karyawan['jenis_kelamin'] == 'Laki-laki' ? 'selected' : '' ?>>Laki-laki</option>
+              <option value="Perempuan" <?= $karyawan['jenis_kelamin'] == 'Perempuan' ? 'selected' : '' ?>>Perempuan</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="tempat_lahir">Tempat Lahir</label>
+            <input type="text" id="tempat_lahir" name="tempat_lahir" 
+                   value="<?= htmlspecialchars($karyawan['tempat_lahir'] ?? '') ?>" 
+                   placeholder="Tempat lahir">
+          </div>
+          
+          <div class="form-group">
+            <label for="tanggal_lahir">Tanggal Lahir</label>
+            <input type="date" id="tanggal_lahir" name="tanggal_lahir" 
+                   value="<?= htmlspecialchars($karyawan['tanggal_lahir'] ?? '') ?>">
+          </div>
+          
+          <div class="form-group">
+            <label for="nik">NIK</label>
+            <input type="text" id="nik" name="nik" 
+                   value="<?= htmlspecialchars($karyawan['nik'] ?? '') ?>" 
+                   placeholder="Nomor Induk Kependudukan">
+          </div>
+          
+          <div class="form-group">
+            <label for="agama">Agama</label>
+            <select id="agama" name="agama">
+              <option value="">Pilih Agama</option>
+              <option value="Islam" <?= $karyawan['agama'] == 'Islam' ? 'selected' : '' ?>>Islam</option>
+              <option value="Kristen" <?= $karyawan['agama'] == 'Kristen' ? 'selected' : '' ?>>Kristen</option>
+              <option value="Katholik" <?= $karyawan['agama'] == 'Katholik' ? 'selected' : '' ?>>Katholik</option>
+              <option value="Hindu" <?= $karyawan['agama'] == 'Hindu' ? 'selected' : '' ?>>Hindu</option>
+              <option value="Buddha" <?= $karyawan['agama'] == 'Buddha' ? 'selected' : '' ?>>Buddha</option>
+              <option value="Khonghucu" <?= $karyawan['agama'] == 'Khonghucu' ? 'selected' : '' ?>>Khonghucu</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="pendidikan_terakhir">Pendidikan Terakhir</label>
+            <select id="pendidikan_terakhir" name="pendidikan_terakhir">
+              <option value="">Pilih Pendidikan</option>
+              <option value="SD" <?= $karyawan['pendidikan_terakhir'] == 'SD' ? 'selected' : '' ?>>SD</option>
+              <option value="SMP" <?= $karyawan['pendidikan_terakhir'] == 'SMP' ? 'selected' : '' ?>>SMP</option>
+              <option value="SMA" <?= $karyawan['pendidikan_terakhir'] == 'SMA' ? 'selected' : '' ?>>SMA</option>
+              <option value="SMK" <?= $karyawan['pendidikan_terakhir'] == 'SMK' ? 'selected' : '' ?>>SMK</option>
+              <option value="Diploma" <?= $karyawan['pendidikan_terakhir'] == 'Diploma' ? 'selected' : '' ?>>Diploma</option>
+              <option value="Sarjana" <?= $karyawan['pendidikan_terakhir'] == 'Sarjana' ? 'selected' : '' ?>>Sarjana</option>
+              <option value="Magister" <?= $karyawan['pendidikan_terakhir'] == 'Magister' ? 'selected' : '' ?>>Magister</option>
+              <option value="Doktor" <?= $karyawan['pendidikan_terakhir'] == 'Doktor' ? 'selected' : '' ?>>Doktor</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="no_telp">No. Telepon</label>
+            <input type="tel" id="no_telp" name="no_telp" 
+                   value="<?= htmlspecialchars($karyawan['no_telp'] ?? '') ?>" 
+                   placeholder="Nomor telepon aktif" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="kontak_darurat">Kontak Darurat</label>
+            <input type="text" id="kontak_darurat" name="kontak_darurat" 
+                   value="<?= htmlspecialchars($karyawan['kontak_darurat'] ?? '') ?>" 
+                   placeholder="Nomor kontak darurat">
+          </div>
+          
+          <div class="form-group full-width">
+            <label for="alamat_rumah">Alamat Rumah</label>
+            <textarea id="alamat_rumah" name="alamat_rumah" 
+                      placeholder="Alamat rumah lengkap"><?= htmlspecialchars($karyawan['alamat_rumah'] ?? '') ?></textarea>
+          </div>
+          
+          <div class="form-group full-width">
+            <label for="alamat_domisili">Alamat Domisili</label>
+            <textarea id="alamat_domisili" name="alamat_domisili" 
+                      placeholder="Alamat domisili saat ini"><?= htmlspecialchars($karyawan['alamat_domisili'] ?? '') ?></textarea>
+          </div>
         </div>
-        <button type="submit" name="update_telepon" class="btn">Update Nomor Telepon</button>
-        <a href="dashboardkaryawan.php" class="btn btn-back">Kembali ke Dashboard</a>
+        
+        <div class="action-buttons">
+          <button type="submit" class="btn">Update Data Pribadi</button>
+          <a href="dashboardkaryawan.php" class="btn btn-back">Kembali ke Dashboard</a>
+        </div>
       </form>
     </div>
   </div>

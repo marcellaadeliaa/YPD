@@ -305,6 +305,56 @@ $stmt->close();
                     </div>
                 </div>
                 
+                <!-- Tambahan: Informasi Personal -->
+                <div class="form-section">
+                    <h3>Informasi Personal</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="jenis_kelamin">Jenis Kelamin</label>
+                            <input type="text" id="jenis_kelamin" name="jenis_kelamin" placeholder="Jenis Kelamin"
+                                   value="<?php echo htmlspecialchars($karyawan['jenis_kelamin'] ?? ''); ?>">
+                        </div>
+                        <div class="form-group">
+                            <label for="tempat_lahir">Tempat Lahir</label>
+                            <input type="text" id="tempat_lahir" name="tempat_lahir" placeholder="Tempat Lahir"
+                                   value="<?php echo htmlspecialchars($karyawan['tempat_lahir'] ?? ''); ?>">
+                        </div>
+                        <div class="form-group">
+                            <label for="tanggal_lahir">Tanggal Lahir</label>
+                            <input type="date" id="tanggal_lahir" name="tanggal_lahir"
+                                   value="<?php echo htmlspecialchars($karyawan['tanggal_lahir'] ?? ''); ?>">
+                        </div>
+                        <div class="form-group">
+                            <label for="nik">NIK</label>
+                            <input type="text" id="nik" name="nik" placeholder="NIK"
+                                   value="<?php echo htmlspecialchars($karyawan['nik'] ?? ''); ?>">
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="alamat_rumah">Alamat Rumah</label>
+                            <textarea id="alamat_rumah" name="alamat_rumah" placeholder="Alamat Rumah" rows="3"><?php echo htmlspecialchars($karyawan['alamat_rumah'] ?? ''); ?></textarea>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="alamat_domisili">Alamat Domisili</label>
+                            <textarea id="alamat_domisili" name="alamat_domisili" placeholder="Alamat Domisili" rows="3"><?php echo htmlspecialchars($karyawan['alamat_domisili'] ?? ''); ?></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="agama">Agama</label>
+                            <input type="text" id="agama" name="agama" placeholder="Agama"
+                                   value="<?php echo htmlspecialchars($karyawan['agama'] ?? ''); ?>">
+                        </div>
+                        <div class="form-group">
+                            <label for="kontak_darurat">Kontak Darurat</label>
+                            <input type="text" id="kontak_darurat" name="kontak_darurat" placeholder="Kontak Darurat"
+                                   value="<?php echo htmlspecialchars($karyawan['kontak_darurat'] ?? ''); ?>">
+                        </div>
+                        <div class="form-group">
+                            <label for="pendidikan_terakhir">Pendidikan Terakhir</label>
+                            <input type="text" id="pendidikan_terakhir" name="pendidikan_terakhir" placeholder="Pendidikan Terakhir"
+                                   value="<?php echo htmlspecialchars($karyawan['pendidikan_terakhir'] ?? ''); ?>">
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="form-section">
                     <h3>Status</h3>
                     <div class="form-grid">

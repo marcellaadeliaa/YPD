@@ -24,6 +24,7 @@ $sql = "SELECT
             status, 
             waktu_persetujuan,
             file_surat_dokter,
+            alasan_penolakan,
             alasan
         FROM 
             data_pengajuan_cuti 
@@ -115,6 +116,11 @@ $conn->close();
     .status-Menunggu-Persetujuan { color: #f39c12; font-weight: 600; }
     .btn-lihat-surat { background-color: #17a2b8; color: white; padding: 4px 8px; border-radius: 4px; text-decoration: none; font-size: 12px; }
     
+    .alasan-cuti {
+        max-width: 200px;
+        word-wrap: break-word;
+    }
+    
     .alasan-penolakan {
         background: #f8d7da;
         color: #721c24;
@@ -123,6 +129,8 @@ $conn->close();
         font-size: 13px;
         border-left: 3px solid #dc3545;
         margin-top: 5px;
+        max-width: 250px;
+        word-wrap: break-word;
     }
     
     .no-data { text-align: center; padding: 40px; color: #666; font-style: italic; }
@@ -150,6 +158,8 @@ $conn->close();
         .action-bar { flex-direction: column; }
         .btn { width: 100%; }
         .data-table-container { overflow-x: auto; }
+        .alasan-cuti { max-width: 150px; }
+        .alasan-penolakan { max-width: 150px; }
     }
 </style>
 </head>
@@ -251,6 +261,7 @@ $conn->close();
                         <th>Tanggal Akhir</th>
                         <th>Jenis Cuti</th>
                         <th>Surat Dokter</th>
+                        <th>Alasan Cuti</th>
                         <th>Status</th>
                         <th>Waktu Persetujuan</th>
                         <th>Alasan Penolakan</th>
@@ -271,6 +282,13 @@ $conn->close();
                                     -
                                 <?php endif; ?>
                             </td>
+                            <td class="alasan-cuti">
+                                <?php if (!empty($cuti['alasan'])): ?>
+                                    <?= htmlspecialchars($cuti['alasan']) ?>
+                                <?php else: ?>
+                                    <span style="color: #999;">-</span>
+                                <?php endif; ?>
+                            </td>
                             <td>
                                 <?php 
                                     $status_class = 'status-' . str_replace(' ', '-', $cuti['status']);
@@ -285,8 +303,8 @@ $conn->close();
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <?php if ($cuti['status'] == 'Ditolak' && !empty($cuti['alasan'])): ?>
-                                    <div class="alasan-penolakan"><?= htmlspecialchars($cuti['alasan']) ?></div>
+                                <?php if ($cuti['status'] == 'Ditolak' && !empty($cuti['alasan_penolakan'])): ?>
+                                    <div class="alasan-penolakan"><?= htmlspecialchars($cuti['alasan_penolakan']) ?></div>
                                 <?php else: ?>
                                     <span style="color: #999;">-</span>
                                 <?php endif; ?>
@@ -295,7 +313,7 @@ $conn->close();
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="8" class="no-data">
+                            <td colspan="9" class="no-data">
                                 Tidak ada data cuti yang ditemukan
                                 <?php if (empty($start_date) && empty($end_date) && empty($search_query)): ?>
                                     <br><br>

@@ -7,6 +7,22 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'karyawan') {
     exit();
 }
 
+function isHoliday($dateString) {
+    $fixedHolidays = [
+        '01-01', // 1 Januari
+        '08-17', // 17 Agustus
+        '12-25'  // 25 Desember
+    ];
+    
+    $monthDay = date('m-d', strtotime($dateString));
+    return in_array($monthDay, $fixedHolidays);
+}
+
+function isWeekend($dateString) {
+    $dayOfWeek = date('w', strtotime($dateString));
+    return $dayOfWeek == 0 || $dayOfWeek == 6; // 0 = Minggu, 6 = Sabtu
+}
+
 if ($_SERVER["REQUEST_METHOD"] != "POST") {
     header("Location: formkhlkaryawan.php?status=error&message=Metode request tidak valid");
     exit();
@@ -21,10 +37,44 @@ $tanggal_cuti_khl = $_POST['tanggal_cuti_khl'];
 $jam_mulai_cuti_khl = $_POST['jam_mulai_cuti_khl'];
 $jam_akhir_cuti_khl = $_POST['jam_akhir_cuti_khl'];
 
+// Validasi input
 if (empty($nik) || empty($proyek) || empty($tanggal_khl) || empty($jam_mulai_kerja) || 
     empty($jam_akhir_kerja) || empty($tanggal_cuti_khl) || empty($jam_mulai_cuti_khl) || 
     empty($jam_akhir_cuti_khl)) {
     header("Location: formkhlkaryawan.php?status=error&message=Semua field harus diisi");
+    exit();
+}
+
+// Validasi weekend dan holiday
+if (isWeekend($tanggal_khl) || isHoliday($tanggal_khl)) {
+    header("Location: formkhlkaryawan.php?status=error&message=Tanggal KHL tidak boleh pada hari weekend atau hari libur nasional");
+    exit();
+}
+
+if (isWeekend($tanggal_cuti_khl) || isHoliday($tanggal_cuti_khl)) {
+    header("Location: formkhlkaryawan.php?status=error&message=Tanggal Cuti KHL tidak boleh pada hari weekend atau hari libur nasional");
+    exit();
+}
+
+// Validasi tanggal tidak sama
+if ($tanggal_khl === $tanggal_cuti_khl) {
+    header("Location: formkhlkaryawan.php?status=error&message=Tanggal KHL dan Tanggal Cuti KHL tidak boleh sama");
+    exit();
+}
+
+// Validasi jam kerja
+$jam_mulai_kerja_minutes = convertTimeToMinutes($jam_mulai_kerja);
+$jam_akhir_kerja_minutes = convertTimeToMinutes($jam_akhir_kerja);
+if ($jam_akhir_kerja_minutes <= $jam_mulai_kerja_minutes) {
+    header("Location: formkhlkaryawan.php?status=error&message=Jam akhir kerja harus setelah jam mulai kerja");
+    exit();
+}
+
+// Validasi jam cuti
+$jam_mulai_cuti_minutes = convertTimeToMinutes($jam_mulai_cuti_khl);
+$jam_akhir_cuti_minutes = convertTimeToMinutes($jam_akhir_cuti_khl);
+if ($jam_akhir_cuti_minutes <= $jam_mulai_cuti_minutes) {
+    header("Location: formkhlkaryawan.php?status=error&message=Jam akhir cuti harus setelah jam mulai cuti");
     exit();
 }
 
@@ -47,6 +97,7 @@ $role = $karyawan['role'];
 
 mysqli_stmt_close($stmt_karyawan);
 
+// Check if table exists and has required columns
 $check_table = mysqli_query($conn, "SHOW TABLES LIKE 'data_pengajuan_khl'");
 if (mysqli_num_rows($check_table) == 0) {
     $create_table = "CREATE TABLE `data_pengajuan_khl` (
@@ -63,6 +114,7 @@ if (mysqli_num_rows($check_table) == 0) {
         `jam_mulai_cuti_khl` time NOT NULL,
         `jam_akhir_cuti_khl` time NOT NULL,
         `status_khl` enum('pending','disetujui','ditolak') DEFAULT 'pending',
+        `alasan_penolakan` text DEFAULT NULL,
         `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (`id_khl`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci";
@@ -72,11 +124,13 @@ if (mysqli_num_rows($check_table) == 0) {
         $status = "error";
     }
 } else {
+    // Check and add missing columns
     $columns_to_check = [
         'divisi' => "ALTER TABLE data_pengajuan_khl ADD COLUMN divisi VARCHAR(50) NOT NULL AFTER kode_karyawan",
         'jabatan' => "ALTER TABLE data_pengajuan_khl ADD COLUMN jabatan VARCHAR(50) NOT NULL AFTER divisi",
         'role' => "ALTER TABLE data_pengajuan_khl ADD COLUMN role ENUM('karyawan','direktur','admin','penanggung jawab') NOT NULL DEFAULT 'karyawan' AFTER jabatan",
-        'proyek' => "ALTER TABLE data_pengajuan_khl ADD COLUMN proyek VARCHAR(100) NOT NULL AFTER role"
+        'proyek' => "ALTER TABLE data_pengajuan_khl ADD COLUMN proyek VARCHAR(100) NOT NULL AFTER role",
+        'alasan_penolakan' => "ALTER TABLE data_pengajuan_khl ADD COLUMN alasan_penolakan TEXT DEFAULT NULL AFTER status_khl"
     ];
     
     foreach ($columns_to_check as $column_name => $alter_query) {
@@ -115,6 +169,11 @@ if (!isset($status)) {
         $error_message = "Gagal mempersiapkan statement: " . mysqli_error($conn);
         $status = "error";
     }
+}
+
+function convertTimeToMinutes($timeString) {
+    list($hours, $minutes) = explode(':', $timeString);
+    return ($hours * 60) + $minutes;
 }
 
 mysqli_close($conn);
@@ -331,11 +390,9 @@ mysqli_close($conn);
       <h3 style="margin-top: 0; color: #4a3f81;">Detail Pengajuan KHL</h3>
       <p><strong>Proyek:</strong> <?php echo htmlspecialchars($proyek); ?></p>
       <p><strong>Tanggal KHL:</strong> <?php echo htmlspecialchars($tanggal_khl); ?></p>
-      <p><strong>Jam Mulai Kerja:</strong> <?php echo htmlspecialchars($jam_mulai_kerja); ?></p>
-      <p><strong>Jam Akhir Kerja:</strong> <?php echo htmlspecialchars($jam_akhir_kerja); ?></p>
+      <p><strong>Jam Kerja:</strong> <?php echo htmlspecialchars($jam_mulai_kerja); ?> - <?php echo htmlspecialchars($jam_akhir_kerja); ?></p>
       <p><strong>Tanggal Cuti KHL:</strong> <?php echo htmlspecialchars($tanggal_cuti_khl); ?></p>
-      <p><strong>Jam Mulai Cuti KHL:</strong> <?php echo htmlspecialchars($jam_mulai_cuti_khl); ?></p>
-      <p><strong>Jam Akhir Cuti KHL:</strong> <?php echo htmlspecialchars($jam_akhir_cuti_khl); ?></p>
+      <p><strong>Jam Cuti KHL:</strong> <?php echo htmlspecialchars($jam_mulai_cuti_khl); ?> - <?php echo htmlspecialchars($jam_akhir_cuti_khl); ?></p>
       <p><strong>Status:</strong> <span style="color: #ffa500; font-weight: bold;">Pending</span></p>
     </div>
 

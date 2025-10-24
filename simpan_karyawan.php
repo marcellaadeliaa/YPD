@@ -8,6 +8,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Data wajib
     $kode_karyawan = $_POST['kode_karyawan'] ?? '';
     $nama_lengkap = $_POST['nama_lengkap'] ?? '';
     $email = $_POST['email'] ?? '';
@@ -18,6 +19,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $no_telp = $_POST['no_telp'] ?? '';
     $status_aktif = $_POST['status_aktif'] ?? 'aktif';
     
+    // Data personal (opsional)
+    $jenis_kelamin = $_POST['jenis_kelamin'] ?? '';
+    $tempat_lahir = $_POST['tempat_lahir'] ?? '';
+    $tanggal_lahir = $_POST['tanggal_lahir'] ?? '';
+    $nik = $_POST['nik'] ?? '';
+    $alamat_rumah = $_POST['alamat_rumah'] ?? '';
+    $alamat_domisili = $_POST['alamat_domisili'] ?? '';
+    $agama = $_POST['agama'] ?? '';
+    $kontak_darurat = $_POST['kontak_darurat'] ?? '';
+    $pendidikan_terakhir = $_POST['pendidikan_terakhir'] ?? '';
+    
+    // Validasi field wajib
     if (empty($kode_karyawan) || empty($nama_lengkap) || empty($email) || empty($password) || 
         empty($jabatan) || empty($divisi) || empty($role)) {
         $_SESSION['error_message'] = "Semua field wajib harus diisi!";
@@ -25,6 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     
+    // Cek duplikasi kode karyawan
     $check_sql = "SELECT id_karyawan FROM data_karyawan WHERE kode_karyawan = ?";
     $check_stmt = $conn->prepare($check_sql);
     $check_stmt->bind_param("s", $kode_karyawan);
@@ -37,6 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     
+    // Cek duplikasi email
     $check_email_sql = "SELECT id_karyawan FROM data_karyawan WHERE email = ?";
     $check_email_stmt = $conn->prepare($check_email_sql);
     $check_email_stmt->bind_param("s", $email);
@@ -51,12 +66,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $plain_password = $password;
     
+    // Query INSERT yang mencakup semua field termasuk data personal
     $sql = "INSERT INTO data_karyawan 
-            (kode_karyawan, nama_lengkap, email, password, jabatan, divisi, role, no_telp, status_aktif) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            (kode_karyawan, nama_lengkap, email, password, jabatan, divisi, role, no_telp, status_aktif,
+             jenis_kelamin, tempat_lahir, tanggal_lahir, nik, alamat_rumah, alamat_domisili, agama, 
+             kontak_darurat, pendidikan_terakhir) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sssssssss", 
+    
+    // Handle tanggal lahir yang kosong
+    if (empty($tanggal_lahir)) {
+        $tanggal_lahir = null;
+    }
+    
+    $stmt->bind_param("ssssssssssssssssss", 
         $kode_karyawan, 
         $nama_lengkap, 
         $email, 
@@ -65,7 +89,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $divisi, 
         $role, 
         $no_telp, 
-        $status_aktif
+        $status_aktif,
+        $jenis_kelamin,
+        $tempat_lahir,
+        $tanggal_lahir,
+        $nik,
+        $alamat_rumah,
+        $alamat_domisili,
+        $agama,
+        $kontak_darurat,
+        $pendidikan_terakhir
     );
     
     if ($stmt->execute()) {
