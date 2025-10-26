@@ -8,7 +8,8 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'direktur') {
 }
 
 $sql = "SELECT id_karyawan, kode_karyawan, nama_lengkap, email, password, jabatan, divisi, role, no_telp, 
-             sisa_cuti_tahunan, sisa_cuti_lustrum, status_aktif, created_at 
+             sisa_cuti_tahunan, sisa_cuti_lustrum, status_aktif, created_at,
+             jenis_kelamin, tempat_lahir, nik, alamat_rumah, alamat_domisili, agama, kontak_darurat, pendidikan_terakhir
         FROM data_karyawan 
         ORDER BY kode_karyawan";
 $result = $conn->query($sql);
@@ -139,9 +140,31 @@ if ($result && $result->num_rows > 0) {
     .search-box input { width:100%; padding:12px 45px 12px 15px; border:1px solid #ccc; border-radius:8px; font-size:16px; box-sizing:border-box; }
     .search-icon { position:absolute; right:15px; top:50%; transform:translateY(-50%); color:#666; cursor:pointer; }
 
-    .data-table { width:100%; border-collapse:collapse; font-size:14px; text-align:center; }
-    .data-table th, .data-table td { padding:12px 10px; border-bottom:1px solid #ddd; vertical-align:middle; }
-    .data-table th { background-color:#f8f9fa; font-weight:600; }
+    .table-container {
+        overflow-x: auto;
+        max-width: 100%;
+        margin-top: 20px;
+    }
+
+    .data-table { 
+        width:100%; 
+        border-collapse:collapse; 
+        font-size:14px; 
+        text-align:center; 
+        min-width: 1200px;
+    }
+    .data-table th, .data-table td { 
+        padding:12px 10px; 
+        border-bottom:1px solid #ddd; 
+        vertical-align:middle; 
+        white-space: nowrap;
+    }
+    .data-table th { 
+        background-color:#f8f9fa; 
+        font-weight:600; 
+        position: sticky;
+        top: 0;
+    }
     .data-table tbody tr:hover { background-color:#f1f1f1; }
 
     .status-aktif { color:#28a745; font-weight:bold; }
@@ -173,7 +196,10 @@ if ($result && $result->num_rows > 0) {
             padding: 8px 25px;
         }
         .search-container { flex-wrap:wrap; }
-        .data-table { display:block; overflow-x:auto; }
+        .table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
     }
 </style>
 </head>
@@ -237,46 +263,64 @@ if ($result && $result->num_rows > 0) {
             </div>
         </div>
 
-        <table class="data-table" id="employeeTable">
-            <thead>
-                <tr>
-                    <th>Kode Karyawan</th>
-                    <th>Nama Lengkap</th>
-                    <th>Jabatan</th>
-                    <th>Divisi</th>
-                    <th>Role</th>
-                    <th>No. Telepon</th>
-                    <th>Email</th>
-                    <th>Sisa Cuti Tahunan</th>
-                    <th>Sisa Cuti Lustrum</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody">
-                <?php if (empty($karyawan)): ?>
-                    <tr><td colspan="10" class="no-results">Belum ada data karyawan</td></tr>
-                <?php else: ?>
-                    <?php foreach($karyawan as $data): ?>
+        <div class="table-container">
+            <table class="data-table" id="employeeTable">
+                <thead>
                     <tr>
-                        <td><?= htmlspecialchars($data['kode_karyawan']) ?></td>
-                        <td><?= htmlspecialchars($data['nama_lengkap']) ?></td>
-                        <td><?= htmlspecialchars($data['jabatan']) ?></td>
-                        <td><?= htmlspecialchars($data['divisi']) ?></td>
-                        <td><?= htmlspecialchars($data['role']) ?></td>
-                        <td><?= htmlspecialchars($data['no_telp']) ?></td>
-                        <td><?= htmlspecialchars($data['email']) ?></td>
-                        <td><?= htmlspecialchars($data['sisa_cuti_tahunan']) ?></td>
-                        <td><?= htmlspecialchars($data['sisa_cuti_lustrum']) ?></td>
-                        <td>
-                            <span class="<?= $data['status_aktif']=='aktif' ? 'status-aktif' : 'status-non-aktif' ?>">
-                                <?= ucfirst($data['status_aktif']) ?>
-                            </span>
-                        </td>
+                        <th>Kode Karyawan</th>
+                        <th>Nama Lengkap</th>
+                        <th>Jabatan</th>
+                        <th>Divisi</th>
+                        <th>Role</th>
+                        <th>Jenis Kelamin</th>
+                        <th>Tempat Lahir</th>
+                        <th>NIK</th>
+                        <th>No. Telepon</th>
+                        <th>Email</th>
+                        <th>Alamat Rumah</th>
+                        <th>Alamat Domisili</th>
+                        <th>Agama</th>
+                        <th>Kontak Darurat</th>
+                        <th>Pendidikan Terakhir</th>
+                        <th>Sisa Cuti Tahunan</th>
+                        <th>Sisa Cuti Lustrum</th>
+                        <th>Status</th>
                     </tr>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </tbody>
-        </table>
+                </thead>
+                <tbody id="tableBody">
+                    <?php if (empty($karyawan)): ?>
+                        <tr><td colspan="18" class="no-results">Belum ada data karyawan</td></tr>
+                    <?php else: ?>
+                        <?php foreach($karyawan as $data): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($data['kode_karyawan']) ?></td>
+                            <td><?= htmlspecialchars($data['nama_lengkap']) ?></td>
+                            <td><?= htmlspecialchars($data['jabatan']) ?></td>
+                            <td><?= htmlspecialchars($data['divisi']) ?></td>
+                            <td><?= htmlspecialchars($data['role']) ?></td>
+                            <td><?= htmlspecialchars($data['jenis_kelamin']) ?></td>
+                            <td><?= htmlspecialchars($data['tempat_lahir']) ?></td>
+                            <td><?= htmlspecialchars($data['nik']) ?></td>
+                            <td><?= htmlspecialchars($data['no_telp']) ?></td>
+                            <td><?= htmlspecialchars($data['email']) ?></td>
+                            <td><?= htmlspecialchars($data['alamat_rumah']) ?></td>
+                            <td><?= htmlspecialchars($data['alamat_domisili']) ?></td>
+                            <td><?= htmlspecialchars($data['agama']) ?></td>
+                            <td><?= htmlspecialchars($data['kontak_darurat']) ?></td>
+                            <td><?= htmlspecialchars($data['pendidikan_terakhir']) ?></td>
+                            <td><?= htmlspecialchars($data['sisa_cuti_tahunan']) ?></td>
+                            <td><?= htmlspecialchars($data['sisa_cuti_lustrum']) ?></td>
+                            <td>
+                                <span class="<?= $data['status_aktif']=='aktif' ? 'status-aktif' : 'status-non-aktif' ?>">
+                                    <?= ucfirst($data['status_aktif']) ?>
+                                </span>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
     </div>
 </main>
 
@@ -299,7 +343,6 @@ function performSearch() {
         if (existingNoResults) existingNoResults.remove();
     }
 
-
     rows.forEach(row => {
         if (row.querySelector('.no-results') && row.querySelector('.no-results').textContent.includes('Belum ada data karyawan')) {
             return;
@@ -321,7 +364,7 @@ function performSearch() {
             if (!noResults) {
                 const tr = document.createElement('tr');
                 tr.id = 'noResults';
-                tr.innerHTML = `<td colspan="10" class="no-results">Tidak ada hasil untuk "${term}"</td>`;
+                tr.innerHTML = `<td colspan="18" class="no-results">Tidak ada hasil untuk "${term}"</td>`;
                 document.getElementById('tableBody').appendChild(tr);
             }
         }

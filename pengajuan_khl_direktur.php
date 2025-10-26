@@ -288,6 +288,28 @@ if (empty($divisi) || empty($jabatan)) {
             color: #666;
             font-size: 12px;
         }
+
+        /* Tambahan untuk validasi tanggal */
+        .holiday-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #ffeaa7;
+            text-align: center;
+        }
+
+        .date-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 5px;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #f5c6cb;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -358,8 +380,6 @@ if (empty($divisi) || empty($jabatan)) {
             }
             ?>
 
-           
-
             <div class="user-info">
                 <p><strong>Kode Karyawan:</strong> <?php echo htmlspecialchars($nik); ?></p>
                 <p><strong>Nama:</strong> <?php echo htmlspecialchars($nama_lengkap); ?></p>
@@ -367,8 +387,6 @@ if (empty($divisi) || empty($jabatan)) {
                 <p><strong>Jabatan:</strong> <?php echo htmlspecialchars($jabatan); ?></p>
                 <p><strong>Role:</strong> <?php echo htmlspecialchars(ucfirst(str_replace('_', ' ', $role))); ?></p>
             </div>
-
-           
             
             <form method="post" action="prosespengajuan_khldirektur.php" id="formKHL">
 
@@ -386,8 +404,9 @@ if (empty($divisi) || empty($jabatan)) {
                 <small>Contoh: Maintenance Server, Implementasi Sistem Baru, dll.</small>
 
                 <label class="required">Tanggal KHL</label>
-                <input type="date" name="tanggal_khl" id="tanggal_khl" min="<?php echo date('Y-m-d'); ?>" required>
+                <input type="date" name="tanggal_khl" id="tanggal_khl" min="<?php echo date('Y-m-d'); ?>" required onchange="validateKHLDate(); updateCutiKHLMinDate();">
                 <small>Tanggal saat Anda akan bekerja di hari libur</small>
+                <div id="khlDateError" class="date-error" style="display: none;"></div>
 
                 <div class="time-container">
                     <div style="flex: 1;">
@@ -413,8 +432,9 @@ if (empty($divisi) || empty($jabatan)) {
                 </div>
 
                 <label class="required">Tanggal Cuti KHL</label>
-                <input type="date" name="tanggal_cuti_khl" id="tanggal_cuti_khl" min="<?php echo date('Y-m-d'); ?>" required>
+                <input type="date" name="tanggal_cuti_khl" id="tanggal_cuti_khl" min="<?php echo date('Y-m-d'); ?>" required onchange="validateCutiKHLDate();">
                 <small>Tanggal pengganti cuti yang akan diambil</small>
+                <div id="cutiKHLDateError" class="date-error" style="display: none;"></div>
 
                 <div class="time-container">
                     <div style="flex: 1;">
@@ -443,6 +463,117 @@ if (empty($divisi) || empty($jabatan)) {
     </main>
 
     <script>
+        // Daftar tanggal merah (format: MM-DD) - sama seperti di form cuti
+        const fixedHolidays = [
+            '01-01', // 1 Januari
+            '08-17', // 17 Agustus
+            '12-25'  // 25 Desember
+        ];
+
+        function isHoliday(dateString) {
+            const date = new Date(dateString);
+            const monthDay = `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            return fixedHolidays.includes(monthDay);
+        }
+
+        function isWeekend(dateString) {
+            const date = new Date(dateString);
+            const dayOfWeek = date.getDay();
+            return dayOfWeek === 0 || dayOfWeek === 6; // 0 = Minggu, 6 = Sabtu
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            return date.toLocaleDateString('id-ID', options);
+        }
+
+        function validateKHLDate() {
+            const tanggalKHL = document.getElementById('tanggal_khl');
+            const errorDiv = document.getElementById('khlDateError');
+            
+            errorDiv.style.display = 'none';
+            
+            if (tanggalKHL.value) {
+                // Untuk KHL, tanggal harus weekend atau holiday (karena ini kerja hari libur)
+                const isWeekendDay = isWeekend(tanggalKHL.value);
+                const isHolidayDate = isHoliday(tanggalKHL.value);
+                
+                if (!isWeekendDay && !isHolidayDate) {
+                    errorDiv.innerHTML = `PERINGATAN: Tanggal ${formatDate(tanggalKHL.value)} adalah hari kerja biasa. KHL seharusnya diajukan untuk hari libur (weekend atau hari libur nasional).`;
+                    errorDiv.style.display = 'block';
+                    errorDiv.className = 'holiday-warning';
+                } else {
+                    // Jika valid, tampilkan info
+                    let infoMessage = `Tanggal ${formatDate(tanggalKHL.value)} adalah `;
+                    if (isWeekendDay && isHolidayDate) {
+                        infoMessage += "hari weekend dan hari libur nasional.";
+                    } else if (isWeekendDay) {
+                        infoMessage += "hari weekend.";
+                    } else {
+                        infoMessage += "hari libur nasional.";
+                    }
+                    errorDiv.innerHTML = infoMessage;
+                    errorDiv.style.display = 'block';
+                    errorDiv.className = 'info-message';
+                }
+            }
+            
+            return true;
+        }
+
+        function validateCutiKHLDate() {
+            const tanggalCutiKHL = document.getElementById('tanggal_cuti_khl');
+            const tanggalKHL = document.getElementById('tanggal_khl');
+            const errorDiv = document.getElementById('cutiKHLDateError');
+            
+            errorDiv.style.display = 'none';
+            
+            if (tanggalCutiKHL.value) {
+                // Validasi: Tanggal cuti KHL harus weekday dan bukan holiday
+                if (isWeekend(tanggalCutiKHL.value)) {
+                    errorDiv.innerHTML = `Tanggal ${formatDate(tanggalCutiKHL.value)} adalah hari weekend. Tanggal cuti KHL harus pada hari kerja (Senin-Jumat).`;
+                    errorDiv.style.display = 'block';
+                    errorDiv.className = 'error-message';
+                    return false;
+                }
+                
+                if (isHoliday(tanggalCutiKHL.value)) {
+                    errorDiv.innerHTML = `Tanggal ${formatDate(tanggalCutiKHL.value)} adalah hari libur nasional. Tanggal cuti KHL harus pada hari kerja biasa.`;
+                    errorDiv.style.display = 'block';
+                    errorDiv.className = 'error-message';
+                    return false;
+                }
+                
+                // Validasi: Tanggal cuti KHL harus setelah tanggal KHL
+                if (tanggalKHL.value && tanggalCutiKHL.value <= tanggalKHL.value) {
+                    errorDiv.innerHTML = `Tanggal cuti KHL harus setelah tanggal KHL.`;
+                    errorDiv.style.display = 'block';
+                    errorDiv.className = 'error-message';
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+
+        function updateCutiKHLMinDate() {
+            const tanggalKHL = document.getElementById('tanggal_khl');
+            const tanggalCutiInput = document.getElementById('tanggal_cuti_khl');
+            
+            if (tanggalKHL.value) {
+                const minDate = new Date(tanggalKHL.value);
+                minDate.setDate(minDate.getDate() + 1);
+                const minDateString = minDate.toISOString().split('T')[0];
+                tanggalCutiInput.min = minDateString;
+                
+                if (tanggalCutiInput.value && tanggalCutiInput.value <= tanggalKHL.value) {
+                    tanggalCutiInput.value = '';
+                    document.getElementById('cutiKHLDateError').style.display = 'none';
+                }
+            }
+        }
+
         document.getElementById('formKHL').addEventListener('submit', function(e) {
             const tanggalKHL = document.getElementById('tanggal_khl').value;
             const tanggalCutiKHL = document.getElementById('tanggal_cuti_khl').value;
@@ -450,6 +581,24 @@ if (empty($divisi) || empty($jabatan)) {
             const jamAkhirKerja = document.querySelector('select[name="jam_akhir_kerja"]').value;
             const jamMulaiCuti = document.querySelector('select[name="jam_mulai_cuti_khl"]').value;
             const jamAkhirCuti = document.querySelector('select[name="jam_akhir_cuti_khl"]').value;
+            
+            // Validasi weekend dan holiday untuk KHL
+            if (tanggalKHL) {
+                if (!isWeekend(tanggalKHL.value) && !isHoliday(tanggalKHL.value)) {
+                    e.preventDefault();
+                    alert('KHL hanya dapat diajukan untuk hari libur (weekend atau hari libur nasional)');
+                    return;
+                }
+            }
+            
+            // Validasi weekend dan holiday untuk cuti KHL
+            if (tanggalCutiKHL) {
+                if (isWeekend(tanggalCutiKHL) || isHoliday(tanggalCutiKHL)) {
+                    e.preventDefault();
+                    alert('Tanggal cuti KHL harus pada hari kerja biasa (bukan weekend atau hari libur)');
+                    return;
+                }
+            }
             
             if (tanggalKHL && tanggalCutiKHL && tanggalKHL >= tanggalCutiKHL) {
                 e.preventDefault();
@@ -474,25 +623,15 @@ if (empty($divisi) || empty($jabatan)) {
             }
         });
 
-        document.getElementById('tanggal_khl').addEventListener('change', function() {
-            const tanggalKHL = this.value;
-            const tanggalCutiInput = document.getElementById('tanggal_cuti_khl');
-            
-            if (tanggalKHL) {
-                const minDate = new Date(tanggalKHL);
-                minDate.setDate(minDate.getDate() + 1);
-                const minDateString = minDate.toISOString().split('T')[0];
-                tanggalCutiInput.min = minDateString;
-                
-                if (tanggalCutiInput.value && tanggalCutiInput.value <= tanggalKHL) {
-                    tanggalCutiInput.value = '';
-                }
-            }
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set minimum date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('tanggal_khl').min = today;
+            document.getElementById('tanggal_cuti_khl').min = today;
         });
     </script>
 
     <?php
- 
     if(isset($conn)) {
         mysqli_close($conn);
     }
