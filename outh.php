@@ -10,16 +10,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $login_input = $_POST['login_input'];
     $password = $_POST['password'];
-    $role = $_POST['role'];
+    $selected_role = $_POST['role'];
 
-    $sql = "SELECT * FROM data_karyawan WHERE (kode_karyawan = ? OR nama_lengkap = ?) AND role = ? AND status_aktif = 'aktif'";
+    $sql = "SELECT * FROM data_karyawan WHERE (kode_karyawan = ? OR nama_lengkap = ?) AND status_aktif = 'aktif'";
     
     $stmt = $conn->prepare($sql);
     if ($stmt === false) {
         die("Error preparing statement: " . $conn->error);
     }
 
-    $stmt->bind_param("sss", $login_input, $login_input, $role);
+    $stmt->bind_param("ss", $login_input, $login_input);
     $stmt->execute();
     $result = $stmt->get_result();
 
@@ -27,19 +27,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $db_user = $result->fetch_assoc();
 
         if ($password === $db_user['password']) {
+            
+            $user_roles = explode(',', $db_user['role']);
+            $is_valid_role = in_array($selected_role, $user_roles);
+            
+            if ($is_valid_role) {
+                $_SESSION['user'] = [
+                    'id_karyawan'   => $db_user['id_karyawan'],
+                    'kode_karyawan' => $db_user['kode_karyawan'],
+                    'nama_lengkap'  => $db_user['nama_lengkap'],
+                    'divisi'        => $db_user['divisi'],
+                    'role'          => $selected_role, 
+                    'email'         => $db_user['email'],
+                    'jabatan'       => $db_user['jabatan'],
+                    'all_roles'     => $user_roles 
+                ];
 
-            $_SESSION['user'] = [
-                'id_karyawan'   => $db_user['id_karyawan'],
-                'kode_karyawan' => $db_user['kode_karyawan'],
-                'nama_lengkap'  => $db_user['nama_lengkap'],
-                'divisi'        => $db_user['divisi'],
-                'role'          => $db_user['role'],
-                'email'         => $db_user['email'],
-                'jabatan'       => $db_user['jabatan']
-            ];
-
-            header("Location: dashboard.php");
-            exit();
+                header("Location: dashboard.php");
+                exit();
+            } else {
+                header("Location: login_karyawan.php?error=invalid_role");
+                exit();
+            }
         }
     }
 
