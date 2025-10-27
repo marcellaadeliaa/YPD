@@ -6,7 +6,6 @@ $display_data = false;
 $error_msg = '';
 $file_surat_path = null;
 
-
 function handleFileUpload($file) {
     if (!isset($file) || $file['error'] !== UPLOAD_ERR_OK) {
         return null;
@@ -22,6 +21,22 @@ function handleFileUpload($file) {
     } else {
         return false;
     }
+}
+
+function isHoliday($dateString) {
+    $fixedHolidays = [
+        '01-01', // 1 Januari
+        '08-17', // 17 Agustus
+        '12-25'  // 25 Desember
+    ];
+    
+    $monthDay = date('m-d', strtotime($dateString));
+    return in_array($monthDay, $fixedHolidays);
+}
+
+function isWeekend($dateString) {
+    $dayOfWeek = date('w', strtotime($dateString));
+    return $dayOfWeek == 0 || $dayOfWeek == 6; // 0 = Minggu, 6 = Sabtu
 }
 
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'penanggung jawab') {
@@ -44,14 +59,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $alasan = $_POST['alasan_cuti'];
     $jenis_cuti = $jenis_cuti_raw;
 
+    // Validasi weekend dan holiday - DITAMBAHKAN
+    if (isWeekend($tanggal_mulai) || isHoliday($tanggal_mulai)) {
+        $error_msg = "Tanggal mulai tidak boleh pada hari weekend atau hari libur nasional.";
+    }
+    
+    if (isWeekend($tanggal_akhir) || isHoliday($tanggal_akhir)) {
+        $error_msg = "Tanggal akhir tidak boleh pada hari weekend atau hari libur nasional.";
+    }
+
     if ($jenis_cuti_raw === 'Khusus' && !empty($_POST['jenis_cuti_khusus'])) {
         $jenis_cuti = 'Khusus - ' . $_POST['jenis_cuti_khusus'];
     }
 
+    // Validasi tanggal
     if ($tanggal_akhir < $tanggal_mulai) {
         $error_msg = "Tanggal akhir tidak boleh lebih awal dari tanggal mulai.";
     }
 
+    // Validasi jumlah hari cuti khusus
     if ($jenis_cuti_raw === 'Khusus' && !empty($_POST['jenis_cuti_khusus'])) {
         $max_days = 0;
         switch($_POST['jenis_cuti_khusus']) {
@@ -79,6 +105,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
+    // Validasi cuti sakit
     if ($jenis_cuti_raw === 'Sakit') {
         if (!isset($_FILES['bukti_surat_dokter']) || $_FILES['bukti_surat_dokter']['error'] === UPLOAD_ERR_NO_FILE) {
             $error_msg = "Untuk cuti sakit, wajib mengunggah bukti surat keterangan dokter.";
@@ -92,12 +119,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
+    // Validasi field wajib
     if (empty($kode_karyawan) || empty($jenis_cuti) || empty($tanggal_mulai) || empty($tanggal_akhir) || empty($alasan)) {
         $error_msg = "Semua field wajib diisi.";
     }
 
+    // Simpan ke database jika tidak ada error
     if (empty($error_msg)) {
-        $sql = "INSERT INTO data_pengajuan_cuti (kode_karyawan, nama_karyawan, divisi, jabatan, role, jenis_cuti, tanggal_mulai, tanggal_akhir, alasan, file_surat_dokter, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Menunggu persetujuan')";
+        $sql = "INSERT INTO data_pengajuan_cuti (kode_karyawan, nama_karyawan, divisi, jabatan, role, jenis_cuti, tanggal_mulai, tanggal_akhir, alasan, file_surat_dokter, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Menunggu Persetujuan')"; // STATUS DIUBAH
         $stmt = mysqli_prepare($conn, $sql);
         
         if ($stmt) {
@@ -380,7 +409,7 @@ mysqli_close($conn);
                 <div class="message success-message">Pengajuan Cuti berhasil dikirim!</div>
                 
                 <div class="note-box">
-                    <strong>Catatan:</strong> Sebagai Penanggung Jawab, pengajuan cuti Anda akan masuk dengan status <strong>Pending</strong> dan membutuhkan persetujuan dari atasan.
+                    <strong>Catatan:</strong> Sebagai Penanggung Jawab, pengajuan cuti Anda akan masuk dengan status <strong>Menunggu Persetujuan</strong> dan membutuhkan persetujuan dari atasan.
                 </div>
                 
                 <div class="info-box">
@@ -400,7 +429,7 @@ mysqli_close($conn);
                     <?php if ($file_surat_path): ?>
                         <p><strong>Bukti Surat Dokter:</strong> Berkas Terlampir</p>
                     <?php endif; ?>
-                    <p><strong>Status:</strong> <span class="status-pending">Pending</span></p>
+                    <p><strong>Status:</strong> <span class="status-pending">Menunggu Persetujuan</span></p>
                 </div>
 
             <?php else: ?>

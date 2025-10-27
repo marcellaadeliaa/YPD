@@ -13,6 +13,7 @@ $nama_lengkap = $user['nama_lengkap'];
 $divisi = $user['divisi'];
 $jabatan = $user['jabatan'];
 $role = $user['role'];  
+
 if (empty($divisi) || empty($jabatan)) {
     $query_karyawan = "SELECT divisi, jabatan FROM data_karyawan WHERE kode_karyawan = ?";
     $stmt = mysqli_prepare($conn, $query_karyawan);
@@ -37,22 +38,113 @@ if (empty($divisi) || empty($jabatan)) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pengajuan KHL - Penanggung Jawab</title>
     <style>
-        :root { --primary-color: #1E105E; --secondary-color: #8897AE; --accent-color: #4a3f81; --card-bg: #FFFFFF; --text-color-light: #fff; --text-color-dark: #2e1f4f; --shadow-light: rgba(0,0,0,0.15); }
-        body { margin: 0; font-family: 'Segoe UI', sans-serif; background: linear-gradient(180deg, var(--primary-color) 0%, #a29bb8 100%); min-height: 100vh; color: var(--text-color-light); padding-bottom: 40px; }
+        :root { 
+            --primary-color: #1E105E; 
+            --secondary-color: #8897AE; 
+            --accent-color: #4a3f81; 
+            --card-bg: #FFFFFF; 
+            --text-color-light: #fff; 
+            --text-color-dark: #2e1f4f; 
+            --shadow-light: rgba(0,0,0,0.15); 
+        }
         
-        header { background: var(--card-bg); padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px var(--shadow-light); }
-        .logo { display: flex; align-items: center; gap: 16px; font-weight: 500; font-size: 20px; color: var(--text-color-dark); }
-        .logo img { width: 50px; height: 50px; object-fit: contain; border-radius: 50%; }
-        nav ul { list-style: none; margin: 0; padding: 0; display: flex; gap: 30px; }
-        nav li { position: relative; }
-        nav a { text-decoration: none; color: var(--text-color-dark); font-weight: 600; padding: 8px 4px; display: block; }
-        nav li ul { display: none; position: absolute; top: 100%; left: 0; background: var(--card-bg); padding: 10px 0; border-radius: 8px; box-shadow: 0 2px 10px var(--shadow-light); min-width: 200px; z-index: 999; }
-        nav li:hover > ul { display: block; }
-        nav li ul li a { color: var(--text-color-dark); font-weight: 400; white-space: nowrap; padding: 5px 20px; }
+        body { 
+            margin: 0; 
+            font-family: 'Segoe UI', sans-serif; 
+            background: linear-gradient(180deg, var(--primary-color) 0%, #a29bb8 100%); 
+            min-height: 100vh; 
+            color: var(--text-color-light); 
+            padding-bottom: 40px; 
+        }
         
-        main { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
-        .heading-section h1 { font-size: 2.5rem; margin: 0; color: #fff;}
-        .heading-section p { font-size: 1.1rem; margin-top: 5px; opacity: 0.9; margin-bottom: 30px; color: #fff;}
+        header { 
+            background: var(--card-bg); 
+            padding: 20px 40px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            box-shadow: 0 4px 15px var(--shadow-light); 
+        }
+        
+        .logo { 
+            display: flex; 
+            align-items: center; 
+            gap: 16px; 
+            font-weight: 500; 
+            font-size: 20px; 
+            color: var(--text-color-dark); 
+        }
+        
+        .logo img { 
+            width: 50px; 
+            height: 50px; 
+            object-fit: contain; 
+            border-radius: 50%; 
+        }
+        
+        nav ul { 
+            list-style: none; 
+            margin: 0; 
+            padding: 0; 
+            display: flex; 
+            gap: 30px; 
+        }
+        
+        nav li { 
+            position: relative; 
+        }
+        
+        nav a { 
+            text-decoration: none; 
+            color: var(--text-color-dark); 
+            font-weight: 600; 
+            padding: 8px 4px; 
+            display: block; 
+        }
+        
+        nav li ul { 
+            display: none; 
+            position: absolute; 
+            top: 100%; 
+            left: 0; 
+            background: var(--card-bg); 
+            padding: 10px 0; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px var(--shadow-light); 
+            min-width: 200px; 
+            z-index: 999; 
+        }
+        
+        nav li:hover > ul { 
+            display: block; 
+        }
+        
+        nav li ul li a { 
+            color: var(--text-color-dark); 
+            font-weight: 400; 
+            white-space: nowrap; 
+            padding: 5px 20px; 
+        }
+        
+        main { 
+            max-width: 1200px; 
+            margin: 40px auto; 
+            padding: 0 20px; 
+        }
+        
+        .heading-section h1 { 
+            font-size: 2.5rem; 
+            margin: 0; 
+            color: #fff;
+        }
+        
+        .heading-section p { 
+            font-size: 1.1rem; 
+            margin-top: 5px; 
+            opacity: 0.9; 
+            margin-bottom: 30px; 
+            color: #fff;
+        }
         
         .form-container {
             background: var(--card-bg);
@@ -104,6 +196,11 @@ if (empty($divisi) || empty($jabatan)) {
         
         button:hover {
             background-color: #3a3162;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
         }
         
         .success-message {
@@ -164,9 +261,36 @@ if (empty($divisi) || empty($jabatan)) {
             font-size: 14px;
         }
 
-        .required::after {
+        .required-field::after {
             content: " *";
-            color: #dc3545;
+            color: #e74c3c;
+        }
+
+        .time-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .time-container select {
+            flex: 1;
+        }
+        
+        small {
+            display:block;
+            margin-top:5px;
+            color:#666;
+            font-size:12px;
+        }
+
+        .holiday-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #ffeaa7;
+            text-align: center;
         }
     </style>
 </head>
@@ -207,9 +331,9 @@ if (empty($divisi) || empty($jabatan)) {
 
     <main>
         <div class="heading-section">
-    <h1>Pengajuan Kerja Hari Libur (KHL) Pribadi</h1>
-    <p>Formulir ini digunakan untuk mengajukan KHL atas nama Anda sendiri.</p>
-</div>
+            <h1>Pengajuan Kerja Hari Libur (KHL) Pribadi</h1>
+            <p>Formulir ini digunakan untuk mengajukan KHL atas nama Anda sendiri.</p>
+        </div>
 
         <div class="form-container">
             <h2>Pengajuan KHL - Penanggung Jawab</h2>
@@ -244,7 +368,7 @@ if (empty($divisi) || empty($jabatan)) {
                 <strong>Catatan:</strong> Sebagai Penanggung Jawab, pengajuan KHL Anda akan masuk dengan status <strong>Pending</strong> dan membutuhkan persetujuan dari atasan.
             </div>
             
-            <form method="post" action="proseskhl_penanggungjawab.php">
+            <form method="post" action="proseskhl_penanggungjawab.php" id="formKHL">
 
                 <label>No. Kode Karyawan</label>
                 <input type="text" name="nik" value="<?php echo htmlspecialchars($nik); ?>" readonly>
@@ -255,49 +379,247 @@ if (empty($divisi) || empty($jabatan)) {
                 <label>Divisi</label>
                 <input type="text" value="<?php echo htmlspecialchars($divisi); ?>" readonly>
 
-                <label class="required">Proyek</label>
+                <label class="required-field">Proyek</label>
                 <input type="text" name="proyek" placeholder="Masukkan nama proyek" required>
 
-                <label class="required">Tanggal KHL</label>
-                <input type="date" name="tanggal_khl" required>
+                <label class="required-field">Tanggal KHL</label>
+                <input type="date" name="tanggal_khl" id="tanggal_khl" required onchange="validateSelectedDates()">
 
-                <label class="required">Jam Mulai Kerja</label>
-                <select name="jam_mulai_kerja" required>
-                    <option value="">Pilih Jam Mulai Kerja</option>
-                    <option value="08:00">08:00</option>
-                    <option value="09:00">09:00</option>
-                    <option value="10:00">10:00</option>
-                </select>
+                <label class="required-field">Jam Kerja</label>
+                <div class="time-container">
+                    <select name="jam_mulai_kerja" id="jam_mulai_kerja" required onchange="validateJamKerja()">
+                        <option value="">Mulai</option>
+                        <option value="08:00">08:00</option>
+                        <option value="09:00">09:00</option>
+                        <option value="10:00">10:00</option>
+                    </select>
+                    <span>-</span>
+                    <select name="jam_akhir_kerja" id="jam_akhir_kerja" required onchange="validateJamKerja()">
+                        <option value="">Akhir</option>
+                        <option value="16:00">16:00</option>
+                        <option value="17:00">17:00</option>
+                        <option value="18:00">18:00</option>
+                    </select>
+                </div>
+                <div id="jamKerjaError" class="error-message" style="display: none; margin-top: 5px; font-size: 12px; padding: 8px;"></div>
 
-                <label class="required">Jam Akhir Kerja</label>
-                <select name="jam_akhir_kerja" required>
-                    <option value="">Pilih Jam Akhir Kerja</option>
-                    <option value="16:00">16:00</option>
-                    <option value="17:00">17:00</option>
-                    <option value="18:00">18:00</option>
-                </select>
+                <label class="required-field">Tanggal Cuti KHL</label>
+                <input type="date" name="tanggal_cuti_khl" id="tanggal_cuti_khl" required onchange="validateSelectedDates()">
 
-                <label class="required">Tanggal Cuti KHL</label>
-                <input type="date" name="tanggal_cuti_khl" required>
+                <label class="required-field">Jam Cuti KHL</label>
+                <div class="time-container">
+                    <select name="jam_mulai_cuti_khl" id="jam_mulai_cuti_khl" required onchange="validateJamCuti()">
+                        <option value="">Mulai</option>
+                        <option value="08:00">08:00</option>
+                        <option value="09:00">09:00</option>
+                        <option value="10:00">10:00</option>
+                    </select>
+                    <span>-</span>
+                    <select name="jam_akhir_cuti_khl" id="jam_akhir_cuti_khl" required onchange="validateJamCuti()">
+                        <option value="">Akhir</option>
+                        <option value="16:00">16:00</option>
+                        <option value="17:00">17:00</option>
+                        <option value="18:00">18:00</option>
+                    </select>
+                </div>
+                <div id="jamCutiError" class="error-message" style="display: none; margin-top: 5px; font-size: 12px; padding: 8px;"></div>
 
-                <label class="required">Jam Mulai Cuti KHL</label>
-                <select name="jam_mulai_cuti_khl" required>
-                    <option value="">Pilih Jam Mulai Cuti</option>
-                    <option value="08:00">08:00</option>
-                    <option value="09:00">09:00</option>
-                </select>
+                <div id="dateError" class="error-message" style="display: none; margin-top: 10px; margin-bottom: 10px;"></div>
 
-                <label class="required">Jam Akhir Cuti KHL</label>
-                <select name="jam_akhir_cuti_khl" required>
-                    <option value="">Pilih Jam Akhir Cuti</option>
-                    <option value="16:00">16:00</option>
-                    <option value="17:00">17:00</option>
-                </select>
-
-                <button type="submit">Masukkan</button>
+                <button type="submit" id="submitButton">Masukkan</button>
             </form>
         </div>
     </main>
+
+    <script>
+        // Daftar tanggal merah (format: MM-DD)
+        const fixedHolidays = [
+            '01-01', // 1 Januari
+            '08-17', // 17 Agustus
+            '12-25'  // 25 Desember
+        ];
+
+        function isHoliday(dateString) {
+            const date = new Date(dateString);
+            const monthDay = `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            return fixedHolidays.includes(monthDay);
+        }
+
+        function isWeekend(dateString) {
+            const date = new Date(dateString);
+            const dayOfWeek = date.getDay();
+            return dayOfWeek === 0 || dayOfWeek === 6; // 0 = Minggu, 6 = Sabtu
+        }
+
+        function validateSelectedDates() {
+            const tanggalKHL = document.getElementById('tanggal_khl');
+            const tanggalCutiKHL = document.getElementById('tanggal_cuti_khl');
+            const errorDiv = document.getElementById('dateError');
+            const submitButton = document.getElementById('submitButton');
+            
+            errorDiv.style.display = 'none';
+            submitButton.disabled = false;
+            
+            let hasError = false;
+            let errorMessage = '';
+            
+            // Validasi tanggal KHL
+            if (tanggalKHL.value) {
+                if (isHoliday(tanggalKHL.value)) {
+                    errorMessage += `Tanggal KHL (${formatDate(tanggalKHL.value)}) adalah hari libur nasional. `;
+                    hasError = true;
+                }
+                if (isWeekend(tanggalKHL.value)) {
+                    errorMessage += `Tanggal KHL (${formatDate(tanggalKHL.value)}) adalah hari weekend. `;
+                    hasError = true;
+                }
+            }
+            
+            // Validasi tanggal cuti KHL
+            if (tanggalCutiKHL.value) {
+                if (isHoliday(tanggalCutiKHL.value)) {
+                    errorMessage += `Tanggal Cuti KHL (${formatDate(tanggalCutiKHL.value)}) adalah hari libur nasional. `;
+                    hasError = true;
+                }
+                if (isWeekend(tanggalCutiKHL.value)) {
+                    errorMessage += `Tanggal Cuti KHL (${formatDate(tanggalCutiKHL.value)}) adalah hari weekend. `;
+                    hasError = true;
+                }
+            }
+            
+            // Validasi jika kedua tanggal sama
+            if (tanggalKHL.value && tanggalCutiKHL.value && tanggalKHL.value === tanggalCutiKHL.value) {
+                errorMessage += 'Tanggal KHL dan Tanggal Cuti KHL tidak boleh sama. ';
+                hasError = true;
+            }
+            
+            if (hasError) {
+                showDateError(errorMessage);
+                submitButton.disabled = true;
+                return false;
+            }
+            
+            return true;
+        }
+
+        function validateJamKerja() {
+            const jamMulai = document.getElementById('jam_mulai_kerja');
+            const jamAkhir = document.getElementById('jam_akhir_kerja');
+            const errorDiv = document.getElementById('jamKerjaError');
+            
+            errorDiv.style.display = 'none';
+            
+            if (jamMulai.value && jamAkhir.value) {
+                const mulai = convertToMinutes(jamMulai.value);
+                const akhir = convertToMinutes(jamAkhir.value);
+                
+                if (akhir <= mulai) {
+                    errorDiv.textContent = 'Jam akhir kerja harus setelah jam mulai kerja';
+                    errorDiv.style.display = 'block';
+                    return false;
+                }
+                
+                const durasi = akhir - mulai;
+                if (durasi < 60) { // kurang dari 1 jam
+                    errorDiv.textContent = 'Durasi kerja minimal 1 jam';
+                    errorDiv.style.display = 'block';
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+
+        function validateJamCuti() {
+            const jamMulai = document.getElementById('jam_mulai_cuti_khl');
+            const jamAkhir = document.getElementById('jam_akhir_cuti_khl');
+            const errorDiv = document.getElementById('jamCutiError');
+            
+            errorDiv.style.display = 'none';
+            
+            if (jamMulai.value && jamAkhir.value) {
+                const mulai = convertToMinutes(jamMulai.value);
+                const akhir = convertToMinutes(jamAkhir.value);
+                
+                if (akhir <= mulai) {
+                    errorDiv.textContent = 'Jam akhir cuti harus setelah jam mulai cuti';
+                    errorDiv.style.display = 'block';
+                    return false;
+                }
+                
+                const durasi = akhir - mulai;
+                if (durasi < 60) { // kurang dari 1 jam
+                    errorDiv.textContent = 'Durasi cuti minimal 1 jam';
+                    errorDiv.style.display = 'block';
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+
+        function convertToMinutes(timeString) {
+            const [hours, minutes] = timeString.split(':').map(Number);
+            return hours * 60 + minutes;
+        }
+
+        function showDateError(message) {
+            const errorDiv = document.getElementById('dateError');
+            errorDiv.innerHTML = message;
+            errorDiv.style.display = 'block';
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            return date.toLocaleDateString('id-ID', options);
+        }
+
+        document.getElementById('formKHL').addEventListener('submit', function(e) {
+            const tanggalKHL = document.getElementById('tanggal_khl');
+            const tanggalCutiKHL = document.getElementById('tanggal_cuti_khl');
+            
+            // Validasi weekend dan holiday
+            if (tanggalKHL.value && (isWeekend(tanggalKHL.value) || isHoliday(tanggalKHL.value))) {
+                e.preventDefault();
+                alert('Tanggal KHL tidak boleh pada hari weekend atau hari libur nasional');
+                tanggalKHL.focus();
+                return;
+            }
+            
+            if (tanggalCutiKHL.value && (isWeekend(tanggalCutiKHL.value) || isHoliday(tanggalCutiKHL.value))) {
+                e.preventDefault();
+                alert('Tanggal Cuti KHL tidak boleh pada hari weekend atau hari libur nasional');
+                tanggalCutiKHL.focus();
+                return;
+            }
+            
+            // Validasi jam kerja
+            if (!validateJamKerja()) {
+                e.preventDefault();
+                alert('Jam kerja tidak valid. Periksa kembali jam mulai dan jam akhir kerja.');
+                return;
+            }
+            
+            // Validasi jam cuti
+            if (!validateJamCuti()) {
+                e.preventDefault();
+                alert('Jam cuti tidak valid. Periksa kembali jam mulai dan jam akhir cuti.');
+                return;
+            }
+            
+            // Validasi tanggal tidak sama
+            if (tanggalKHL.value && tanggalCutiKHL.value && tanggalKHL.value === tanggalCutiKHL.value) {
+                e.preventDefault();
+                alert('Tanggal KHL dan Tanggal Cuti KHL tidak boleh sama');
+                return;
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tidak perlu set minimum date untuk KHL (boleh memilih tanggal sebelum hari ini)
+        });
+    </script>
 
     <?php
     mysqli_close($conn);

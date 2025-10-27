@@ -94,10 +94,9 @@ if (empty($divisi) || empty($jabatan)) {
         }
         
         .logo img { 
-            width: 50px; 
+            width: 140px; 
             height: 50px; 
             object-fit: contain; 
-            border-radius: 50%; 
         }
         
         nav ul { 
@@ -376,11 +375,24 @@ if (empty($divisi) || empty($jabatan)) {
             border: 1px solid #e74c3c !important;
             background-color: #fdf2f2 !important;
         }
+
+        .holiday-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #ffeaa7;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
     <header>
-        <div class="logo"><img src="image/namayayasan.png" alt="Logo"><span>Yayasan Purba Danarta</span></div>
+        <div class="logo">
+            <img src="image/namayayasan.png" alt="Logo Yayasan">
+            <span>Yayasan Purba Danarta</span>
+        </div>
         <nav>
             <ul>
                 <li><a href="dashboard_penanggungjawab.php">Beranda</a></li>
@@ -505,11 +517,12 @@ if (empty($divisi) || empty($jabatan)) {
 
                 <label class="required">Periode Cuti</label>
                 <div class="date-range-container">
-                    <input type="date" name="tanggal_mulai" id="tanggal_mulai" min="<?php echo date('Y-m-d'); ?>" required onchange="updateTanggalAkhir(); validateMaxDays(); checkSisaCuti();">
+                    <input type="date" name="tanggal_mulai" id="tanggal_mulai" min="<?php echo date('Y-m-d'); ?>" required onchange="validateSelectedDates(); updateTanggalAkhir(); validateMaxDays(); checkSisaCuti();">
                     <span>s/d</span>
-                    <input type="date" name="tanggal_akhir" id="tanggal_akhir" min="<?php echo date('Y-m-d'); ?>" required onchange="validateMaxDays(); checkSisaCuti();">
+                    <input type="date" name="tanggal_akhir" id="tanggal_akhir" min="<?php echo date('Y-m-d'); ?>" required onchange="validateSelectedDates(); validateMaxDays(); checkSisaCuti();">
                 </div>
                 <small>Untuk cuti 1 hari, isi tanggal yang sama pada kedua kolom</small>
+                <div id="dateError" class="error-message" style="display: none; margin-top: 10px; margin-bottom: 10px;"></div>
 
                 <div id="totalHariInfo" class="sisa-cuti-info" style="display: none;"></div>
 
@@ -525,6 +538,118 @@ if (empty($divisi) || empty($jabatan)) {
         let currentMaxDays = 0;
         const sisaCutiTahunan = <?php echo $sisa_cuti_tahunan; ?>;
         const sisaCutiLustrum = <?php echo $sisa_cuti_lustrum; ?>;
+
+        // Daftar tanggal merah (format: MM-DD)
+        const fixedHolidays = [
+            '01-01', // 1 Januari
+            '08-17', // 17 Agustus
+            '12-25'  // 25 Desember
+        ];
+
+        function isHoliday(dateString) {
+            const date = new Date(dateString);
+            const monthDay = `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            return fixedHolidays.includes(monthDay);
+        }
+
+        function isWeekend(dateString) {
+            const date = new Date(dateString);
+            const dayOfWeek = date.getDay();
+            return dayOfWeek === 0 || dayOfWeek === 6; // 0 = Minggu, 6 = Sabtu
+        }
+
+        function validateSelectedDates() {
+            const tanggalMulai = document.getElementById('tanggal_mulai');
+            const tanggalAkhir = document.getElementById('tanggal_akhir');
+            const errorDiv = document.getElementById('dateError');
+            
+            errorDiv.style.display = 'none';
+            
+            // Validasi tanggal mulai
+            if (tanggalMulai.value) {
+                if (isHoliday(tanggalMulai.value)) {
+                    showDateError(`Tanggal ${formatDate(tanggalMulai.value)} adalah hari libur nasional. Silakan pilih tanggal lain.`);
+                    tanggalMulai.value = '';
+                    return false;
+                }
+                if (isWeekend(tanggalMulai.value)) {
+                    showDateError(`Tanggal ${formatDate(tanggalMulai.value)} adalah hari weekend. Silakan pilih tanggal weekday (Senin-Jumat).`);
+                    tanggalMulai.value = '';
+                    return false;
+                }
+            }
+            
+            // Validasi tanggal akhir
+            if (tanggalAkhir.value) {
+                if (isHoliday(tanggalAkhir.value)) {
+                    showDateError(`Tanggal ${formatDate(tanggalAkhir.value)} adalah hari libur nasional. Silakan pilih tanggal lain.`);
+                    tanggalAkhir.value = '';
+                    return false;
+                }
+                if (isWeekend(tanggalAkhir.value)) {
+                    showDateError(`Tanggal ${formatDate(tanggalAkhir.value)} adalah hari weekend. Silakan pilih tanggal weekday (Senin-Jumat).`);
+                    tanggalAkhir.value = '';
+                    return false;
+                }
+            }
+            
+            // Validasi range tanggal
+            if (tanggalMulai.value && tanggalAkhir.value) {
+                const startDate = new Date(tanggalMulai.value);
+                const endDate = new Date(tanggalAkhir.value);
+                const currentDate = new Date(startDate);
+                const holidayDates = [];
+                const weekendDates = [];
+                
+                while (currentDate <= endDate) {
+                    const dateString = currentDate.toISOString().split('T')[0];
+                    if (isHoliday(dateString)) {
+                        holidayDates.push(new Date(currentDate));
+                    }
+                    if (isWeekend(dateString)) {
+                        weekendDates.push(new Date(currentDate));
+                    }
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+                
+                if (holidayDates.length > 0 || weekendDates.length > 0) {
+                    let warningMessage = "Periode cuti Anda mengandung: ";
+                    const warnings = [];
+                    
+                    if (holidayDates.length > 0) {
+                        const holidayList = holidayDates.map(date => formatDate(date)).join(', ');
+                        warnings.push(`hari libur nasional (${holidayList})`);
+                    }
+                    
+                    if (weekendDates.length > 0) {
+                        const weekendList = weekendDates.map(date => formatDate(date)).join(', ');
+                        warnings.push(`hari weekend (${weekendList})`);
+                    }
+                    
+                    warningMessage += warnings.join(' dan ') + ". Hari-hari tersebut tidak dihitung sebagai hari cuti.";
+                    showDateError(warningMessage, 'warning');
+                }
+            }
+            
+            return true;
+        }
+
+        function showDateError(message, type = 'error') {
+            const errorDiv = document.getElementById('dateError');
+            errorDiv.innerHTML = message;
+            errorDiv.style.display = 'block';
+            if (type === 'warning') {
+                errorDiv.className = 'holiday-warning';
+            } else {
+                errorDiv.className = 'error-message';
+            }
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            return date.toLocaleDateString('id-ID', options);
+        }
 
         function toggleConditionalInputs() {
             const jenisCutiSelect = document.getElementById('jenisCuti');
@@ -666,7 +791,10 @@ if (empty($divisi) || empty($jabatan)) {
             
             while (current <= end) {
                 const dayOfWeek = current.getDay();
-                if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+                const isHolidayDate = isHoliday(current.toISOString().split('T')[0]);
+                
+                if (!isWeekend && !isHolidayDate) {
                     count++;
                 }
                 current.setDate(current.getDate() + 1);
@@ -734,6 +862,21 @@ if (empty($divisi) || empty($jabatan)) {
             const sakitInput = document.getElementById('bukti_surat_dokter');
             const tanggalMulai = document.getElementById('tanggal_mulai');
             const tanggalAkhir = document.getElementById('tanggal_akhir');
+            
+            // Validasi weekend dan holiday
+            if (tanggalMulai.value && (isWeekend(tanggalMulai.value) || isHoliday(tanggalMulai.value))) {
+                e.preventDefault();
+                alert('Tanggal mulai tidak boleh pada hari weekend atau hari libur nasional');
+                tanggalMulai.focus();
+                return;
+            }
+            
+            if (tanggalAkhir.value && (isWeekend(tanggalAkhir.value) || isHoliday(tanggalAkhir.value))) {
+                e.preventDefault();
+                alert('Tanggal akhir tidak boleh pada hari weekend atau hari libur nasional');
+                tanggalAkhir.focus();
+                return;
+            }
             
             if (jenisCutiSelect.value === 'Khusus' && !khususInput.value.trim()) {
                 e.preventDefault();
@@ -805,6 +948,11 @@ if (empty($divisi) || empty($jabatan)) {
 
         document.addEventListener('DOMContentLoaded', function() {
             toggleConditionalInputs();
+            
+            // Set minimum date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('tanggal_mulai').min = today;
+            document.getElementById('tanggal_akhir').min = today;
         });
     </script>
 

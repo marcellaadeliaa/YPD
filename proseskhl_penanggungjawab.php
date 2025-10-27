@@ -5,6 +5,29 @@ require_once 'config.php';
 $display_data = false;
 $error_msg = '';
 
+// Fungsi validasi weekend dan holiday - DITAMBAHKAN
+function isHoliday($dateString) {
+    $fixedHolidays = [
+        '01-01', // 1 Januari
+        '08-17', // 17 Agustus
+        '12-25'  // 25 Desember
+    ];
+    
+    $monthDay = date('m-d', strtotime($dateString));
+    return in_array($monthDay, $fixedHolidays);
+}
+
+function isWeekend($dateString) {
+    $dayOfWeek = date('w', strtotime($dateString));
+    return $dayOfWeek == 0 || $dayOfWeek == 6; // 0 = Minggu, 6 = Sabtu
+}
+
+// Fungsi konversi waktu ke menit - DITAMBAHKAN
+function convertTimeToMinutes($timeString) {
+    list($hours, $minutes) = explode(':', $timeString);
+    return ($hours * 60) + $minutes;
+}
+
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'penanggung jawab') {
     header("Location: login_karyawan.php");
     exit();
@@ -26,11 +49,45 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $jam_mulai_cuti_khl = $_POST['jam_mulai_cuti_khl'] ?? '';
     $jam_akhir_cuti_khl = $_POST['jam_akhir_cuti_khl'] ?? '';
 
+    // Validasi field wajib
     if (empty($proyek) || empty($tanggal_khl) || empty($jam_mulai_kerja) || empty($jam_akhir_kerja) || 
         empty($tanggal_cuti_khl) || empty($jam_mulai_cuti_khl) || empty($jam_akhir_cuti_khl)) {
         $error_msg = "Semua field harus diisi.";
     }
 
+    // Validasi weekend dan holiday - DITAMBAHKAN
+    if (empty($error_msg) && (isWeekend($tanggal_khl) || isHoliday($tanggal_khl))) {
+        $error_msg = "Tanggal KHL tidak boleh pada hari weekend atau hari libur nasional.";
+    }
+    
+    if (empty($error_msg) && (isWeekend($tanggal_cuti_khl) || isHoliday($tanggal_cuti_khl))) {
+        $error_msg = "Tanggal Cuti KHL tidak boleh pada hari weekend atau hari libur nasional.";
+    }
+
+    // Validasi tanggal tidak sama - DITAMBAHKAN
+    if (empty($error_msg) && $tanggal_khl === $tanggal_cuti_khl) {
+        $error_msg = "Tanggal KHL dan Tanggal Cuti KHL tidak boleh sama.";
+    }
+
+    // Validasi jam kerja dengan fungsi convertTimeToMinutes - DIPERBAIKI
+    if (empty($error_msg)) {
+        $jam_mulai_kerja_minutes = convertTimeToMinutes($jam_mulai_kerja);
+        $jam_akhir_kerja_minutes = convertTimeToMinutes($jam_akhir_kerja);
+        if ($jam_akhir_kerja_minutes <= $jam_mulai_kerja_minutes) {
+            $error_msg = "Jam akhir kerja harus setelah jam mulai kerja.";
+        }
+    }
+
+    // Validasi jam cuti dengan fungsi convertTimeToMinutes - DIPERBAIKI
+    if (empty($error_msg)) {
+        $jam_mulai_cuti_minutes = convertTimeToMinutes($jam_mulai_cuti_khl);
+        $jam_akhir_cuti_minutes = convertTimeToMinutes($jam_akhir_cuti_khl);
+        if ($jam_akhir_cuti_minutes <= $jam_mulai_cuti_minutes) {
+            $error_msg = "Jam akhir cuti harus setelah jam mulai cuti.";
+        }
+    }
+
+    // Validasi kode karyawan
     if (empty($error_msg)) {
         $check_karyawan = "SELECT kode_karyawan FROM data_karyawan WHERE kode_karyawan = ?";
         $stmt_check = mysqli_prepare($conn, $check_karyawan);
@@ -44,17 +101,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         mysqli_stmt_close($stmt_check);
     }
 
-    if (empty($error_msg) && $tanggal_khl > $tanggal_cuti_khl) {
-        $error_msg = "Tanggal KHL tidak boleh lebih besar dari Tanggal Cuti KHL.";
-    }
-    
-    if (empty($error_msg) && $jam_mulai_kerja >= $jam_akhir_kerja) {
-        $error_msg = "Jam mulai kerja harus lebih awal dari jam akhir kerja.";
-    }
-    
-    if (empty($error_msg) && $jam_mulai_cuti_khl >= $jam_akhir_cuti_khl) {
-        $error_msg = "Jam mulai cuti harus lebih awal dari jam akhir cuti.";
-    }
+    // Validasi tanggal (dihapus validasi yang lama karena sudah ada validasi tanggal tidak sama)
+    // if (empty($error_msg) && $tanggal_khl > $tanggal_cuti_khl) {
+    //     $error_msg = "Tanggal KHL tidak boleh lebih besar dari Tanggal Cuti KHL.";
+    // }
 
     if (empty($error_msg)) {
         $status_khl = "pending";
@@ -380,11 +430,9 @@ mysqli_close($conn);
                     <h3 style="margin-top: 0; color: #4a3f81;">Detail Pengajuan KHL</h3>
                     <p><strong>Proyek:</strong> <?php echo htmlspecialchars($proyek); ?></p>
                     <p><strong>Tanggal KHL:</strong> <?php echo htmlspecialchars($tanggal_khl); ?></p>
-                    <p><strong>Jam Mulai Kerja:</strong> <?php echo htmlspecialchars($jam_mulai_kerja); ?></p>
-                    <p><strong>Jam Akhir Kerja:</strong> <?php echo htmlspecialchars($jam_akhir_kerja); ?></p>
+                    <p><strong>Jam Kerja:</strong> <?php echo htmlspecialchars($jam_mulai_kerja); ?> - <?php echo htmlspecialchars($jam_akhir_kerja); ?></p>
                     <p><strong>Tanggal Cuti KHL:</strong> <?php echo htmlspecialchars($tanggal_cuti_khl); ?></p>
-                    <p><strong>Jam Mulai Cuti KHL:</strong> <?php echo htmlspecialchars($jam_mulai_cuti_khl); ?></p>
-                    <p><strong>Jam Akhir Cuti KHL:</strong> <?php echo htmlspecialchars($jam_akhir_cuti_khl); ?></p>
+                    <p><strong>Jam Cuti KHL:</strong> <?php echo htmlspecialchars($jam_mulai_cuti_khl); ?> - <?php echo htmlspecialchars($jam_akhir_cuti_khl); ?></p>
                     <p><strong>Status:</strong> <span class="status-pending">Pending</span></p>
                 </div>
 
