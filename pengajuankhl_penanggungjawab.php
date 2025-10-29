@@ -463,19 +463,10 @@ if (empty($divisi) || empty($jabatan)) {
             let hasError = false;
             let errorMessage = '';
             
-            // Validasi tanggal KHL
-            if (tanggalKHL.value) {
-                if (isHoliday(tanggalKHL.value)) {
-                    errorMessage += `Tanggal KHL (${formatDate(tanggalKHL.value)}) adalah hari libur nasional. `;
-                    hasError = true;
-                }
-                if (isWeekend(tanggalKHL.value)) {
-                    errorMessage += `Tanggal KHL (${formatDate(tanggalKHL.value)}) adalah hari weekend. `;
-                    hasError = true;
-                }
-            }
+            // HILANGKAN VALIDASI UNTUK TANGGAL KHL (boleh weekend dan libur)
+            // Validasi tanggal KHL dihapus
             
-            // Validasi tanggal cuti KHL
+            // TETAPKAN VALIDASI UNTUK TANGGAL CUTI KHL
             if (tanggalCutiKHL.value) {
                 if (isHoliday(tanggalCutiKHL.value)) {
                     errorMessage += `Tanggal Cuti KHL (${formatDate(tanggalCutiKHL.value)}) adalah hari libur nasional. `;
@@ -579,14 +570,10 @@ if (empty($divisi) || empty($jabatan)) {
             const tanggalKHL = document.getElementById('tanggal_khl');
             const tanggalCutiKHL = document.getElementById('tanggal_cuti_khl');
             
-            // Validasi weekend dan holiday
-            if (tanggalKHL.value && (isWeekend(tanggalKHL.value) || isHoliday(tanggalKHL.value))) {
-                e.preventDefault();
-                alert('Tanggal KHL tidak boleh pada hari weekend atau hari libur nasional');
-                tanggalKHL.focus();
-                return;
-            }
+            // HILANGKAN VALIDASI UNTUK TANGGAL KHL
+            // Tidak ada validasi weekend/holiday untuk tanggal KHL
             
+            // TETAPKAN VALIDASI UNTUK TANGGAL CUTI KHL
             if (tanggalCutiKHL.value && (isWeekend(tanggalCutiKHL.value) || isHoliday(tanggalCutiKHL.value))) {
                 e.preventDefault();
                 alert('Tanggal Cuti KHL tidak boleh pada hari weekend atau hari libur nasional');

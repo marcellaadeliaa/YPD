@@ -339,30 +339,6 @@ $conn->close();
             background: #3a3162; 
         }
         
-        .action-buttons { 
-            display: flex; 
-            gap: 5px; 
-        }
-        
-        .btn-small { 
-            padding: 5px 10px; 
-            font-size: 0.8rem; 
-            border: none; 
-            border-radius: 4px; 
-            cursor: pointer; 
-            text-decoration: none; 
-        }
-        
-        .btn-edit { 
-            background: #17a2b8; 
-            color: white; 
-        }
-        
-        .btn-delete { 
-            background: #dc3545; 
-            color: white; 
-        }
-        
         .periode-info { 
             font-size: 0.8rem; 
             color: #666; 
@@ -559,7 +535,7 @@ $conn->close();
                             <th>Status</th>
                             <th>Waktu Persetujuan</th>
                             <th>Tanggal Pengajuan</th>
-                            <th>Aksi</th>
+                            <!-- HAPUS KOLOM AKSI -->
                         </tr>
                     </thead>
                     <tbody>
@@ -653,9 +629,6 @@ $conn->close();
                                 </td>
                                 <td>
                                     <span class="status-badge <?= $status_class ?>"><?= $status_text ?></span>
-                                    
-                                    <?php // --- PERUBAHAN --- (Menghapus tampilan alasan dari bawah status) ?>
-                                    
                                 </td>
                                 <td>
                                     <?php if (!empty($cuti['waktu_persetujuan'])): ?>
@@ -665,16 +638,7 @@ $conn->close();
                                     <?php endif; ?>
                                 </td>
                                 <td><?= date('d/m/Y H:i', strtotime($cuti['created_at'])) ?></td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <?php if ($cuti['status'] == 'Menunggu Persetujuan'): ?>
-                                            <a href="edit_cuti.php?id=<?= $cuti['id'] ?>" class="btn-small btn-edit">Edit</a>
-                                            <a href="hapus_cuti.php?id=<?= $cuti['id'] ?>" class="btn-small btn-delete" onclick="return confirm('Yakin ingin menghapus pengajuan cuti ini?')">Hapus</a>
-                                        <?php else: ?>
-                                            <span style="color: #999; font-size: 0.8rem;">Tidak bisa diubah</span>
-                                        <?php endif; ?>
-                                    </div>
-                                </td>
+                                <!-- HAPUS KOLOM AKSI -->
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -755,13 +719,6 @@ $conn->close();
 </main>
 
 <script>
-function confirmDelete(cutiId) {
-    if (confirm('Apakah Anda yakin ingin menghapus pengajuan cuti ini?')) {
-        window.location.href = 'hapus_cuti.php?id=' + cutiId;
-    }
-    return false;
-}
-
 document.addEventListener('DOMContentLoaded', function() {
     const alasanElements = document.querySelectorAll('.alasan-text');
     alasanElements.forEach(function(el) {

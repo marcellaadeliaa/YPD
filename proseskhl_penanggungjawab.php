@@ -55,11 +55,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $error_msg = "Semua field harus diisi.";
     }
 
-    // Validasi weekend dan holiday - DITAMBAHKAN
-    if (empty($error_msg) && (isWeekend($tanggal_khl) || isHoliday($tanggal_khl))) {
-        $error_msg = "Tanggal KHL tidak boleh pada hari weekend atau hari libur nasional.";
-    }
-    
+    // HILANGKAN VALIDASI WEEKEND DAN HOLIDAY UNTUK TANGGAL KHL
+    // Validasi untuk tanggal KHL dihapus (boleh weekend dan libur)
+
+    // TETAPKAN VALIDASI UNTUK TANGGAL CUTI KHL
     if (empty($error_msg) && (isWeekend($tanggal_cuti_khl) || isHoliday($tanggal_cuti_khl))) {
         $error_msg = "Tanggal Cuti KHL tidak boleh pada hari weekend atau hari libur nasional.";
     }
@@ -76,6 +75,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($jam_akhir_kerja_minutes <= $jam_mulai_kerja_minutes) {
             $error_msg = "Jam akhir kerja harus setelah jam mulai kerja.";
         }
+        
+        // Validasi durasi kerja minimal 1 jam
+        $durasi_kerja = $jam_akhir_kerja_minutes - $jam_mulai_kerja_minutes;
+        if ($durasi_kerja < 60) {
+            $error_msg = "Durasi kerja minimal 1 jam.";
+        }
     }
 
     // Validasi jam cuti dengan fungsi convertTimeToMinutes - DIPERBAIKI
@@ -84,6 +89,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $jam_akhir_cuti_minutes = convertTimeToMinutes($jam_akhir_cuti_khl);
         if ($jam_akhir_cuti_minutes <= $jam_mulai_cuti_minutes) {
             $error_msg = "Jam akhir cuti harus setelah jam mulai cuti.";
+        }
+        
+        // Validasi durasi cuti minimal 1 jam
+        $durasi_cuti = $jam_akhir_cuti_minutes - $jam_mulai_cuti_minutes;
+        if ($durasi_cuti < 60) {
+            $error_msg = "Durasi cuti minimal 1 jam.";
         }
     }
 
@@ -100,11 +111,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
         mysqli_stmt_close($stmt_check);
     }
-
-    // Validasi tanggal (dihapus validasi yang lama karena sudah ada validasi tanggal tidak sama)
-    // if (empty($error_msg) && $tanggal_khl > $tanggal_cuti_khl) {
-    //     $error_msg = "Tanggal KHL tidak boleh lebih besar dari Tanggal Cuti KHL.";
-    // }
 
     if (empty($error_msg)) {
         $status_khl = "pending";

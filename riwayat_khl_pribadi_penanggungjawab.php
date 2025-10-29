@@ -289,30 +289,6 @@ $conn->close();
             background: #3a3162; 
         }
         
-        .action-buttons { 
-            display: flex; 
-            gap: 5px; 
-        }
-        
-        .btn-small { 
-            padding: 5px 10px; 
-            font-size: 0.8rem; 
-            border: none; 
-            border-radius: 4px; 
-            cursor: pointer; 
-            text-decoration: none; 
-        }
-        
-        .btn-edit { 
-            background: #17a2b8; 
-            color: white; 
-        }
-        
-        .btn-delete { 
-            background: #dc3545; 
-            color: white; 
-        }
-        
         .jam-info { 
             font-size: 0.8rem; 
             color: #666; 
@@ -475,7 +451,7 @@ $conn->close();
                             <th>Jam Cuti</th>
                             <th>Status</th>
                             <th>Tanggal Pengajuan</th>
-                            <th>Aksi</th>
+                            <!-- HAPUS KOLOM AKSI -->
                         </tr>
                     </thead>
                     <tbody>
@@ -526,16 +502,7 @@ $conn->close();
                                     <span class="status-badge <?= $status_class ?>"><?= $status_text ?></span>
                                 </td>
                                 <td><?= date('d/m/Y H:i', strtotime($khl['created_at'])) ?></td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <?php if ($khl['status_khl'] == 'pending'): ?>
-                                            <a href="edit_khl.php?id=<?= $khl['id_khl'] ?>" class="btn-small btn-edit">Edit</a>
-                                            <a href="hapus_khl.php?id=<?= $khl['id_khl'] ?>" class="btn-small btn-delete" onclick="return confirm('Yakin ingin menghapus pengajuan KHL ini?')">Hapus</a>
-                                        <?php else: ?>
-                                            <span style="color: #999; font-size: 0.8rem;">-</span>
-                                        <?php endif; ?>
-                                    </div>
-                                </td>
+                                <!-- HAPUS KOLOM AKSI -->
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -611,13 +578,5 @@ $conn->close();
     </div>
 </main>
 
-<script>
-function confirmDelete(khlId) {
-    if (confirm('Apakah Anda yakin ingin menghapus pengajuan KHL ini?')) {
-        window.location.href = 'hapus_khl.php?id=' + khlId;
-    }
-    return false;
-}
-</script>
 </body>
 </html>

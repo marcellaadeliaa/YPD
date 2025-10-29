@@ -45,12 +45,10 @@ if (empty($nik) || empty($proyek) || empty($tanggal_khl) || empty($jam_mulai_ker
     exit();
 }
 
-// Validasi weekend dan holiday
-if (isWeekend($tanggal_khl) || isHoliday($tanggal_khl)) {
-    header("Location: formkhlkaryawan.php?status=error&message=Tanggal KHL tidak boleh pada hari weekend atau hari libur nasional");
-    exit();
-}
+// HILANGKAN VALIDASI WEEKEND DAN HOLIDAY UNTUK TANGGAL KHL
+// Validasi untuk tanggal KHL dihapus (boleh weekend dan libur)
 
+// TETAPKAN VALIDASI UNTUK TANGGAL CUTI KHL
 if (isWeekend($tanggal_cuti_khl) || isHoliday($tanggal_cuti_khl)) {
     header("Location: formkhlkaryawan.php?status=error&message=Tanggal Cuti KHL tidak boleh pada hari weekend atau hari libur nasional");
     exit();
@@ -70,11 +68,23 @@ if ($jam_akhir_kerja_minutes <= $jam_mulai_kerja_minutes) {
     exit();
 }
 
+$durasi_kerja = $jam_akhir_kerja_minutes - $jam_mulai_kerja_minutes;
+if ($durasi_kerja < 60) {
+    header("Location: formkhlkaryawan.php?status=error&message=Durasi kerja minimal 1 jam");
+    exit();
+}
+
 // Validasi jam cuti
 $jam_mulai_cuti_minutes = convertTimeToMinutes($jam_mulai_cuti_khl);
 $jam_akhir_cuti_minutes = convertTimeToMinutes($jam_akhir_cuti_khl);
 if ($jam_akhir_cuti_minutes <= $jam_mulai_cuti_minutes) {
     header("Location: formkhlkaryawan.php?status=error&message=Jam akhir cuti harus setelah jam mulai cuti");
+    exit();
+}
+
+$durasi_cuti = $jam_akhir_cuti_minutes - $jam_mulai_cuti_minutes;
+if ($durasi_cuti < 60) {
+    header("Location: formkhlkaryawan.php?status=error&message=Durasi cuti minimal 1 jam");
     exit();
 }
 
