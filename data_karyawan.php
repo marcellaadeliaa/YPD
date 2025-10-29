@@ -9,6 +9,7 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
 
 $sql = "SELECT id_karyawan, kode_karyawan, nama_lengkap, email, password, jabatan, divisi, role, no_telp, status_aktif, created_at 
         FROM data_karyawan 
+        WHERE is_deleted = 0  
         ORDER BY kode_karyawan";
 $result = $conn->query($sql);
 
@@ -109,6 +110,12 @@ if ($result->num_rows > 0) {
         
         .btn-tambah {
             background-color: #2ecc71;
+            color: white;
+        }
+        
+        /* TAMBAHAN: Style untuk button backup */
+        .btn-backup {
+            background-color: #9b59b6;
             color: white;
         }
         
@@ -244,6 +251,9 @@ if ($result->num_rows > 0) {
                     <input type="text" id="searchInput" placeholder="Cari Karyawan / Kode / Jabatan...">
                     <i class="fas fa-search search-icon" id="searchButton"></i>
                 </div>
+                <a href="backup_karyawan.php" class="btn btn-backup">
+                    <i class="fas fa-archive"></i> Lihat Backup Data
+                </a>
                 <a href="tambah_karyawan.php" class="btn btn-tambah">
                     <i class="fas fa-plus"></i> Tambah Karyawan
                 </a>
@@ -343,8 +353,8 @@ if ($result->num_rows > 0) {
                 const employeeName = this.getAttribute('data-nama');
                 
                 if (action === 'Hapus') {
-                    if (confirm(`Apakah Anda yakin ingin menghapus data karyawan ${employeeName}?`)) {
-                        window.location.href = `hapus_karyawan.php?id=${employeeId}`;
+                    if (confirm(`Apakah Anda yakin ingin menghapus data karyawan ${employeeName}? Data akan dipindahkan ke backup.`)) {
+                        window.location.href = `soft_delete_karyawan.php?id=${employeeId}`;
                     }
                 } else if (action === 'Lihat') {
                     window.location.href = `detail_karyawan.php?id=${employeeId}`;
