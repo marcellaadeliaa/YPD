@@ -55,6 +55,7 @@ $sql = "
         alasan,
         file_surat_dokter,
         status,
+        alasan_penolakan,
         waktu_persetujuan,
         created_at
     FROM 
@@ -70,7 +71,40 @@ if (!$result) {
     die("Query Gagal: " . mysqli_error($conn) . " Query: " . $sql);
 }
 
-$filtered_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
+$all_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
+
+// Pagination configuration
+$limit = 5; // Jumlah data per halaman
+$total_records = count($all_data);
+$total_pages = ceil($total_records / $limit);
+
+$page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+if ($page < 1) {
+    $page = 1;
+}
+if ($page > $total_pages && $total_pages > 0) {
+    $page = $total_pages;
+}
+
+$offset = ($page - 1) * $limit;
+$filtered_data = array_slice($all_data, $offset, $limit);
+
+// Fungsi untuk menghitung hari kerja
+function hitungHariKerja($tanggal_mulai, $tanggal_akhir) {
+    $jumlah_hari = 0;
+    $current_date = new DateTime($tanggal_mulai);
+    $end_date = new DateTime($tanggal_akhir);
+    
+    while ($current_date <= $end_date) {
+        $day_of_week = $current_date->format('N'); 
+        if ($day_of_week >= 1 && $day_of_week <= 5) { 
+            $jumlah_hari++;
+        }
+        $current_date->modify('+1 day');
+    }
+    
+    return $jumlah_hari;
+}
 
 ?>
 <!DOCTYPE html>
@@ -80,252 +114,205 @@ $filtered_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Riwayat Cuti Pribadi - Direktur</title>
 <style>
-   
-    body { 
-        margin:0; 
-        font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-        background: linear-gradient(180deg,#1E105E 0%,#8897AE 100%); 
-        min-height:100vh; 
-        color:#333; 
-    }
-    header { 
-        background:rgba(255,255,255,1); 
-        padding:20px 40px; 
-        display:flex; 
-        justify-content:space-between; 
-        align-items:center; 
-        border-bottom:2px solid #34377c; 
-    }
-    .logo { 
-        display:flex; 
-        align-items:center; 
-        gap:16px; 
-        font-weight:500; 
-        font-size:20px; 
-        color:#2e1f4f; 
-    }
-    .logo img { 
-        width: 50px; 
-        height: 50px; 
-        object-fit: contain; 
-        border-radius: 50%; 
-    }
-    nav ul { 
-        list-style:none; 
-        margin:0; 
-        padding:0; 
-        display:flex; 
-        gap:30px; 
-    }
-    nav li { 
-        position:relative; 
-    }
-    nav a { 
-        text-decoration:none; 
-        color:#333; 
-        font-weight:600; 
-        padding:8px 4px; 
-        display:block; 
-    }
-    nav li ul { 
-        display:none; 
-        position:absolute; 
-        top:100%; 
-        left:0; 
-        background:#fff; 
-        padding:10px 0; 
-        border-radius:8px; 
-        box-shadow:0 2px 8px rgba(0,0,0,.15); 
-        min-width:200px; 
-        z-index:999; 
-    }
-    nav li:hover > ul { 
-        display:block; 
-    }
-    nav li ul li { 
-        padding:5px 20px; 
-    }
-    nav li ul li a { 
-        color:#333; 
-        font-weight:400; 
-        white-space:nowrap; 
-    }
-    main { 
-        max-width:1400px; 
-        margin:40px auto; 
-        padding:0 20px; 
-    }
-    h1, p.admin-title { 
-        color: #fff; 
-    }
-    h1 { 
-        text-align:left; 
-        font-size:28px; 
-        margin-bottom:10px; 
-    }
-    p.admin-title { 
-        font-size: 16px; 
-        margin-top: 0; 
-        margin-bottom: 30px; 
-        font-weight: 400; 
-        opacity: 0.9; 
-    }
-    .card { 
-        background:#fff; 
-        border-radius:20px; 
-        padding:30px 40px; 
-        box-shadow:0 2px 10px rgba(0,0,0,0.15); 
-    }
-    .page-title { 
-        font-size: 24px; 
-        font-weight: 600; 
-        text-align: center; 
-        margin-bottom: 30px; 
-        color: #1E105E; 
-    }
+    body { margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg,#1E105E 0%,#8897AE 100%); min-height:100vh; color:#333; }
+    header { background:rgba(255,255,255,1); padding:20px 40px; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #34377c; }
+    .logo { display:flex; align-items:center; gap:16px; font-weight:500; font-size:20px; color:#2e1f4f; }
+    .logo img { width: 50px; height: 50px; object-fit: contain; border-radius: 50%; }
+    nav ul { list-style:none; margin:0; padding:0; display:flex; gap:30px; }
+    nav li { position:relative; }
+    nav a { text-decoration:none; color:#333; font-weight:600; padding:8px 4px; display:block; }
+    nav li ul { display:none; position:absolute; top:100%; left:0; background:#fff; padding:10px 0; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.15); min-width:200px; z-index:999; }
+    nav li:hover > ul { display:block; }
+    nav li ul li { padding:5px 20px; }
+    nav li ul li a { color:#333; font-weight:400; white-space:nowrap; }
+    main { max-width:1600px; margin:40px auto; padding:0 20px; }
+    h1, p.admin-title { color: #fff; }
+    h1 { text-align:left; font-size:28px; margin-bottom:10px; }
+    p.admin-title { font-size: 16px; margin-top: 0; margin-bottom: 30px; font-weight: 400; opacity: 0.9; }
+    .card { background:#fff; border-radius:20px; padding:30px 40px; box-shadow:0 2px 10px rgba(0,0,0,0.15); }
+    .page-title { font-size: 24px; font-weight: 600; text-align: center; margin-bottom: 30px; color: #1E105E; }
+    .filter-section { background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 25px; }
+    .filter-row { display: flex; gap: 15px; align-items: end; flex-wrap: wrap; }
+    .filter-group { display: flex; flex-direction: column; gap: 5px; }
+    .filter-group label { font-weight: 600; font-size: 14px; color: #333; }
+    .filter-group input, .filter-group select { padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
+    .filter-group.date-group { min-width: 150px; }
+    .filter-group.search-group { flex-grow: 1; min-width: 200px; }
+    .filter-group.status-group { min-width: 180px; }
+    .action-bar { display: flex; gap: 10px; margin-top: 15px; }
+    .btn { padding: 10px 20px; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; color: #fff; cursor: pointer; transition: opacity 0.3s; text-decoration: none; display: inline-block; text-align: center; }
+    .btn-cari { background-color: #4a3f81; }
+    .btn-cari:hover { background-color: #3a3162; }
+    .btn-reset { background-color: #6c757d; }
+    .btn-reset:hover { background-color: #545b62; }
     
-    .filter-section { 
-        background: #f8f9fa; 
-        padding: 20px; 
-        border-radius: 10px; 
-        margin-bottom: 25px; 
-    }
-    .filter-row { 
-        display: flex; 
-        gap: 15px; 
-        align-items: end; 
-        flex-wrap: wrap; 
-    }
-    .filter-group { 
-        display: flex; 
-        flex-direction: column; 
-        gap: 5px; 
-    }
-    .filter-group label { 
-        font-weight: 600; 
-        font-size: 14px; 
-        color: #333; 
-    }
-    .filter-group input, .filter-group select { 
-        padding: 8px 12px; 
-        border: 1px solid #ccc; 
-        border-radius: 6px; 
-        font-size: 14px; 
-    }
-    .filter-group.date-group { 
-        min-width: 150px; 
-    }
-    .filter-group.search-group { 
-        flex-grow: 1; 
-        min-width: 200px; 
-    }
-    .filter-group.status-group { 
-        min-width: 180px; 
-    }
-    
-    .action-bar { 
-        display: flex; 
-        gap: 10px; 
-        margin-top: 15px; 
-    }
-    .btn { 
-        padding: 10px 20px; 
-        border: none; 
-        border-radius: 6px; 
-        font-size: 14px; 
-        font-weight: 600; 
-        color: #fff; 
-        cursor: pointer; 
-        transition: opacity 0.3s; 
-        text-decoration: none;
-        display: inline-block;
-        text-align: center;
-    }
-    .btn-cari { 
-        background-color: #4a3f81; 
-    }
-    .btn-cari:hover { 
-        background-color: #3a3162; 
-    }
-    .btn-reset { 
-        background-color: #6c757d; 
-    }
-    .btn-reset:hover { 
-        background-color: #545b62; 
+    /* Container untuk tabel scrollable */
+    .table-container {
+        width: 100%;
+        overflow-x: auto;
+        margin-top: 20px;
+        border: 2px solid #34377c;
+        border-radius: 8px;
+        background: white;
     }
     
     .data-table { 
-        width: 100%; 
+        width: 100%;
+        min-width: 1400px; /* Minimum width untuk memastikan konten terbaca */
         border-collapse: collapse; 
         font-size: 14px; 
-        margin-top: 20px; 
     }
+    
     .data-table th, .data-table td { 
         padding: 12px 15px; 
         text-align: left; 
-        border-bottom: 1px solid #ddd; 
+        border: 1px solid #ddd;
+        white-space: nowrap; /* Mencegah wrap di sel normal */
     }
+    
     .data-table th { 
-        background-color: #f8f9fa; 
+        background-color: #4a3f81; 
         font-weight: 600; 
+        color: white;
+        border-bottom: 2px solid #34377c;
+        text-align: center;
+        position: sticky;
+        top: 0;
+        z-index: 10;
     }
+    
+    .data-table td {
+        background-color: white;
+    }
+    
     .data-table tbody tr:hover { 
         background-color: #f1f1f1; 
     }
-    .status-diterima { 
-        color: #28a745; 
-        font-weight: 600; 
+    
+    .data-table tbody tr:nth-child(even) td {
+        background-color: #f8f9fa;
     }
-    .status-ditolak { 
+    
+    .data-table tbody tr:nth-child(even):hover td {
+        background-color: #e9ecef;
+    }
+    
+    /* Kolom dengan teks panjang bisa wrap */
+    .data-table td.alasan-cell,
+    .data-table td.alasan-penolakan-cell {
+        white-space: normal; /* Biarkan wrap untuk kolom alasan */
+        min-width: 200px;
+        max-width: 300px;
+        word-wrap: break-word;
+    }
+    
+    .status-diterima { color: #28a745; font-weight: 600; }
+    .status-ditolak { color: #d9534f; font-weight: 600; }
+    .status-menunggu { color: #ffc107; font-weight: 600; }
+    .no-data { text-align: center; padding: 40px; color: #666; font-style: italic; }
+    .filter-info { background: #e7f3ff; padding: 10px 15px; border-radius: 6px; margin-bottom: 15px; font-size: 14px; border-left: 4px solid #4a3f81;}
+    .file-link { color: #4a3f81; text-decoration: none; font-weight: 500;}
+    .file-link:hover { text-decoration: underline;}
+    
+    /* Styling untuk kolom alasan */
+    .alasan-cell {
+        max-width: 300px;
+        word-wrap: break-word;
+        line-height: 1.4;
+    }
+    
+    /* Styling untuk alasan penolakan */
+    .alasan-penolakan-cell { 
         color: #d9534f; 
-        font-weight: 600; 
-    }
-    .status-menunggu { 
-        color: #ffc107; 
-        font-weight: 600; 
-    }
-    
-    .no-data { 
-        text-align: center; 
-        padding: 40px; 
-        color: #666; 
-        font-style: italic; 
+        font-style: italic;
+        font-size: 13px;
+        max-width: 300px;
+        word-wrap: break-word;
+        line-height: 1.4;
     }
     
-    .filter-info { 
-        background: #e7f3ff; 
-        padding: 10px 15px; 
-        border-radius: 6px; 
-        margin-bottom: 15px; 
-        font-size: 14px; 
-        border-left: 4px solid #4a3f81;
+    /* Scrollbar styling */
+    .table-container::-webkit-scrollbar {
+        height: 12px;
     }
     
-    .file-link {
-        color: #4a3f81;
-        text-decoration: none;
+    .table-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 0 0 6px 6px;
+    }
+    
+    .table-container::-webkit-scrollbar-thumb {
+        background: #4a3f81;
+        border-radius: 6px;
+    }
+    
+    .table-container::-webkit-scrollbar-thumb:hover {
+        background: #3a3162;
+    }
+    
+    /* Indikator scroll */
+    .scroll-indicator {
+        text-align: center;
+        color: #666;
+        font-size: 12px;
+        margin-top: 5px;
+        font-style: italic;
+    }
+
+    /* Style tambahan dari riwayatcuti_penanggungjawab.php */
+    .cuti-details {
+        background: #f8f9fa;
+        padding: 8px;
+        border-radius: 6px;
+        margin: 5px 0;
+        font-size: 0.8rem;
+    }
+
+    .hari-kerja-info {
+        background: #e7f3ff;
+        padding: 6px 10px;
+        border-radius: 4px;
+        margin: 3px 0;
+        font-size: 0.75rem;
+        border-left: 3px solid #2196F3;
+    }
+
+    .role-badge {
+        background: #e9ecef;
+        color: #495057;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.75rem;
         font-weight: 500;
     }
     
-    .file-link:hover {
-        text-decoration: underline;
+    .role-karyawan {
+        background: #d4edda;
+        color: #155724;
     }
     
-    .alasan-cell {
-        max-width: 200px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+    .role-penanggung-jawab {
+        background: #cce7ff;
+        color: #004085;
     }
     
-    .alasan-cell:hover {
-        white-space: normal;
-        overflow: visible;
-        background: #f8f9fa;
-        position: relative;
-        z-index: 1;
+    .role-direktur {
+        background: #f8d7da;
+        color: #721c24;
     }
     
+    .role-admin {
+        background: #e2e3e5;
+        color: #383d41;
+    }
+
+    .weekend-note {
+        color: #666;
+        font-size: 0.75rem;
+        font-style: italic;
+        margin-top: 3px;
+    }
+
     .user-info {
         background: #d4edda;
         padding: 15px;
@@ -334,14 +321,110 @@ $filtered_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
         border-left: 4px solid #28a745;
         color: #155724;
     }
+
+    /* Pagination Styles */
+    .pagination-wrapper {
+        background-color: #f8f9fa;
+        padding: 20px 15px;
+        margin-top: 30px;
+        border-radius: 12px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .pagination-wrapper a, 
+    .pagination-wrapper span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 40px;
+        height: 40px;
+        padding: 0 12px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.2s ease-in-out;
+        user-select: none;
+    }
+
+    .pagination-wrapper a {
+        color: #1E105E; /* Warna teks untuk link */
+        background-color: #fff;
+        border: 1px solid #dee2e6;
+    }
+
+    .pagination-wrapper a:hover {
+        background-color: #1E105E;
+        color: #fff;
+        border-color: #1E105E;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .pagination-wrapper span.active {
+        background-color: #1E105E;
+        color: #fff;
+        border: 1px solid #1E105E;
+        cursor: default;
+        box-shadow: 0 4px 10px rgba(30, 16, 94, 0.3);
+    }
+
+    .pagination-wrapper span.disabled {
+        color: #adb5bd;
+        background-color: #e9ecef;
+        border: 1px solid #dee2e6;
+        cursor: not-allowed;
+    }
+
+    .pagination-wrapper span.ellipsis {
+        background-color: transparent;
+        border: none;
+        color: #6c757d;
+        font-weight: bold;
+    }
+
+    .pagination-info {
+        text-align: center;
+        margin-top: 15px;
+        color: #666;
+        font-size: 14px;
+    }
     
-    @media (max-width: 768px) {
-        .filter-row { flex-direction: column; }
-        .filter-group { width: 100%; }
-        .action-bar { flex-direction: column; }
-        .btn { width: 100%; }
-        .data-table { font-size: 12px; }
+    @media (max-width: 768px) { 
+        .filter-row { flex-direction: column; } 
+        .filter-group { width: 100%; } 
+        .action-bar { flex-direction: column; } 
+        .btn { width: 100%; } 
+        .data-table { font-size: 12px; } 
         .data-table th, .data-table td { padding: 8px 10px; }
+        .card { padding: 20px; }
+        main { max-width: 1400px; }
+        
+        /* Untuk mobile, kurangi min-width tabel */
+        .data-table {
+            min-width: 1200px;
+        }
+        
+        /* Perbesar scrollbar di mobile */
+        .table-container::-webkit-scrollbar {
+            height: 14px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .data-table {
+            min-width: 1000px;
+        }
+        
+        .data-table th, .data-table td {
+            padding: 6px 8px;
+            font-size: 11px;
+        }
     }
 </style>
 </head>
@@ -393,7 +476,7 @@ $filtered_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
 
 <main>
     <h1>Welcome, <?php echo htmlspecialchars($nama_direktur); ?>!</h1>
-    <p class="admin-title">Direktur</p>
+    <p class="admin-title">Riwayat Cuti Pribadi</p>
 
     <div class="card">
         <h2 class="page-title">Riwayat Cuti Pribadi</h2>
@@ -403,6 +486,7 @@ $filtered_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
             Nama: <?php echo htmlspecialchars($nama_direktur); ?> | 
             Kode Karyawan: <?php echo htmlspecialchars($kode_direktur); ?> | 
             Role: Direktur
+            <div class="weekend-note">📝 Catatan: Sabtu & Minggu tidak terhitung sebagai hari cuti</div>
         </div>
         
         <div class="filter-section">
@@ -453,74 +537,96 @@ $filtered_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
                 echo implode(' | ', $filters);
                 ?>
                 <span style="float: right; color: #666;">
-                    Data ditemukan: <?= count($filtered_data) ?>
+                    Total Data: <?= $total_records ?> | Halaman <?= $page ?> dari <?= $total_pages ?>
+                </span>
+            </div>
+        <?php else: ?>
+            <div class="filter-info">
+                <strong>Total Data:</strong> <?= $total_records ?> cuti pribadi
+                <span style="float: right; color: #666;">
+                    Halaman <?= $page ?> dari <?= $total_pages ?>
                 </span>
             </div>
         <?php endif; ?>
 
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>No</th>
-                    <th>Kode Karyawan</th>
-                    <th>Nama Karyawan</th>
-                    <th>Divisi</th>
-                    <th>Jabatan</th>
-                    <th>Role</th>
-                    <th>Jenis Cuti</th>
-                    <th>Tanggal Mulai</th>
-                    <th>Tanggal Akhir</th>
-                    <th>Alasan</th>
-                    <th>File Surat</th>
-                    <th>Status</th>
-                    <th>Waktu Persetujuan</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (!empty($filtered_data)): ?>
-                    <?php $no = 1; ?>
-                    <?php foreach($filtered_data as $cuti): ?>
+        <!-- Container untuk tabel scrollable -->
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
                     <tr>
-                        <td><?= $no++ ?></td>
-                        <td><?= htmlspecialchars($cuti['kode_karyawan']) ?></td>
-                        <td><?= htmlspecialchars($cuti['nama_karyawan']) ?></td>
-                        <td><?= htmlspecialchars($cuti['divisi']) ?></td>
-                        <td><?= htmlspecialchars($cuti['jabatan']) ?></td>
-                        <td><?= htmlspecialchars($cuti['role']) ?></td>
-                        <td><?= htmlspecialchars($cuti['jenis_cuti']) ?></td>
-                        <td><?= date('d/m/Y', strtotime($cuti['tanggal_mulai'])) ?></td> 
-                        <td><?= date('d/m/Y', strtotime($cuti['tanggal_akhir'])) ?></td> 
-                        <td class="alasan-cell" title="<?= htmlspecialchars($cuti['alasan']) ?>">
-                            <?= htmlspecialchars($cuti['alasan']) ?>
-                        </td>
-                        <td>
-                            <?php if (!empty($cuti['file_surat_dokter'])): ?>
-                                <a href="<?= htmlspecialchars($cuti['file_surat_dokter']) ?>" class="file-link" target="_blank">Lihat</a>
-                            <?php else: ?>
-                                <span style="color: #999;">-</span>
-                            <?php endif; ?>
-                        </td>
-                        <td>
-                            <?php if ($cuti['status'] == 'Diterima'): ?>
-                                <span class="status-diterima"><?= htmlspecialchars($cuti['status']) ?></span>
-                            <?php elseif ($cuti['status'] == 'Ditolak'): ?>
-                                <span class="status-ditolak"><?= htmlspecialchars($cuti['status']) ?></span>
-                            <?php elseif ($cuti['status'] == 'Menunggu Persetujuan'): ?>
-                                <span class="status-menunggu"><?= htmlspecialchars($cuti['status']) ?></span>
-                            <?php else: ?>
-                                <?= htmlspecialchars($cuti['status']) ?>
-                            <?php endif; ?>
-                        </td>
-                        <td>
-                            <?php 
-                                echo $cuti['waktu_persetujuan'] ? date('d/m/Y H:i', strtotime($cuti['waktu_persetujuan'])) : '-'; 
-                            ?>
-                        </td>
+                        <th>No</th>
+                        <th>Kode</th>
+                        <th>Nama</th>
+                        <th>Role</th>
+                        <th>Jenis Cuti</th>
+                        <th>Tanggal Mulai</th>
+                        <th>Tanggal Akhir</th>
+                        <th>Alasan Cuti</th>
+                        <th>Alasan Penolakan</th>
+                        <th>File Surat Dokter</th>
+                        <th>Status</th>
+                        <th>Waktu Persetujuan</th>
+                        <th>Tanggal Pengajuan</th>
                     </tr>
-                    <?php endforeach; ?>
-                <?php else: ?>
-                    <tr>
-                        <td colspan="13" class="no-data">
+                </thead>
+                <tbody>
+                    <?php if (!empty($filtered_data)): ?>
+                        <?php $no = $offset + 1; foreach ($filtered_data as $cuti): ?>
+                            <?php 
+                            $jumlah_hari_kerja = hitungHariKerja($cuti['tanggal_mulai'], $cuti['tanggal_akhir']);
+                            $total_hari_kalender = (strtotime($cuti['tanggal_akhir']) - strtotime($cuti['tanggal_mulai'])) / (60 * 60 * 24) + 1;
+                            $alasan_penolakan = isset($cuti['alasan_penolakan']) ? $cuti['alasan_penolakan'] : '';
+                            ?>
+                            <tr>
+                                <td style="text-align: center;"><?= $no++ ?></td>
+                                <td><?= htmlspecialchars($cuti['kode_karyawan']) ?></td>
+                                <td>
+                                    <?= htmlspecialchars($cuti['nama_karyawan']) ?>
+                                    <div class="cuti-details">
+                                        <strong>Periode:</strong> <?= $total_hari_kalender ?> hari kalender<br>
+                                        <div class="hari-kerja-info">
+                                            <strong>Hari Kerja:</strong> <?= $jumlah_hari_kerja ?> hari (Senin-Jumat)
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="role-badge role-<?= str_replace(' ', '-', $cuti['role']) ?>">
+                                        <?= htmlspecialchars(ucfirst($cuti['role'])) ?>
+                                    </span>
+                                </td>
+                                <td><?= htmlspecialchars($cuti['jenis_cuti']) ?></td>
+                                <td><?= htmlspecialchars($cuti['tanggal_mulai']) ?></td>
+                                <td><?= htmlspecialchars($cuti['tanggal_akhir']) ?></td>
+                                <td class="alasan-cell"><?= htmlspecialchars($cuti['alasan']) ?></td>
+                                <td class="alasan-penolakan-cell">
+                                    <?php if (!empty($alasan_penolakan) && $cuti['status'] == 'Ditolak'): ?>
+                                        <?= htmlspecialchars($alasan_penolakan) ?>
+                                    <?php else: ?>
+                                        <span style="color:#999;">-</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td style="text-align: center;">
+                                    <?php if (!empty($cuti['file_surat_dokter'])): ?>
+                                        <a href="<?= htmlspecialchars($cuti['file_surat_dokter']) ?>" class="file-link" target="_blank">Lihat File</a>
+                                    <?php else: ?>
+                                        <span style="color:#999;">-</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td style="text-align: center;">
+                                    <?php $status = strtolower(trim($cuti['status'])); if ($status === 'diterima') { echo '<span class="status-diterima">Diterima</span>'; } elseif ($status === 'ditolak') { echo '<span class="status-ditolak">Ditolak</span>'; } elseif ($status === 'menunggu persetujuan') { echo '<span class="status-menunggu">Menunggu</span>'; } else { echo htmlspecialchars($cuti['status'] ?: '-'); } ?>
+                                </td>
+                                <td>
+                                    <?php if (!empty($cuti['waktu_persetujuan'])): ?>
+                                        <?= date('d/m/Y H:i', strtotime($cuti['waktu_persetujuan'])) ?>
+                                    <?php else: ?>
+                                        <span style="color:#999;">-</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td><?= date('d/m/Y H:i', strtotime($cuti['created_at'])) ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr><td colspan="13" class="no-data">
                             <?php if (!empty($start_date) || !empty($end_date) || !empty($search_query) || !empty($status_filter)): ?>
                                 Tidak ada data cuti pribadi yang sesuai dengan filter yang dipilih.
                             <?php else: ?>
@@ -528,11 +634,66 @@ $filtered_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
                                 <br><br>
                                 <a href="pengajuan_cuti_direktur.php" style="color: #4a3f81; font-weight: 600;">Ajukan Cuti Sekarang</a>
                             <?php endif; ?>
-                        </td>
-                    </tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
+                        </td></tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="scroll-indicator">
+            ← Geser untuk melihat lebih banyak data →
+        </div>
+
+        <?php if ($total_pages > 1): ?>
+            <div class="pagination-wrapper">
+                <?php
+                $query_params = $_GET;
+                unset($query_params['page']);
+                $base_url = http_build_query($query_params);
+                $ampersand = !empty($base_url) ? '&' : '';
+                
+                $range = 2; // Jumlah halaman yang ditampilkan di kiri dan kanan halaman aktif
+
+                if ($page > 1) {
+                    echo '<a href="?' . $base_url . $ampersand . 'page=' . ($page - 1) . '">‹ Sebelumnya</a>';
+                } else {
+                    echo '<span class="disabled">‹ Sebelumnya</span>';
+                }
+
+                if ($page > ($range + 1)) {
+                    echo '<a href="?' . $base_url . $ampersand . 'page=1">1</a>';
+                    if ($page > ($range + 2)) {
+                        echo '<span class="ellipsis">...</span>';
+                    }
+                }
+
+                for ($i = max(1, $page - $range); $i <= min($total_pages, $page + $range); $i++) {
+                    if ($i == $page) {
+                        echo '<span class="active">' . $i . '</span>';
+                    } else {
+                        echo '<a href="?' . $base_url . $ampersand . 'page=' . $i . '">' . $i . '</a>';
+                    }
+                }
+
+                if ($page < ($total_pages - $range)) {
+                    if ($page < ($total_pages - $range - 1)) {
+                        echo '<span class="ellipsis">...</span>';
+                    }
+                    echo '<a href="?' . $base_url . $ampersand . 'page=' . $total_pages . '">' . $total_pages . '</a>';
+                }
+
+                if ($page < $total_pages) {
+                    echo '<a href="?' . $base_url . $ampersand . 'page=' . ($page + 1) . '">Selanjutnya ›</a>';
+                } else {
+                    echo '<span class="disabled">Selanjutnya ›</span>';
+                }
+                ?>
+            </div>
+            
+            <div class="pagination-info">
+                Menampilkan <?= count($filtered_data) ?> dari <?= $total_records ?> data cuti pribadi
+            </div>
+        <?php endif; ?>
         
         <div style="text-align: center; margin-top: 30px;">
             <a href="pengajuan_cuti_direktur.php" class="btn btn-cari" style="background-color: #28a745;">+ Ajukan Cuti Baru</a>
@@ -541,47 +702,48 @@ $filtered_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
     </div>
 </main>
 
-<script> 
-    document.addEventListener('DOMContentLoaded', function() {
-        const startDate = document.getElementById('start_date');
-        const endDate = document.getElementById('end_date');
-        
-        function validateDates() {
-            if (startDate.value && endDate.value) {
-                if (new Date(startDate.value) > new Date(endDate.value)) {
-                    alert('Tanggal akhir tidak boleh kurang dari tanggal awal');
-                    endDate.value = '';
-                }
-            }
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tableContainer = document.querySelector('.table-container');
+    
+    tableContainer.addEventListener('keydown', function(e) {
+        if (e.key === 'ArrowLeft') {
+            tableContainer.scrollLeft -= 100;
+            e.preventDefault();
+        } else if (e.key === 'ArrowRight') {
+            tableContainer.scrollLeft += 100;
+            e.preventDefault();
         }
-        
-        startDate.addEventListener('change', validateDates);
-        endDate.addEventListener('change', validateDates);
-         
-        const alasanCells = document.querySelectorAll('.alasan-cell');
-        alasanCells.forEach(cell => {
-            cell.addEventListener('mouseenter', function() {
-                this.style.whiteSpace = 'normal';
-                this.style.overflow = 'visible';
-                this.style.backgroundColor = '#f8f9fa';
-                this.style.position = 'relative';
-                this.style.zIndex = '1';
-            });
-            
-            cell.addEventListener('mouseleave', function() {
-                this.style.whiteSpace = 'nowrap';
-                this.style.overflow = 'hidden';
-                this.style.backgroundColor = '';
-                this.style.position = '';
-                this.style.zIndex = '';
-            });
+    });
+    
+    tableContainer.setAttribute('tabindex', '0');
+    
+    const tableRows = document.querySelectorAll('.data-table tbody tr');
+    tableRows.forEach(row => {
+        row.addEventListener('mouseenter', function() {
+            this.style.transition = 'background-color 0.2s ease';
         });
     });
+
+    // Validasi tanggal
+    const startDate = document.getElementById('start_date');
+    const endDate = document.getElementById('end_date');
+    
+    function validateDates() {
+        if (startDate.value && endDate.value) {
+            if (new Date(startDate.value) > new Date(endDate.value)) {
+                alert('Tanggal akhir tidak boleh kurang dari tanggal awal');
+                endDate.value = '';
+            }
+        }
+    }
+    
+    startDate.addEventListener('change', validateDates);
+    endDate.addEventListener('change', validateDates);
+});
 </script>
 
 </body>
 </html>
 <?php 
-
 mysqli_close($conn); 
-?>

@@ -15,7 +15,7 @@ $start_date = $_GET['start_date'] ?? '';
 $end_date = $_GET['end_date'] ?? '';
 $status_filter = $_GET['status'] ?? '';
 
-$query = "SELECT dk.nama_lengkap, dpk.* 
+$query = "SELECT dk.nama_lengkap, dk.divisi, dk.role, dpk.* 
           FROM data_pengajuan_khl dpk
           JOIN data_karyawan dk ON dpk.kode_karyawan = dk.kode_karyawan
           WHERE dk.kode_karyawan = ?";
@@ -46,11 +46,27 @@ if ($stmt) {
     $stmt->bind_param($types, ...$params);
     $stmt->execute();
     $result = $stmt->get_result();
-    $data_khl = $result->fetch_all(MYSQLI_ASSOC);
+    $all_data = $result->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
 } else {
-    $data_khl = [];
+    $all_data = [];
 }
+
+// Pagination configuration
+$limit = 5; // Jumlah data per halaman
+$total_records = count($all_data);
+$total_pages = ceil($total_records / $limit);
+
+$page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+if ($page < 1) {
+    $page = 1;
+}
+if ($page > $total_pages && $total_pages > 0) {
+    $page = $total_pages;
+}
+
+$offset = ($page - 1) * $limit;
+$data_khl = array_slice($all_data, $offset, $limit);
 
 $conn->close();
 ?>
@@ -102,7 +118,7 @@ $conn->close();
     nav li:hover > ul { display:block; }
     nav li ul li { padding:5px 20px; }
     nav li ul li a { color:#333; font-weight:400; white-space:nowrap; }
-    main { max-width:1400px; margin:40px auto; padding:0 20px; }
+    main { max-width:1600px; margin:40px auto; padding:0 20px; }
     h1, p.admin-title { color:#fff; }
     h1 { font-size:28px; margin-bottom:10px; }
     p.admin-title { font-size:16px; margin-top:0; margin-bottom:30px; opacity:0.9; }
@@ -126,16 +142,168 @@ $conn->close();
     .btn-reset { background-color:#6c757d; }
     .btn-reset:hover { background-color:#545b62; }
 
-    .data-table { width:100%; border-collapse:collapse; font-size:14px; margin-top:20px; }
-    .data-table th, .data-table td { padding:12px 15px; border-bottom:1px solid #ddd; }
-    .data-table th { background-color:#f8f9fa; font-weight:600; }
-    .data-table tbody tr:hover { background-color:#f1f1f1; }
+    .data-table { 
+        width:100%; 
+        border-collapse: collapse; 
+        font-size:14px; 
+        margin-top:20px; 
+        border: 2px solid #34377c;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .data-table th, .data-table td { 
+        padding:12px 15px; 
+        text-align: left; 
+        border: 1px solid #ddd;
+        border-bottom: 1px solid #ddd;
+        border-right: 1px solid #ddd;
+    }
+    .data-table th { 
+        background-color:#4a3f81; 
+        font-weight:600; 
+        color: white;
+        border-bottom: 2px solid #34377c;
+        text-align: center;
+    }
+    .data-table th:last-child {
+        border-right: 1px solid #34377c;
+    }
+    .data-table td {
+        background-color: white;
+        border-bottom: 1px solid #ddd;
+    }
+    .data-table tbody tr:hover { 
+        background-color:#f1f1f1; 
+    }
+    .data-table tbody tr:nth-child(even) td {
+        background-color: #f8f9fa;
+    }
+    .data-table tbody tr:nth-child(even):hover td {
+        background-color: #e9ecef;
+    }
 
     .status-diterima { color:#28a745; font-weight:600; }
     .status-ditolak { color:#d9534f; font-weight:600; }
     .status-menunggu { color:#ffc107; font-weight:600; }
 
-    .no-data { text-align:center; padding:40px; color:#666; font-style:italic; }
+    .no-data { 
+        text-align:center; 
+        padding:40px; 
+        color:#666; 
+        font-style:italic; 
+    }
+
+    .role-badge {
+        background: #e9ecef;
+        color: #495057;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .role-karyawan {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .role-penanggung-jawab {
+        background: #cce7ff;
+        color: #004085;
+    }
+
+    /* Pagination Styles */
+    .pagination-wrapper {
+        background-color: #f8f9fa;
+        padding: 20px 15px;
+        margin-top: 30px;
+        border-radius: 12px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .pagination-wrapper a, 
+    .pagination-wrapper span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 40px;
+        height: 40px;
+        padding: 0 12px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.2s ease-in-out;
+        user-select: none;
+    }
+
+    .pagination-wrapper a {
+        color: #1E105E;
+        background-color: #fff;
+        border: 1px solid #dee2e6;
+    }
+
+    .pagination-wrapper a:hover {
+        background-color: #1E105E;
+        color: #fff;
+        border-color: #1E105E;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .pagination-wrapper span.active {
+        background-color: #1E105E;
+        color: #fff;
+        border: 1px solid #1E105E;
+        cursor: default;
+        box-shadow: 0 4px 10px rgba(30, 16, 94, 0.3);
+    }
+
+    .pagination-wrapper span.disabled {
+        color: #adb5bd;
+        background-color: #e9ecef;
+        border: 1px solid #dee2e6;
+        cursor: not-allowed;
+    }
+
+    .pagination-wrapper span.ellipsis {
+        background-color: transparent;
+        border: none;
+        color: #6c757d;
+        font-weight: bold;
+    }
+    
+    .pagination-info {
+        text-align: center;
+        margin-top: 15px;
+        color: #666;
+        font-size: 14px;
+    }
+
+    .filter-info {
+        background: #e7f3ff;
+        padding: 10px 15px;
+        border-radius: 6px;
+        margin-bottom: 15px;
+        font-size: 14px;
+        border-left: 4px solid #4a3f81;
+    }
+
+    @media (max-width:768px) {
+        .filter-row { flex-direction:column; }
+        .filter-group { width:100%; }
+        .action-bar { flex-direction:column; }
+        .btn { width:100%; }
+        .data-table { font-size:12px; }
+        .data-table th, .data-table td { padding:8px 10px; }
+        .card { padding:20px; }
+        main { max-width: 1400px; }
+    }
 </style>
 </head>
 <body>
@@ -219,27 +387,63 @@ $conn->close();
             </form>
         </div>
 
+        <?php if (!empty($start_date) || !empty($end_date) || !empty($status_filter)): ?>
+            <div class="filter-info">
+                <strong>Filter Aktif:</strong>
+                <?php 
+                $filters = [];
+                if (!empty($start_date)) $filters[] = "Dari: " . date('d/m/Y', strtotime($start_date));
+                if (!empty($end_date)) $filters[] = "Sampai: " . date('d/m/Y', strtotime($end_date));
+                if (!empty($status_filter)) $filters[] = "Status: " . htmlspecialchars($status_filter);
+                echo implode(' | ', $filters);
+                ?>
+                <span style="float: right; color: #666;">
+                    Total Data: <?= $total_records ?> | Halaman <?= $page ?> dari <?= $total_pages ?>
+                </span>
+            </div>
+        <?php else: ?>
+            <div class="filter-info">
+                <strong>Total Data:</strong> <?= $total_records ?> KHL
+                <span style="float: right; color: #666;">
+                    Halaman <?= $page ?> dari <?= $total_pages ?>
+                </span>
+            </div>
+        <?php endif; ?>
+
         <table class="data-table">
             <thead>
                 <tr>
                     <th>No</th>
+                    <th>Kode</th>
+                    <th>Nama</th>
+                    <th>Role</th>
                     <th>Proyek</th>
-                    <th>Tanggal Kerja</th>
-                    <th>Jam Mulai</th>
-                    <th>Jam Selesai</th>
+                    <th>Tanggal KHL</th>
+                    <th>Jam Kerja</th>
+                    <th>Tanggal Cuti</th>
+                    <th>Jam Cuti</th>
                     <th>Status</th>
+                    <th>Tanggal Pengajuan</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (!empty($data_khl)): ?>
-                    <?php $no=1; foreach($data_khl as $row): ?>
+                    <?php $no = $offset + 1; foreach($data_khl as $row): ?>
                     <tr>
-                        <td><?= $no++ ?></td>
-                        <td><?= htmlspecialchars($row['proyek']) ?></td>
-                        <td><?= date('d/m/Y', strtotime($row['tanggal_khl'])) ?></td>
-                        <td><?= $row['jam_mulai_kerja'] ? date('H:i', strtotime($row['jam_mulai_kerja'])) : '-' ?></td>
-                        <td><?= $row['jam_akhir_kerja'] ? date('H:i', strtotime($row['jam_akhir_kerja'])) : '-' ?></td>
+                        <td style="text-align: center;"><?= $no++ ?></td>
+                        <td><?= htmlspecialchars($row['kode_karyawan']) ?></td>
+                        <td><?= htmlspecialchars($row['nama_lengkap']) ?></td>
                         <td>
+                            <span class="role-badge role-<?= str_replace(' ', '-', $row['role']) ?>">
+                                <?= htmlspecialchars(ucfirst($row['role'])) ?>
+                            </span>
+                        </td>
+                        <td><?= htmlspecialchars($row['proyek']) ?></td>
+                        <td><?= htmlspecialchars($row['tanggal_khl']) ?></td>
+                        <td><?= htmlspecialchars($row['jam_mulai_kerja'] . ' - ' . $row['jam_akhir_kerja']) ?></td>
+                        <td><?= htmlspecialchars($row['tanggal_cuti_khl']) ?></td>
+                        <td><?= htmlspecialchars($row['jam_mulai_cuti_khl'] . ' - ' . $row['jam_akhir_cuti_khl']) ?></td>
+                        <td style="text-align: center;">
                             <?php
                             $status = strtolower($row['status_khl']);
                             if ($status=='disetujui') echo "<span class='status-diterima'>Diterima</span>";
@@ -247,13 +451,65 @@ $conn->close();
                             else echo "<span class='status-menunggu'>Menunggu</span>";
                             ?>
                         </td>
+                        <td><?= date('d/m/Y H:i', strtotime($row['created_at'])) ?></td>
                     </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <tr><td colspan="6" class="no-data">Tidak ada data KHL ditemukan</td></tr>
+                    <tr><td colspan="11" class="no-data">Tidak ada data KHL ditemukan</td></tr>
                 <?php endif; ?>
             </tbody>
         </table>
+
+        <?php if ($total_pages > 1): ?>
+            <div class="pagination-wrapper">
+                <?php
+                $query_params = $_GET;
+                unset($query_params['page']);
+                $base_url = http_build_query($query_params);
+                $ampersand = !empty($base_url) ? '&' : '';
+                
+                $range = 2; // Jumlah halaman yang ditampilkan di kiri dan kanan halaman aktif
+
+                if ($page > 1) {
+                    echo '<a href="?' . $base_url . $ampersand . 'page=' . ($page - 1) . '">‹ Sebelumnya</a>';
+                } else {
+                    echo '<span class="disabled">‹ Sebelumnya</span>';
+                }
+
+                if ($page > ($range + 1)) {
+                    echo '<a href="?' . $base_url . $ampersand . 'page=1">1</a>';
+                    if ($page > ($range + 2)) {
+                        echo '<span class="ellipsis">...</span>';
+                    }
+                }
+
+                for ($i = max(1, $page - $range); $i <= min($total_pages, $page + $range); $i++) {
+                    if ($i == $page) {
+                        echo '<span class="active">' . $i . '</span>';
+                    } else {
+                        echo '<a href="?' . $base_url . $ampersand . 'page=' . $i . '">' . $i . '</a>';
+                    }
+                }
+
+                if ($page < ($total_pages - $range)) {
+                    if ($page < ($total_pages - $range - 1)) {
+                        echo '<span class="ellipsis">...</span>';
+                    }
+                    echo '<a href="?' . $base_url . $ampersand . 'page=' . $total_pages . '">' . $total_pages . '</a>';
+                }
+
+                if ($page < $total_pages) {
+                    echo '<a href="?' . $base_url . $ampersand . 'page=' . ($page + 1) . '">Selanjutnya ›</a>';
+                } else {
+                    echo '<span class="disabled">Selanjutnya ›</span>';
+                }
+                ?>
+            </div>
+            
+            <div class="pagination-info">
+                Menampilkan <?= count($data_khl) ?> dari <?= $total_records ?> data KHL
+            </div>
+        <?php endif; ?>
     </div>
 </main>
 </body>

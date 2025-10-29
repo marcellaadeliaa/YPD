@@ -15,7 +15,7 @@ $end_date = $_GET['end_date'] ?? '';
 $search_query = $_GET['search'] ?? '';
 $status_filter = $_GET['status'] ?? '';
 
-$query = "SELECT dk.nama_lengkap, dpk.* 
+$query = "SELECT dk.nama_lengkap, dk.divisi, dk.role, dpk.* 
           FROM data_pengajuan_khl dpk
           JOIN data_karyawan dk ON dpk.kode_karyawan = dk.kode_karyawan
           WHERE 1=1";
@@ -52,11 +52,27 @@ if ($stmt) {
     if (!empty($params)) $stmt->bind_param($types, ...$params);
     $stmt->execute();
     $result = $stmt->get_result();
-    $data_khl = $result->fetch_all(MYSQLI_ASSOC);
+    $all_data = $result->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
 } else {
-    $data_khl = [];
+    $all_data = [];
 }
+
+// Pagination configuration
+$limit = 5; // Jumlah data per halaman
+$total_records = count($all_data);
+$total_pages = ceil($total_records / $limit);
+
+$page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+if ($page < 1) {
+    $page = 1;
+}
+if ($page > $total_pages && $total_pages > 0) {
+    $page = $total_pages;
+}
+
+$offset = ($page - 1) * $limit;
+$data_khl = array_slice($all_data, $offset, $limit);
 
 $status_mapping = [
     'disetujui' => 'Diterima',
@@ -207,6 +223,107 @@ $conn->close();
         z-index: 1;
     }
 
+    .role-badge {
+        background: #e9ecef;
+        color: #495057;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .role-karyawan {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .role-penanggung-jawab {
+        background: #cce7ff;
+        color: #004085;
+    }
+
+    /* Pagination Styles */
+    .pagination-wrapper {
+        background-color: #f8f9fa;
+        padding: 20px 15px;
+        margin-top: 30px;
+        border-radius: 12px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .pagination-wrapper a, 
+    .pagination-wrapper span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 40px;
+        height: 40px;
+        padding: 0 12px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.2s ease-in-out;
+        user-select: none;
+    }
+
+    .pagination-wrapper a {
+        color: #1E105E;
+        background-color: #fff;
+        border: 1px solid #dee2e6;
+    }
+
+    .pagination-wrapper a:hover {
+        background-color: #1E105E;
+        color: #fff;
+        border-color: #1E105E;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .pagination-wrapper span.active {
+        background-color: #1E105E;
+        color: #fff;
+        border: 1px solid #1E105E;
+        cursor: default;
+        box-shadow: 0 4px 10px rgba(30, 16, 94, 0.3);
+    }
+
+    .pagination-wrapper span.disabled {
+        color: #adb5bd;
+        background-color: #e9ecef;
+        border: 1px solid #dee2e6;
+        cursor: not-allowed;
+    }
+
+    .pagination-wrapper span.ellipsis {
+        background-color: transparent;
+        border: none;
+        color: #6c757d;
+        font-weight: bold;
+    }
+    
+    .pagination-info {
+        text-align: center;
+        margin-top: 15px;
+        color: #666;
+        font-size: 14px;
+    }
+
+    .filter-info {
+        background: #e7f3ff;
+        padding: 10px 15px;
+        border-radius: 6px;
+        margin-bottom: 15px;
+        font-size: 14px;
+        border-left: 4px solid #4a3f81;
+    }
+
     @media (max-width:768px) {
         .filter-row { flex-direction:column; }
         .filter-group { width:100%; }
@@ -305,33 +422,64 @@ $conn->close();
             </form>
         </div>
 
+        <?php if (!empty($start_date) || !empty($end_date) || !empty($search_query) || !empty($status_filter)): ?>
+            <div class="filter-info">
+                <strong>Filter Aktif:</strong>
+                <?php 
+                $filters = [];
+                if (!empty($start_date)) $filters[] = "Dari: " . date('d/m/Y', strtotime($start_date));
+                if (!empty($end_date)) $filters[] = "Sampai: " . date('d/m/Y', strtotime($end_date));
+                if (!empty($status_filter)) $filters[] = "Status: " . htmlspecialchars($status_filter);
+                if (!empty($search_query)) $filters[] = "Pencarian: '" . htmlspecialchars($search_query) . "'";
+                echo implode(' | ', $filters);
+                ?>
+                <span style="float: right; color: #666;">
+                    Total Data: <?= $total_records ?> | Halaman <?= $page ?> dari <?= $total_pages ?>
+                </span>
+            </div>
+        <?php else: ?>
+            <div class="filter-info">
+                <strong>Total Data:</strong> <?= $total_records ?> KHL
+                <span style="float: right; color: #666;">
+                    Halaman <?= $page ?> dari <?= $total_pages ?>
+                </span>
+            </div>
+        <?php endif; ?>
+
         <table class="data-table">
             <thead>
                 <tr>
                     <th>No</th>
-                    <th>Kode Karyawan</th>
-                    <th>Nama Karyawan</th>
-                    <th>Divisi</th>
+                    <th>Kode</th>
+                    <th>Nama</th>
+                    <th>Role</th>
                     <th>Proyek</th>
-                    <th>Tanggal Kerja</th>
-                    <th>Jam Mulai</th>
-                    <th>Jam Selesai</th>
+                    <th>Tanggal KHL</th>
+                    <th>Jam Kerja</th>
+                    <th>Tanggal Cuti</th>
+                    <th>Jam Cuti</th>
                     <th>Status</th>
                     <th>Alasan Penolakan</th>
+                    <th>Tanggal Pengajuan</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (!empty($data_khl)): ?>
-                    <?php $no=1; foreach($data_khl as $row): ?>
+                    <?php $no = $offset + 1; foreach($data_khl as $row): ?>
                     <tr>
                         <td style="text-align: center;"><?= $no++ ?></td>
                         <td><?= htmlspecialchars($row['kode_karyawan']) ?></td>
                         <td><?= htmlspecialchars($row['nama_lengkap']) ?></td>
-                        <td><?= htmlspecialchars($row['divisi']) ?></td>
+                        <td>
+                            <span class="role-badge role-<?= str_replace(' ', '-', $row['role']) ?>">
+                                <?= htmlspecialchars(ucfirst($row['role'])) ?>
+                            </span>
+                        </td>
                         <td><?= htmlspecialchars($row['proyek']) ?></td>
-                        <td><?= date('d/m/Y', strtotime($row['tanggal_khl'])) ?></td>
-                        <td style="text-align: center;"><?= $row['jam_mulai_kerja'] ? date('H:i', strtotime($row['jam_mulai_kerja'])) : '-' ?></td>
-                        <td style="text-align: center;"><?= $row['jam_akhir_kerja'] ? date('H:i', strtotime($row['jam_akhir_kerja'])) : '-' ?></td>
+                        <td><?= htmlspecialchars($row['tanggal_khl']) ?></td>
+                        <td><?= htmlspecialchars($row['jam_mulai_kerja'] . ' - ' . $row['jam_akhir_kerja']) ?></td>
+                        <td><?= htmlspecialchars($row['tanggal_cuti_khl']) ?></td>
+                        <td><?= htmlspecialchars($row['jam_mulai_cuti_khl'] . ' - ' . $row['jam_akhir_cuti_khl']) ?></td>
                         <td style="text-align: center;">
                             <?php
                             $status = strtolower($row['status_khl']);
@@ -343,13 +491,65 @@ $conn->close();
                         <td class="alasan-penolakan-cell" title="<?= htmlspecialchars($row['alasan_penolakan'] ?? '') ?>">
                             <?= !empty($row['alasan_penolakan']) ? htmlspecialchars($row['alasan_penolakan']) : '<span style="color:#999;">-</span>' ?>
                         </td>
+                        <td><?= date('d/m/Y H:i', strtotime($row['created_at'])) ?></td>
                     </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
-                    <tr><td colspan="10" class="no-data">Tidak ada data KHL ditemukan</td></tr>
+                    <tr><td colspan="12" class="no-data">Tidak ada data KHL ditemukan</td></tr>
                 <?php endif; ?>
             </tbody>
         </table>
+
+        <?php if ($total_pages > 1): ?>
+            <div class="pagination-wrapper">
+                <?php
+                $query_params = $_GET;
+                unset($query_params['page']);
+                $base_url = http_build_query($query_params);
+                $ampersand = !empty($base_url) ? '&' : '';
+                
+                $range = 2; // Jumlah halaman yang ditampilkan di kiri dan kanan halaman aktif
+
+                if ($page > 1) {
+                    echo '<a href="?' . $base_url . $ampersand . 'page=' . ($page - 1) . '">‹ Sebelumnya</a>';
+                } else {
+                    echo '<span class="disabled">‹ Sebelumnya</span>';
+                }
+
+                if ($page > ($range + 1)) {
+                    echo '<a href="?' . $base_url . $ampersand . 'page=1">1</a>';
+                    if ($page > ($range + 2)) {
+                        echo '<span class="ellipsis">...</span>';
+                    }
+                }
+
+                for ($i = max(1, $page - $range); $i <= min($total_pages, $page + $range); $i++) {
+                    if ($i == $page) {
+                        echo '<span class="active">' . $i . '</span>';
+                    } else {
+                        echo '<a href="?' . $base_url . $ampersand . 'page=' . $i . '">' . $i . '</a>';
+                    }
+                }
+
+                if ($page < ($total_pages - $range)) {
+                    if ($page < ($total_pages - $range - 1)) {
+                        echo '<span class="ellipsis">...</span>';
+                    }
+                    echo '<a href="?' . $base_url . $ampersand . 'page=' . $total_pages . '">' . $total_pages . '</a>';
+                }
+
+                if ($page < $total_pages) {
+                    echo '<a href="?' . $base_url . $ampersand . 'page=' . ($page + 1) . '">Selanjutnya ›</a>';
+                } else {
+                    echo '<span class="disabled">Selanjutnya ›</span>';
+                }
+                ?>
+            </div>
+            
+            <div class="pagination-info">
+                Menampilkan <?= count($data_khl) ?> dari <?= $total_records ?> data KHL
+            </div>
+        <?php endif; ?>
     </div>
 </main>
 </body>

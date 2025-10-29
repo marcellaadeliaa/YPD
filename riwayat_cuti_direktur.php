@@ -74,7 +74,40 @@ if (!$result) {
     die("Query Gagal: " . mysqli_error($conn) . " Query: " . $sql);
 }
 
-$filtered_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
+$all_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
+
+// Pagination configuration
+$limit = 5; // Jumlah data per halaman
+$total_records = count($all_data);
+$total_pages = ceil($total_records / $limit);
+
+$page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+if ($page < 1) {
+    $page = 1;
+}
+if ($page > $total_pages && $total_pages > 0) {
+    $page = $total_pages;
+}
+
+$offset = ($page - 1) * $limit;
+$filtered_data = array_slice($all_data, $offset, $limit);
+
+// Fungsi untuk menghitung hari kerja
+function hitungHariKerja($tanggal_mulai, $tanggal_akhir) {
+    $jumlah_hari = 0;
+    $current_date = new DateTime($tanggal_mulai);
+    $end_date = new DateTime($tanggal_akhir);
+    
+    while ($current_date <= $end_date) {
+        $day_of_week = $current_date->format('N'); 
+        if ($day_of_week >= 1 && $day_of_week <= 5) { 
+            $jumlah_hari++;
+        }
+        $current_date->modify('+1 day');
+    }
+    
+    return $jumlah_hari;
+}
 
 ?>
 <!DOCTYPE html>
@@ -128,7 +161,7 @@ $filtered_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
     
     .data-table { 
         width: 100%;
-        min-width: 1200px; /* Minimum width untuk memastikan konten terbaca */
+        min-width: 1400px; /* Minimum width untuk memastikan konten terbaca */
         border-collapse: collapse; 
         font-size: 14px; 
     }
@@ -228,6 +261,132 @@ $filtered_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
         margin-top: 5px;
         font-style: italic;
     }
+
+    /* Style tambahan dari riwayatcuti_penanggungjawab.php */
+    .cuti-details {
+        background: #f8f9fa;
+        padding: 8px;
+        border-radius: 6px;
+        margin: 5px 0;
+        font-size: 0.8rem;
+    }
+
+    .hari-kerja-info {
+        background: #e7f3ff;
+        padding: 6px 10px;
+        border-radius: 4px;
+        margin: 3px 0;
+        font-size: 0.75rem;
+        border-left: 3px solid #2196F3;
+    }
+
+    .role-badge {
+        background: #e9ecef;
+        color: #495057;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .role-karyawan {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .role-penanggung-jawab {
+        background: #cce7ff;
+        color: #004085;
+    }
+    
+    .role-direktur {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .role-admin {
+        background: #e2e3e5;
+        color: #383d41;
+    }
+
+    .weekend-note {
+        color: #666;
+        font-size: 0.75rem;
+        font-style: italic;
+        margin-top: 3px;
+    }
+
+    /* Pagination Styles */
+.pagination-wrapper {
+    background-color: #f8f9fa;
+    padding: 20px 15px;
+    margin-top: 30px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.pagination-wrapper a, 
+.pagination-wrapper span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+    padding: 0 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.2s ease-in-out;
+    user-select: none;
+}
+
+.pagination-wrapper a {
+    color: #1E105E; /* Warna teks untuk link */
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+}
+
+.pagination-wrapper a:hover {
+    background-color: #1E105E;
+    color: #fff;
+    border-color: #1E105E;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.pagination-wrapper span.active {
+    background-color: #1E105E;
+    color: #fff;
+    border: 1px solid #1E105E;
+    cursor: default;
+    box-shadow: 0 4px 10px rgba(30, 16, 94, 0.3);
+}
+
+.pagination-wrapper span.disabled {
+    color: #adb5bd;
+    background-color: #e9ecef;
+    border: 1px solid #dee2e6;
+    cursor: not-allowed;
+}
+
+.pagination-wrapper span.ellipsis {
+    background-color: transparent;
+    border: none;
+    color: #6c757d;
+    font-weight: bold;
+}
+    .pagination-info {
+        text-align: center;
+        margin-top: 15px;
+        color: #666;
+        font-size: 14px;
+    }
     
     @media (max-width: 768px) { 
         .filter-row { flex-direction: column; } 
@@ -241,7 +400,7 @@ $filtered_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
         
         /* Untuk mobile, kurangi min-width tabel */
         .data-table {
-            min-width: 1000px;
+            min-width: 1200px;
         }
         
         /* Perbesar scrollbar di mobile */
@@ -252,7 +411,7 @@ $filtered_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
     
     @media (max-width: 480px) {
         .data-table {
-            min-width: 800px;
+            min-width: 1000px;
         }
         
         .data-table th, .data-table td {
@@ -370,7 +529,14 @@ $filtered_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
                 echo implode(' | ', $filters);
                 ?>
                 <span style="float: right; color: #666;">
-                    Data ditemukan: <?= count($filtered_data) ?>
+                    Total Data: <?= $total_records ?> | Halaman <?= $page ?> dari <?= $total_pages ?>
+                </span>
+            </div>
+        <?php else: ?>
+            <div class="filter-info">
+                <strong>Total Data:</strong> <?= $total_records ?> cuti
+                <span style="float: right; color: #666;">
+                    Halaman <?= $page ?> dari <?= $total_pages ?>
                 </span>
             </div>
         <?php endif; ?>
@@ -381,37 +547,59 @@ $filtered_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
                 <thead> 
                     <tr> 
                         <th>No</th> 
-                        <th>Kode Karyawan</th> 
-                        <th>Nama Karyawan</th> 
-                        <th>Divisi</th> 
-                        <th>Jabatan</th> 
+                        <th>Kode</th> 
+                        <th>Nama</th> 
                         <th>Role</th> 
                         <th>Jenis Cuti</th> 
                         <th>Tanggal Mulai</th> 
                         <th>Tanggal Akhir</th> 
-                        <th>Alasan</th> 
-                        <th>File Surat</th> 
+                        <th>Alasan Cuti</th> 
+                        <th>Alasan Penolakan</th> 
+                        <th>File Surat Dokter</th> 
                         <th>Status</th>
-                        <th>Alasan Penolakan</th>
+                        <th>Waktu Persetujuan</th>
+                        <th>Tanggal Pengajuan</th>
                     </tr> 
                 </thead> 
                 <tbody> 
                     <?php if (!empty($filtered_data)): ?> 
-                        <?php $no = 1; foreach ($filtered_data as $cuti): ?> 
+                        <?php $no = $offset + 1; foreach ($filtered_data as $cuti): ?> 
+                            <?php 
+                            $jumlah_hari_kerja = hitungHariKerja($cuti['tanggal_mulai'], $cuti['tanggal_akhir']);
+                            $total_hari_kalender = (strtotime($cuti['tanggal_akhir']) - strtotime($cuti['tanggal_mulai'])) / (60 * 60 * 24) + 1;
+                            $alasan_penolakan = isset($cuti['alasan_penolakan']) ? $cuti['alasan_penolakan'] : '';
+                            ?>
                             <tr> 
                                 <td style="text-align: center;"><?= $no++ ?></td> 
                                 <td><?= htmlspecialchars($cuti['kode_karyawan']) ?></td> 
-                                <td><?= htmlspecialchars($cuti['nama_karyawan']) ?></td> 
-                                <td><?= htmlspecialchars($cuti['divisi']) ?></td> 
-                                <td><?= htmlspecialchars($cuti['jabatan']) ?></td> 
-                                <td><?= htmlspecialchars(ucfirst($cuti['role'])) ?></td> 
+                                <td>
+                                    <?= htmlspecialchars($cuti['nama_karyawan']) ?>
+                                    <div class="cuti-details">
+                                        <strong>Periode:</strong> <?= $total_hari_kalender ?> hari kalender<br>
+                                        <div class="hari-kerja-info">
+                                            <strong>Hari Kerja:</strong> <?= $jumlah_hari_kerja ?> hari (Senin-Jumat)
+                                        </div>
+                                    </div>
+                                </td> 
+                                <td>
+                                    <span class="role-badge role-<?= str_replace(' ', '-', $cuti['role']) ?>">
+                                        <?= htmlspecialchars(ucfirst($cuti['role'])) ?>
+                                    </span>
+                                </td> 
                                 <td><?= htmlspecialchars($cuti['jenis_cuti']) ?></td> 
-                                <td><?= date('d/m/Y', strtotime($cuti['tanggal_mulai'])) ?></td> 
-                                <td><?= date('d/m/Y', strtotime($cuti['tanggal_akhir'])) ?></td> 
+                                <td><?= htmlspecialchars($cuti['tanggal_mulai']) ?></td> 
+                                <td><?= htmlspecialchars($cuti['tanggal_akhir']) ?></td> 
                                 <td class="alasan-cell"><?= htmlspecialchars($cuti['alasan']) ?></td> 
+                                <td class="alasan-penolakan-cell">
+                                    <?php if (!empty($alasan_penolakan) && $cuti['status'] == 'Ditolak'): ?>
+                                        <?= htmlspecialchars($alasan_penolakan) ?>
+                                    <?php else: ?>
+                                        <span style="color:#999;">-</span>
+                                    <?php endif; ?>
+                                </td>
                                 <td style="text-align: center;"> 
                                     <?php if (!empty($cuti['file_surat_dokter'])): ?> 
-                                        <a href="<?= htmlspecialchars($cuti['file_surat_dokter']) ?>" class="file-link" target="_blank">Lihat</a> 
+                                        <a href="<?= htmlspecialchars($cuti['file_surat_dokter']) ?>" class="file-link" target="_blank">Lihat File</a> 
                                     <?php else: ?> 
                                         <span style="color:#999;">-</span> 
                                     <?php endif; ?> 
@@ -419,9 +607,14 @@ $filtered_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
                                 <td style="text-align: center;"> 
                                     <?php $status = strtolower(trim($cuti['status'])); if ($status === 'diterima') { echo '<span class="status-diterima">Diterima</span>'; } elseif ($status === 'ditolak') { echo '<span class="status-ditolak">Ditolak</span>'; } elseif ($status === 'menunggu persetujuan') { echo '<span class="status-menunggu">Menunggu</span>'; } else { echo htmlspecialchars($cuti['status'] ?: '-'); } ?> 
                                 </td>
-                                <td class="alasan-penolakan-cell">
-                                    <?= !empty($cuti['alasan_penolakan']) ? htmlspecialchars($cuti['alasan_penolakan']) : '<span style="color:#999;">-</span>' ?>
+                                <td>
+                                    <?php if (!empty($cuti['waktu_persetujuan'])): ?>
+                                        <?= date('d/m/Y H:i', strtotime($cuti['waktu_persetujuan'])) ?>
+                                    <?php else: ?>
+                                        <span style="color:#999;">-</span>
+                                    <?php endif; ?>
                                 </td>
+                                <td><?= date('d/m/Y H:i', strtotime($cuti['created_at'])) ?></td>
                             </tr> 
                         <?php endforeach; ?> 
                     <?php else: ?> 
@@ -434,6 +627,57 @@ $filtered_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
         <div class="scroll-indicator">
             ← Geser untuk melihat lebih banyak data →
         </div>
+
+        <?php if ($total_pages > 1): ?>
+            <div class="pagination-wrapper">
+                <?php
+                $query_params = $_GET;
+                unset($query_params['page']);
+                $base_url = http_build_query($query_params);
+                $ampersand = !empty($base_url) ? '&' : '';
+                
+                $range = 2; // Jumlah halaman yang ditampilkan di kiri dan kanan halaman aktif
+
+                if ($page > 1) {
+                    echo '<a href="?' . $base_url . $ampersand . 'page=' . ($page - 1) . '">‹ Sebelumnya</a>';
+                } else {
+                    echo '<span class="disabled">‹ Sebelumnya</span>';
+                }
+
+                if ($page > ($range + 1)) {
+                    echo '<a href="?' . $base_url . $ampersand . 'page=1">1</a>';
+                    if ($page > ($range + 2)) {
+                        echo '<span class="ellipsis">...</span>';
+                    }
+                }
+
+                for ($i = max(1, $page - $range); $i <= min($total_pages, $page + $range); $i++) {
+                    if ($i == $page) {
+                        echo '<span class="active">' . $i . '</span>';
+                    } else {
+                        echo '<a href="?' . $base_url . $ampersand . 'page=' . $i . '">' . $i . '</a>';
+                    }
+                }
+
+                if ($page < ($total_pages - $range)) {
+                    if ($page < ($total_pages - $range - 1)) {
+                        echo '<span class="ellipsis">...</span>';
+                    }
+                    echo '<a href="?' . $base_url . $ampersand . 'page=' . $total_pages . '">' . $total_pages . '</a>';
+                }
+
+                if ($page < $total_pages) {
+                    echo '<a href="?' . $base_url . $ampersand . 'page=' . ($page + 1) . '">Selanjutnya ›</a>';
+                } else {
+                    echo '<span class="disabled">Selanjutnya ›</span>';
+                }
+                ?>
+            </div>
+            
+            <div class="pagination-info">
+                Menampilkan <?= count($filtered_data) ?> dari <?= $total_records ?> data cuti
+            </div>
+        <?php endif; ?>
     </div>
 </main>
 
