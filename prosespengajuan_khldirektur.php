@@ -5,7 +5,7 @@ require_once 'config.php';
 $display_data = false;
 $error_msg = '';
 
-// Fungsi validasi weekend dan holiday - DITAMBAHKAN
+// Fungsi validasi weekend dan holiday
 function isHoliday($dateString) {
     $fixedHolidays = [
         '01-01', // 1 Januari
@@ -22,7 +22,7 @@ function isWeekend($dateString) {
     return $dayOfWeek == 0 || $dayOfWeek == 6; // 0 = Minggu, 6 = Sabtu
 }
 
-// Fungsi konversi waktu ke menit - DITAMBAHKAN
+// Fungsi konversi waktu ke menit
 function convertTimeToMinutes($timeString) {
     list($hours, $minutes) = explode(':', $timeString);
     return ($hours * 60) + $minutes;
@@ -41,18 +41,40 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $jabatan = $user['jabatan'];
     $role = 'direktur';
 
-    $proyek = $_POST['proyek'] ?? '';
-    $tanggal_khl = $_POST['tanggal_khl'] ?? '';
-    $jam_mulai_kerja = $_POST['jam_mulai_kerja'] ?? '';
-    $jam_akhir_kerja = $_POST['jam_akhir_kerja'] ?? '';
-    $tanggal_cuti_khl = $_POST['tanggal_cuti_khl'] ?? '';
-    $jam_mulai_cuti_khl = $_POST['jam_mulai_cuti_khl'] ?? '';
-    $jam_akhir_cuti_khl = $_POST['jam_akhir_cuti_khl'] ?? '';
+    // Sanitize input data
+    $proyek = trim($_POST['proyek'] ?? '');
+    $tanggal_khl = trim($_POST['tanggal_khl'] ?? '');
+    $jam_mulai_kerja = trim($_POST['jam_mulai_kerja'] ?? '');
+    $jam_akhir_kerja = trim($_POST['jam_akhir_kerja'] ?? '');
+    $tanggal_cuti_khl = trim($_POST['tanggal_cuti_khl'] ?? '');
+    $jam_mulai_cuti_khl = trim($_POST['jam_mulai_cuti_khl'] ?? '');
+    $jam_akhir_cuti_khl = trim($_POST['jam_akhir_cuti_khl'] ?? '');
 
     // Validasi field wajib
     if (empty($proyek) || empty($tanggal_khl) || empty($jam_mulai_kerja) || empty($jam_akhir_kerja) || 
         empty($tanggal_cuti_khl) || empty($jam_mulai_cuti_khl) || empty($jam_akhir_cuti_khl)) {
         $error_msg = "Semua field harus diisi.";
+    }
+
+    // Validasi format tanggal
+    if (empty($error_msg)) {
+        if (!DateTime::createFromFormat('Y-m-d', $tanggal_khl)) {
+            $error_msg = "Format tanggal KHL tidak valid.";
+        }
+        
+        if (!DateTime::createFromFormat('Y-m-d', $tanggal_cuti_khl)) {
+            $error_msg = "Format tanggal cuti KHL tidak valid.";
+        }
+    }
+
+    // Validasi format waktu
+    if (empty($error_msg)) {
+        if (!DateTime::createFromFormat('H:i', $jam_mulai_kerja) || 
+            !DateTime::createFromFormat('H:i', $jam_akhir_kerja) ||
+            !DateTime::createFromFormat('H:i', $jam_mulai_cuti_khl) || 
+            !DateTime::createFromFormat('H:i', $jam_akhir_cuti_khl)) {
+            $error_msg = "Format jam tidak valid.";
+        }
     }
 
     // HILANGKAN VALIDASI WEEKEND DAN HOLIDAY UNTUK TANGGAL KHL
@@ -63,12 +85,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $error_msg = "Tanggal Cuti KHL tidak boleh pada hari weekend atau hari libur nasional.";
     }
 
-    // Validasi tanggal tidak sama - DITAMBAHKAN
+    // Validasi tanggal tidak sama
     if (empty($error_msg) && $tanggal_khl === $tanggal_cuti_khl) {
         $error_msg = "Tanggal KHL dan Tanggal Cuti KHL tidak boleh sama.";
     }
 
-    // Validasi jam kerja dengan fungsi convertTimeToMinutes - DIPERBAIKI
+    // Validasi jam kerja dengan fungsi convertTimeToMinutes
     if (empty($error_msg)) {
         $jam_mulai_kerja_minutes = convertTimeToMinutes($jam_mulai_kerja);
         $jam_akhir_kerja_minutes = convertTimeToMinutes($jam_akhir_kerja);
@@ -83,7 +105,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
-    // Validasi jam cuti dengan fungsi convertTimeToMinutes - DIPERBAIKI
+    // Validasi jam cuti dengan fungsi convertTimeToMinutes
     if (empty($error_msg)) {
         $jam_mulai_cuti_minutes = convertTimeToMinutes($jam_mulai_cuti_khl);
         $jam_akhir_cuti_minutes = convertTimeToMinutes($jam_akhir_cuti_khl);
@@ -365,7 +387,7 @@ mysqli_close($conn);
     .khl-id { 
         background-color: #e7f3ff; 
         color: #0c5460; 
-        padding: 10px; 
+        padding: 10px;  
         border-radius: 5px; 
         margin: 10px 0; 
         border: 1px solid #b8daff; 
@@ -382,6 +404,30 @@ mysqli_close($conn);
         text-align: center;
         margin: 15px 0;
         font-size: 16px;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .container {
+            padding: 20px;
+            margin: 20px 10px;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
+        }
+        
+        header {
+            padding: 15px 20px;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        nav ul {
+            flex-direction: column;
+            gap: 15px;
+            text-align: center;
+        }
     }
 </style>
 </head>
@@ -473,7 +519,7 @@ mysqli_close($conn);
             <div class="action-buttons">
                 <a href="pengajuan_khl_direktur.php" class="btn btn-primary">Ajukan KHL Lain</a>
                 <a href="dashboarddirektur.php" class="btn btn-secondary">Kembali ke Dashboard</a>
-                <a href="riwayat_khl_pribadi_direktur.php" class="btn btn-primary">Lihat Riwayat KHL</a>
+                <a href="riwayat_khl_pribadi_direktur.php" class="btn btn-secondary">Lihat Riwayat KHL</a>
             </div>
         </div>
     </main>
