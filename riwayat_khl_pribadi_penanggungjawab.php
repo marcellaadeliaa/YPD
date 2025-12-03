@@ -451,7 +451,6 @@ $conn->close();
                             <th>Jam Cuti</th>
                             <th>Status</th>
                             <th>Tanggal Pengajuan</th>
-                            <!-- HAPUS KOLOM AKSI -->
                         </tr>
                     </thead>
                     <tbody>
@@ -502,7 +501,6 @@ $conn->close();
                                     <span class="status-badge <?= $status_class ?>"><?= $status_text ?></span>
                                 </td>
                                 <td><?= date('d/m/Y H:i', strtotime($khl['created_at'])) ?></td>
-                                <!-- HAPUS KOLOM AKSI -->
                             </tr>
                         <?php endforeach; ?>
                     </tbody>

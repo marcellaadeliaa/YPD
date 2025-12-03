@@ -70,7 +70,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     }
                     
                     if (isset($message) && $message_type == 'error') {
-                        // Do nothing, message will be displayed
                     } else {
                         $new_status = 'Diterima';
                         $waktu_persetujuan = date('Y-m-d H:i:s');
@@ -92,16 +91,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         
                         $update_stmt->close();
                     }
-                } else { // Ini adalah blok 'reject'
+                } else { 
                     $new_status = 'Ditolak';
                     $waktu_persetujuan = date('Y-m-d H:i:s');
                     
-                    // --- PERUBAHAN DI SINI ---
-                    // Kolom 'alasan' diubah menjadi 'alasan_penolakan'
                     $update_query = "UPDATE data_pengajuan_cuti SET status = ?, alasan_penolakan = ?, waktu_persetujuan = ? WHERE id = ?";
                     $update_stmt = $conn->prepare($update_query);
                     
-                    // Bind param sudah benar, menggunakan $alasan_penolakan
                     $update_stmt->bind_param("sssi", $new_status, $alasan_penolakan, $waktu_persetujuan, $id_cuti);
                     
                     if ($update_stmt->execute()) {

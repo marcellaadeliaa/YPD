@@ -222,7 +222,6 @@ $result = $stmt->get_result();
             border: 1px solid #f5c6cb;
         }
         
-        /* Container untuk tabel scrollable */
         .table-container {
             width: 100%;
             overflow-x: auto;
@@ -235,7 +234,7 @@ $result = $stmt->get_result();
             width: 100%;
             border-collapse: collapse;
             background: white;
-            min-width: 1300px; /* Lebar minimum untuk memaksa scroll */
+            min-width: 1300px;
         }
         
         th, td {

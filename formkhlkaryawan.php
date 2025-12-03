@@ -37,7 +37,6 @@ if (empty($divisi) || empty($jabatan)) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Pengajuan KHL</title>
 <style>
-  /* CSS tetap sama seperti sebelumnya */
   body {
     margin:0;
     font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -331,11 +330,10 @@ if (empty($divisi) || empty($jabatan)) {
 </main>
 
 <script>
-  // Daftar tanggal merah (format: MM-DD)
   const fixedHolidays = [
-      '01-01', // 1 Januari
-      '08-17', // 17 Agustus
-      '12-25'  // 25 Desember
+      '01-01', 
+      '08-17', 
+      '12-25' 
   ];
 
   function isHoliday(dateString) {
@@ -347,7 +345,7 @@ if (empty($divisi) || empty($jabatan)) {
   function isWeekend(dateString) {
       const date = new Date(dateString);
       const dayOfWeek = date.getDay();
-      return dayOfWeek === 0 || dayOfWeek === 6; // 0 = Minggu, 6 = Sabtu
+      return dayOfWeek === 0 || dayOfWeek === 6;
   }
 
   function validateSelectedDates() {
@@ -362,10 +360,6 @@ if (empty($divisi) || empty($jabatan)) {
       let hasError = false;
       let errorMessage = '';
       
-      // HILANGKAN VALIDASI UNTUK TANGGAL KHL (boleh weekend dan libur)
-      // Validasi tanggal KHL dihapus
-      
-      // TETAPKAN VALIDASI UNTUK TANGGAL CUTI KHL
       if (tanggalCutiKHL.value) {
           if (isHoliday(tanggalCutiKHL.value)) {
               errorMessage += `Tanggal Cuti KHL (${formatDate(tanggalCutiKHL.value)}) adalah hari libur nasional. `;
@@ -377,7 +371,6 @@ if (empty($divisi) || empty($jabatan)) {
           }
       }
       
-      // Validasi jika kedua tanggal sama
       if (tanggalKHL.value && tanggalCutiKHL.value && tanggalKHL.value === tanggalCutiKHL.value) {
           errorMessage += 'Tanggal KHL dan Tanggal Cuti KHL tidak boleh sama. ';
           hasError = true;
@@ -410,7 +403,7 @@ if (empty($divisi) || empty($jabatan)) {
           }
           
           const durasi = akhir - mulai;
-          if (durasi < 60) { // kurang dari 1 jam
+          if (durasi < 60) {
               errorDiv.textContent = 'Durasi kerja minimal 1 jam';
               errorDiv.style.display = 'block';
               return false;
@@ -438,7 +431,7 @@ if (empty($divisi) || empty($jabatan)) {
           }
           
           const durasi = akhir - mulai;
-          if (durasi < 60) { // kurang dari 1 jam
+          if (durasi < 60) { 
               errorDiv.textContent = 'Durasi cuti minimal 1 jam';
               errorDiv.style.display = 'block';
               return false;
@@ -469,10 +462,6 @@ if (empty($divisi) || empty($jabatan)) {
       const tanggalKHL = document.getElementById('tanggal_khl');
       const tanggalCutiKHL = document.getElementById('tanggal_cuti_khl');
       
-      // HILANGKAN VALIDASI UNTUK TANGGAL KHL
-      // Tidak ada validasi weekend/holiday untuk tanggal KHL
-      
-      // TETAPKAN VALIDASI UNTUK TANGGAL CUTI KHL
       if (tanggalCutiKHL.value && (isWeekend(tanggalCutiKHL.value) || isHoliday(tanggalCutiKHL.value))) {
           e.preventDefault();
           alert('Tanggal Cuti KHL tidak boleh pada hari weekend atau hari libur nasional');
@@ -480,21 +469,18 @@ if (empty($divisi) || empty($jabatan)) {
           return;
       }
       
-      // Validasi jam kerja
       if (!validateJamKerja()) {
           e.preventDefault();
           alert('Jam kerja tidak valid. Periksa kembali jam mulai dan jam akhir kerja.');
           return;
       }
       
-      // Validasi jam cuti
       if (!validateJamCuti()) {
           e.preventDefault();
           alert('Jam cuti tidak valid. Periksa kembali jam mulai dan jam akhir cuti.');
           return;
       }
       
-      // Validasi tanggal tidak sama
       if (tanggalKHL.value && tanggalCutiKHL.value && tanggalKHL.value === tanggalCutiKHL.value) {
           e.preventDefault();
           alert('Tanggal KHL dan Tanggal Cuti KHL tidak boleh sama');
@@ -503,7 +489,6 @@ if (empty($divisi) || empty($jabatan)) {
   });
 
   document.addEventListener('DOMContentLoaded', function() {
-      // Tidak perlu set minimum date untuk KHL (boleh memilih tanggal sebelum hari ini)
   });
 </script>
 

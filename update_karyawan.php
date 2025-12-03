@@ -19,7 +19,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $no_telp = $_POST['no_telp'] ?? '';
     $status_aktif = $_POST['status_aktif'] ?? 'aktif';
     
-    // Data personal tambahan - gunakan null coalescing untuk handle empty values
     $jenis_kelamin = !empty($_POST['jenis_kelamin']) ? $_POST['jenis_kelamin'] : NULL;
     $tempat_lahir = !empty($_POST['tempat_lahir']) ? $_POST['tempat_lahir'] : NULL;
     $tanggal_lahir = !empty($_POST['tanggal_lahir']) ? $_POST['tanggal_lahir'] : NULL;
@@ -30,7 +29,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $kontak_darurat = !empty($_POST['kontak_darurat']) ? $_POST['kontak_darurat'] : NULL;
     $pendidikan_terakhir = !empty($_POST['pendidikan_terakhir']) ? $_POST['pendidikan_terakhir'] : NULL;
     
-    // Validasi field wajib
     if (empty($kode_karyawan) || empty($nama_lengkap) || empty($email) || empty($password) || 
         empty($jabatan) || empty($divisi) || empty($role)) {
         $_SESSION['error_message'] = "Semua field wajib harus diisi!";
@@ -38,7 +36,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     
-    // Validasi: Cek apakah kode karyawan sudah digunakan oleh karyawan lain
     $check_sql = "SELECT id_karyawan FROM data_karyawan WHERE kode_karyawan = ? AND id_karyawan != ?";
     $check_stmt = $conn->prepare($check_sql);
     $check_stmt->bind_param("si", $kode_karyawan, $id_karyawan);
@@ -51,7 +48,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     
-    // Validasi: Cek apakah email sudah digunakan oleh karyawan lain
     $check_email_sql = "SELECT id_karyawan FROM data_karyawan WHERE email = ? AND id_karyawan != ?";
     $check_email_stmt = $conn->prepare($check_email_sql);
     $check_email_stmt->bind_param("si", $email, $id_karyawan);
@@ -77,11 +73,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     //     exit;
     // }
     
-    // Debug: Tampilkan data yang akan diupdate
     error_log("Updating karyawan ID: $id_karyawan");
     error_log("Data personal: jenis_kelamin=$jenis_kelamin, tempat_lahir=$tempat_lahir");
     
-    // Buat SQL update dengan field yang pasti ada
     $sql = "UPDATE data_karyawan SET 
             kode_karyawan = ?, 
             nama_lengkap = ?, 
@@ -106,7 +100,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ];
     $param_types = "sssssssss";
     
-    // Tambahkan field personal jika ada di database (opsional)
     $additional_fields = [
         'jenis_kelamin' => $jenis_kelamin,
         'tempat_lahir' => $tempat_lahir,
@@ -119,7 +112,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'pendidikan_terakhir' => $pendidikan_terakhir
     ];
     
-    // Cek kolom yang ada di database
     $check_table_sql = "DESCRIBE data_karyawan";
     $table_result = $conn->query($check_table_sql);
     $existing_columns = [];
@@ -130,7 +122,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     
-    // Tambahkan field yang ada di database
     foreach ($additional_fields as $column => $value) {
         if (in_array($column, $existing_columns)) {
             $sql .= ", $column = ?";
@@ -140,7 +131,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     
-    // Tambahkan WHERE clause
     $sql .= " WHERE id_karyawan = ?";
     $param_types .= "i";
     $params[] = $id_karyawan;
@@ -155,7 +145,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     
-    // Bind parameters
     $bind_params = [$param_types];
     foreach ($params as &$param) {
         $bind_params[] = &$param;

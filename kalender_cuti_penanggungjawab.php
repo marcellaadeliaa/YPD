@@ -672,12 +672,10 @@ $cuti_colors = [
             <div class="calendar-day-header">Sabtu</div>
             <div class="calendar-day-header">Minggu</div>
             
-            <!-- Empty days for first week -->
             <?php for ($i = 0; $i < $first_day_of_week; $i++): ?>
                 <div class="calendar-day other-month"></div>
             <?php endfor; ?>
             
-            <!-- Days of the month -->
             <?php for ($day = 1; $day <= $days_in_month; $day++): ?>
                 <?php
                 $current_date = date('Y-m-d', mktime(0, 0, 0, $month, $day, $year));

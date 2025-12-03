@@ -32,7 +32,6 @@ $stmt->close();
 
 $success_message = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Update data pribadi yang diizinkan
     $jenis_kelamin = $_POST['jenis_kelamin'] ?? '';
     $tempat_lahir = $_POST['tempat_lahir'] ?? '';
     $tanggal_lahir = $_POST['tanggal_lahir'] ?? '';
@@ -59,7 +58,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     $update_stmt = $conn->prepare($update_sql);
     
-    // Handle tanggal lahir yang kosong
     if (empty($tanggal_lahir)) {
         $tanggal_lahir = null;
     }
@@ -80,7 +78,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     if ($update_stmt->execute()) {
         $success_message = "Data pribadi berhasil diupdate!";
-        // Update data di session
         $karyawan['jenis_kelamin'] = $jenis_kelamin;
         $karyawan['tempat_lahir'] = $tempat_lahir;
         $karyawan['tanggal_lahir'] = $tanggal_lahir;
@@ -363,7 +360,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         <?php endif; ?>
 
-        <!-- Informasi yang tidak bisa diedit -->
         <div class="info-grid">
             <div class="info-item">
                 <span class="info-label">Kode Karyawan</span>
@@ -401,7 +397,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </div>
 
-        <!-- Form edit data pribadi yang diizinkan -->
         <div class="edit-form">
             <h3>Edit Data Pribadi</h3>
             <form method="POST">

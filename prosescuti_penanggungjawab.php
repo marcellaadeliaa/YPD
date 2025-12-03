@@ -25,9 +25,9 @@ function handleFileUpload($file) {
 
 function isHoliday($dateString) {
     $fixedHolidays = [
-        '01-01', // 1 Januari
-        '08-17', // 17 Agustus
-        '12-25'  // 25 Desember
+        '01-01',
+        '08-17',
+        '12-25' 
     ];
     
     $monthDay = date('m-d', strtotime($dateString));
@@ -36,7 +36,7 @@ function isHoliday($dateString) {
 
 function isWeekend($dateString) {
     $dayOfWeek = date('w', strtotime($dateString));
-    return $dayOfWeek == 0 || $dayOfWeek == 6; // 0 = Minggu, 6 = Sabtu
+    return $dayOfWeek == 0 || $dayOfWeek == 6; 
 }
 
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'penanggung jawab') {
@@ -59,7 +59,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $alasan = $_POST['alasan_cuti'];
     $jenis_cuti = $jenis_cuti_raw;
 
-    // Validasi weekend dan holiday - DITAMBAHKAN
     if (isWeekend($tanggal_mulai) || isHoliday($tanggal_mulai)) {
         $error_msg = "Tanggal mulai tidak boleh pada hari weekend atau hari libur nasional.";
     }
@@ -72,12 +71,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $jenis_cuti = 'Khusus - ' . $_POST['jenis_cuti_khusus'];
     }
 
-    // Validasi tanggal
     if ($tanggal_akhir < $tanggal_mulai) {
         $error_msg = "Tanggal akhir tidak boleh lebih awal dari tanggal mulai.";
     }
 
-    // Validasi jumlah hari cuti khusus
     if ($jenis_cuti_raw === 'Khusus' && !empty($_POST['jenis_cuti_khusus'])) {
         $max_days = 0;
         switch($_POST['jenis_cuti_khusus']) {
@@ -105,7 +102,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
-    // Validasi cuti sakit
     if ($jenis_cuti_raw === 'Sakit') {
         if (!isset($_FILES['bukti_surat_dokter']) || $_FILES['bukti_surat_dokter']['error'] === UPLOAD_ERR_NO_FILE) {
             $error_msg = "Untuk cuti sakit, wajib mengunggah bukti surat keterangan dokter.";
@@ -119,12 +115,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
-    // Validasi field wajib
     if (empty($kode_karyawan) || empty($jenis_cuti) || empty($tanggal_mulai) || empty($tanggal_akhir) || empty($alasan)) {
         $error_msg = "Semua field wajib diisi.";
     }
 
-    // Simpan ke database jika tidak ada error
     if (empty($error_msg)) {
         $sql = "INSERT INTO data_pengajuan_cuti (kode_karyawan, nama_karyawan, divisi, jabatan, role, jenis_cuti, tanggal_mulai, tanggal_akhir, alasan, file_surat_dokter, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Menunggu Persetujuan')"; // STATUS DIUBAH
         $stmt = mysqli_prepare($conn, $sql);

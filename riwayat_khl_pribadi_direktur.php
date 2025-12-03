@@ -52,8 +52,7 @@ if ($stmt) {
     $all_data = [];
 }
 
-// Pagination configuration
-$limit = 5; // Jumlah data per halaman
+$limit = 5; 
 $total_records = count($all_data);
 $total_pages = ceil($total_records / $limit);
 
@@ -468,7 +467,7 @@ $conn->close();
                 $base_url = http_build_query($query_params);
                 $ampersand = !empty($base_url) ? '&' : '';
                 
-                $range = 2; // Jumlah halaman yang ditampilkan di kiri dan kanan halaman aktif
+                $range = 2; 
 
                 if ($page > 1) {
                     echo '<a href="?' . $base_url . $ampersand . 'page=' . ($page - 1) . '">‹ Sebelumnya</a>';

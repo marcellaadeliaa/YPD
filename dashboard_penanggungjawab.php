@@ -237,7 +237,6 @@ $conn->close();
             <?php endif; ?>
         </div>
 
-        <!-- KHL -->
         <div class="card" style="flex: 1; min-width: 48%;">
             <h3>5 Pengajuan KHL Terbaru (Pending)</h3>
             <?php if (count($recent_khl) > 0): ?>

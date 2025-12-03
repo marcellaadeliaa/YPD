@@ -7,7 +7,6 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
     exit();
 }
 
-// Fungsi untuk mencari data pelamar berdasarkan nama
 function cariDataPelamar($nama, $conn) {
     $sql = "SELECT dp.* FROM data_pelamar dp 
             LEFT JOIN data_karyawan dk ON dp.nama_lengkap = dk.nama_lengkap 
@@ -28,7 +27,6 @@ function cariDataPelamar($nama, $conn) {
     return $data;
 }
 
-// Fungsi untuk mengecek apakah pelamar sudah menjadi karyawan
 function cekPelamarSudahKaryawan($pelamar_id, $conn) {
     $sql = "SELECT dp.nama_lengkap, dk.id_karyawan 
             FROM data_pelamar dp 
@@ -53,14 +51,12 @@ if (isset($_GET['search']) && isset($_GET['nama'])) {
     exit();
 }
 
-// Proses jika ada data pelamar yang dipilih
 $selectedPelamar = null;
 $errorMessage = null;
 
 if (isset($_GET['pelamar_id'])) {
     $pelamar_id = $_GET['pelamar_id'];
     
-    // Cek apakah pelamar sudah menjadi karyawan
     if (cekPelamarSudahKaryawan($pelamar_id, $conn)) {
         $errorMessage = "Pelamar ini sudah terdaftar sebagai karyawan dan tidak dapat ditambahkan lagi.";
     } else {
@@ -705,7 +701,6 @@ if (isset($_GET['pelamar_id'])) {
                             <small>Posisi: ${pelamar.posisi_dilamar} | Email: ${pelamar.email}</small>
                         `;
                         item.addEventListener('click', function() {
-                            // Redirect ke halaman ini dengan parameter pelamar_id
                             window.location.href = `?pelamar_id=${pelamar.id}`;
                         });
                         resultsDiv.appendChild(item);
@@ -717,32 +712,26 @@ if (isset($_GET['pelamar_id'])) {
                 });
         });
 
-        // Fungsi untuk generate kode karyawan otomatis
-       // Fungsi untuk generate email otomatis (opsional)
         document.getElementById('nama_lengkap').addEventListener('blur', function() {
             const emailInput = document.getElementById('email');
             const namaInput = document.getElementById('nama_lengkap');
             
-            // Hanya generate email otomatis jika email masih kosong
             if (emailInput.value === '' && namaInput.value !== '' && !namaInput.readOnly) {
                 const nama = namaInput.value.toLowerCase().replace(/\s+/g, '.');
                 emailInput.value = nama + '@ypd.com';
             }
         });
 
-        // Fungsi untuk generate email otomatis (opsional)
         document.getElementById('nama_lengkap').addEventListener('blur', function() {
             const emailInput = document.getElementById('email');
             const namaInput = document.getElementById('nama_lengkap');
             
-            // Hanya generate email otomatis jika email masih kosong
             if (emailInput.value === '' && namaInput.value !== '' && !namaInput.readOnly) {
                 const nama = namaInput.value.toLowerCase().replace(/\s+/g, '.');
                 emailInput.value = nama + '@ypd.com';
             }
         });
 
-        // Generate password default
         document.addEventListener('DOMContentLoaded', function() {
             const passwordInput = document.getElementById('password');
             if (!passwordInput.readOnly) {
@@ -751,7 +740,6 @@ if (isset($_GET['pelamar_id'])) {
             }
         });
 
-        // Toggle password visibility
         document.getElementById('togglePassword').addEventListener('click', function() {
             if (!this.disabled) {
                 const passwordInput = document.getElementById('password');
@@ -769,7 +757,6 @@ if (isset($_GET['pelamar_id'])) {
             }
         });
 
-        // Pencarian dengan enter
         document.getElementById('searchNama').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -777,7 +764,6 @@ if (isset($_GET['pelamar_id'])) {
             }
         });
 
-        // Validasi form sebelum submit
         document.getElementById('tambahForm').addEventListener('submit', function(e) {
             const namaInput = document.getElementById('nama_lengkap');
             if (namaInput.readOnly) {

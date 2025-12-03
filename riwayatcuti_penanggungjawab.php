@@ -676,7 +676,6 @@ function hitungHariKerja($tanggal_mulai, $tanggal_akhir) {
                         $jumlah_hari_kerja = hitungHariKerja($row['tanggal_mulai'], $row['tanggal_akhir']);
                         $total_hari_kalender = (strtotime($row['tanggal_akhir']) - strtotime($row['tanggal_mulai'])) / (60 * 60 * 24) + 1;
                         
-                        // Check if there's alasan_penolakan in the row
                         $alasan_penolakan = isset($row['alasan_penolakan']) ? $row['alasan_penolakan'] : '';
                     ?>
                         <tr>

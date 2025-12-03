@@ -113,7 +113,6 @@ if ($result->num_rows > 0) {
             color: white;
         }
         
-        /* TAMBAHAN: Style untuk button backup */
         .btn-backup {
             background-color: #9b59b6;
             color: white;

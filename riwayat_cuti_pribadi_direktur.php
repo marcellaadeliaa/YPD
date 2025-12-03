@@ -73,8 +73,7 @@ if (!$result) {
 
 $all_data = mysqli_fetch_all($result, MYSQLI_ASSOC);
 
-// Pagination configuration
-$limit = 5; // Jumlah data per halaman
+$limit = 5; 
 $total_records = count($all_data);
 $total_pages = ceil($total_records / $limit);
 
@@ -89,7 +88,6 @@ if ($page > $total_pages && $total_pages > 0) {
 $offset = ($page - 1) * $limit;
 $filtered_data = array_slice($all_data, $offset, $limit);
 
-// Fungsi untuk menghitung hari kerja
 function hitungHariKerja($tanggal_mulai, $tanggal_akhir) {
     $jumlah_hari = 0;
     $current_date = new DateTime($tanggal_mulai);
@@ -146,7 +144,6 @@ function hitungHariKerja($tanggal_mulai, $tanggal_akhir) {
     .btn-reset { background-color: #6c757d; }
     .btn-reset:hover { background-color: #545b62; }
     
-    /* Container untuk tabel scrollable */
     .table-container {
         width: 100%;
         overflow-x: auto;
@@ -158,7 +155,7 @@ function hitungHariKerja($tanggal_mulai, $tanggal_akhir) {
     
     .data-table { 
         width: 100%;
-        min-width: 1400px; /* Minimum width untuk memastikan konten terbaca */
+        min-width: 1400px; 
         border-collapse: collapse; 
         font-size: 14px; 
     }
@@ -167,7 +164,7 @@ function hitungHariKerja($tanggal_mulai, $tanggal_akhir) {
         padding: 12px 15px; 
         text-align: left; 
         border: 1px solid #ddd;
-        white-space: nowrap; /* Mencegah wrap di sel normal */
+        white-space: nowrap; 
     }
     
     .data-table th { 
@@ -197,10 +194,9 @@ function hitungHariKerja($tanggal_mulai, $tanggal_akhir) {
         background-color: #e9ecef;
     }
     
-    /* Kolom dengan teks panjang bisa wrap */
     .data-table td.alasan-cell,
     .data-table td.alasan-penolakan-cell {
-        white-space: normal; /* Biarkan wrap untuk kolom alasan */
+        white-space: normal;
         min-width: 200px;
         max-width: 300px;
         word-wrap: break-word;
@@ -214,14 +210,12 @@ function hitungHariKerja($tanggal_mulai, $tanggal_akhir) {
     .file-link { color: #4a3f81; text-decoration: none; font-weight: 500;}
     .file-link:hover { text-decoration: underline;}
     
-    /* Styling untuk kolom alasan */
     .alasan-cell {
         max-width: 300px;
         word-wrap: break-word;
         line-height: 1.4;
     }
     
-    /* Styling untuk alasan penolakan */
     .alasan-penolakan-cell { 
         color: #d9534f; 
         font-style: italic;
@@ -231,7 +225,6 @@ function hitungHariKerja($tanggal_mulai, $tanggal_akhir) {
         line-height: 1.4;
     }
     
-    /* Scrollbar styling */
     .table-container::-webkit-scrollbar {
         height: 12px;
     }
@@ -250,7 +243,6 @@ function hitungHariKerja($tanggal_mulai, $tanggal_akhir) {
         background: #3a3162;
     }
     
-    /* Indikator scroll */
     .scroll-indicator {
         text-align: center;
         color: #666;
@@ -259,7 +251,6 @@ function hitungHariKerja($tanggal_mulai, $tanggal_akhir) {
         font-style: italic;
     }
 
-    /* Style tambahan dari riwayatcuti_penanggungjawab.php */
     .cuti-details {
         background: #f8f9fa;
         padding: 8px;
@@ -322,7 +313,6 @@ function hitungHariKerja($tanggal_mulai, $tanggal_akhir) {
         color: #155724;
     }
 
-    /* Pagination Styles */
     .pagination-wrapper {
         background-color: #f8f9fa;
         padding: 20px 15px;
@@ -353,7 +343,7 @@ function hitungHariKerja($tanggal_mulai, $tanggal_akhir) {
     }
 
     .pagination-wrapper a {
-        color: #1E105E; /* Warna teks untuk link */
+        color: #1E105E;
         background-color: #fff;
         border: 1px solid #dee2e6;
     }
@@ -405,12 +395,10 @@ function hitungHariKerja($tanggal_mulai, $tanggal_akhir) {
         .card { padding: 20px; }
         main { max-width: 1400px; }
         
-        /* Untuk mobile, kurangi min-width tabel */
         .data-table {
             min-width: 1200px;
         }
         
-        /* Perbesar scrollbar di mobile */
         .table-container::-webkit-scrollbar {
             height: 14px;
         }
@@ -549,7 +537,6 @@ function hitungHariKerja($tanggal_mulai, $tanggal_akhir) {
             </div>
         <?php endif; ?>
 
-        <!-- Container untuk tabel scrollable -->
         <div class="table-container">
             <table class="data-table">
                 <thead>
@@ -652,7 +639,7 @@ function hitungHariKerja($tanggal_mulai, $tanggal_akhir) {
                 $base_url = http_build_query($query_params);
                 $ampersand = !empty($base_url) ? '&' : '';
                 
-                $range = 2; // Jumlah halaman yang ditampilkan di kiri dan kanan halaman aktif
+                $range = 2; 
 
                 if ($page > 1) {
                     echo '<a href="?' . $base_url . $ampersand . 'page=' . ($page - 1) . '">‹ Sebelumnya</a>';
@@ -725,7 +712,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Validasi tanggal
     const startDate = document.getElementById('start_date');
     const endDate = document.getElementById('end_date');
     

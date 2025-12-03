@@ -9,9 +9,9 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'karyawan') {
 
 function isHoliday($dateString) {
     $fixedHolidays = [
-        '01-01', // 1 Januari
-        '08-17', // 17 Agustus
-        '12-25'  // 25 Desember
+        '01-01', 
+        '08-17', 
+        '12-25'  
     ];
     
     $monthDay = date('m-d', strtotime($dateString));
@@ -20,7 +20,7 @@ function isHoliday($dateString) {
 
 function isWeekend($dateString) {
     $dayOfWeek = date('w', strtotime($dateString));
-    return $dayOfWeek == 0 || $dayOfWeek == 6; // 0 = Minggu, 6 = Sabtu
+    return $dayOfWeek == 0 || $dayOfWeek == 6; 
 }
 
 if ($_SERVER["REQUEST_METHOD"] != "POST") {
@@ -37,7 +37,6 @@ $tanggal_cuti_khl = $_POST['tanggal_cuti_khl'];
 $jam_mulai_cuti_khl = $_POST['jam_mulai_cuti_khl'];
 $jam_akhir_cuti_khl = $_POST['jam_akhir_cuti_khl'];
 
-// Validasi input
 if (empty($nik) || empty($proyek) || empty($tanggal_khl) || empty($jam_mulai_kerja) || 
     empty($jam_akhir_kerja) || empty($tanggal_cuti_khl) || empty($jam_mulai_cuti_khl) || 
     empty($jam_akhir_cuti_khl)) {
@@ -45,22 +44,16 @@ if (empty($nik) || empty($proyek) || empty($tanggal_khl) || empty($jam_mulai_ker
     exit();
 }
 
-// HILANGKAN VALIDASI WEEKEND DAN HOLIDAY UNTUK TANGGAL KHL
-// Validasi untuk tanggal KHL dihapus (boleh weekend dan libur)
-
-// TETAPKAN VALIDASI UNTUK TANGGAL CUTI KHL
 if (isWeekend($tanggal_cuti_khl) || isHoliday($tanggal_cuti_khl)) {
     header("Location: formkhlkaryawan.php?status=error&message=Tanggal Cuti KHL tidak boleh pada hari weekend atau hari libur nasional");
     exit();
 }
 
-// Validasi tanggal tidak sama
 if ($tanggal_khl === $tanggal_cuti_khl) {
     header("Location: formkhlkaryawan.php?status=error&message=Tanggal KHL dan Tanggal Cuti KHL tidak boleh sama");
     exit();
 }
 
-// Validasi jam kerja
 $jam_mulai_kerja_minutes = convertTimeToMinutes($jam_mulai_kerja);
 $jam_akhir_kerja_minutes = convertTimeToMinutes($jam_akhir_kerja);
 if ($jam_akhir_kerja_minutes <= $jam_mulai_kerja_minutes) {
@@ -74,7 +67,6 @@ if ($durasi_kerja < 60) {
     exit();
 }
 
-// Validasi jam cuti
 $jam_mulai_cuti_minutes = convertTimeToMinutes($jam_mulai_cuti_khl);
 $jam_akhir_cuti_minutes = convertTimeToMinutes($jam_akhir_cuti_khl);
 if ($jam_akhir_cuti_minutes <= $jam_mulai_cuti_minutes) {
@@ -107,7 +99,6 @@ $role = $karyawan['role'];
 
 mysqli_stmt_close($stmt_karyawan);
 
-// Check if table exists and has required columns
 $check_table = mysqli_query($conn, "SHOW TABLES LIKE 'data_pengajuan_khl'");
 if (mysqli_num_rows($check_table) == 0) {
     $create_table = "CREATE TABLE `data_pengajuan_khl` (
@@ -134,7 +125,6 @@ if (mysqli_num_rows($check_table) == 0) {
         $status = "error";
     }
 } else {
-    // Check and add missing columns
     $columns_to_check = [
         'divisi' => "ALTER TABLE data_pengajuan_khl ADD COLUMN divisi VARCHAR(50) NOT NULL AFTER kode_karyawan",
         'jabatan' => "ALTER TABLE data_pengajuan_khl ADD COLUMN jabatan VARCHAR(50) NOT NULL AFTER divisi",
@@ -373,7 +363,6 @@ mysqli_close($conn);
   <div class="form-container">
     <h2>Status Pengajuan KHL</h2>
     
-    <!-- Tampilkan pesan sukses/error -->
     <?php if (isset($status)): ?>
         <?php if ($status == 'success'): ?>
             <div class="success-message">
@@ -386,7 +375,6 @@ mysqli_close($conn);
         <?php endif; ?>
     <?php endif; ?>
 
-    <!-- Info Pengguna -->
     <div class="user-info">
       <p><strong>Kode Karyawan:</strong> <?php echo htmlspecialchars($nik); ?></p>
       <p><strong>Nama:</strong> <?php echo htmlspecialchars($nama_lengkap); ?></p>
@@ -395,7 +383,6 @@ mysqli_close($conn);
       <p><strong>Role:</strong> <?php echo htmlspecialchars(ucfirst(str_replace('_', ' ', $role))); ?></p>
     </div>
 
-    <!-- Detail Pengajuan KHL -->
     <div class="user-info">
       <h3 style="margin-top: 0; color: #4a3f81;">Detail Pengajuan KHL</h3>
       <p><strong>Proyek:</strong> <?php echo htmlspecialchars($proyek); ?></p>
@@ -406,7 +393,6 @@ mysqli_close($conn);
       <p><strong>Status:</strong> <span style="color: #ffa500; font-weight: bold;">Pending</span></p>
     </div>
 
-    <!-- Tombol Aksi -->
     <div class="action-buttons">
       <a href="formkhlkaryawan.php" class="btn btn-primary">Ajukan KHL Lain</a>
       <a href="dashboardkaryawan.php" class="btn btn-secondary">Kembali ke Dashboard</a>

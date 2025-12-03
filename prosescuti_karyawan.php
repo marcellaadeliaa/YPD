@@ -25,9 +25,9 @@ function handleFileUpload($file) {
 
 function isHoliday($dateString) {
     $fixedHolidays = [
-        '01-01', // 1 Januari
-        '08-17', // 17 Agustus
-        '12-25'  // 25 Desember
+        '01-01', 
+        '08-17', 
+        '12-25'  
     ];
     
     $monthDay = date('m-d', strtotime($dateString));
@@ -36,7 +36,7 @@ function isHoliday($dateString) {
 
 function isWeekend($dateString) {
     $dayOfWeek = date('w', strtotime($dateString));
-    return $dayOfWeek == 0 || $dayOfWeek == 6; // 0 = Minggu, 6 = Sabtu
+    return $dayOfWeek == 0 || $dayOfWeek == 6;
 }
 
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'karyawan') {
@@ -58,7 +58,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $alasan = $_POST['alasan_cuti'];
     $jenis_cuti = $jenis_cuti_raw;
 
-    // Validasi weekend dan holiday
     if (isWeekend($tanggal_mulai) || isHoliday($tanggal_mulai)) {
         $error_msg = "Tanggal mulai tidak boleh pada hari weekend atau hari libur nasional.";
     }
@@ -88,7 +87,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $error_msg = "Semua field wajib diisi.";
     }
 
-    // Validasi tanggal
     if ($tanggal_akhir < $tanggal_mulai) {
         $error_msg = "Tanggal akhir tidak boleh lebih awal dari tanggal mulai.";
     }

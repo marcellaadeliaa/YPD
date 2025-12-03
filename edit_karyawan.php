@@ -305,7 +305,6 @@ $stmt->close();
                     </div>
                 </div>
                 
-                <!-- Tambahan: Informasi Personal -->
                 <div class="form-section">
                     <h3>Informasi Personal</h3>
                     <div class="form-grid">

@@ -283,7 +283,6 @@ function monthName($month) {
 
     th { background: #f8f9fa; }
 
-    /* Responsive adjustments */
     @media (max-width: 768px) {
         header { 
             flex-direction: column; 

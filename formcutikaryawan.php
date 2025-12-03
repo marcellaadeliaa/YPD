@@ -436,11 +436,10 @@ if (empty($divisi) || empty($jabatan)) {
   const sisaCutiTahunan = <?php echo $sisa_cuti_tahunan; ?>;
   const sisaCutiLustrum = <?php echo $sisa_cuti_lustrum; ?>;
 
-  // Daftar tanggal merah (format: MM-DD)
   const fixedHolidays = [
-      '01-01', // 1 Januari
-      '08-17', // 17 Agustus
-      '12-25'  // 25 Desember
+      '01-01', 
+      '08-17', 
+      '12-25' 
   ];
 
   function isHoliday(dateString) {
@@ -452,7 +451,7 @@ if (empty($divisi) || empty($jabatan)) {
   function isWeekend(dateString) {
       const date = new Date(dateString);
       const dayOfWeek = date.getDay();
-      return dayOfWeek === 0 || dayOfWeek === 6; // 0 = Minggu, 6 = Sabtu
+      return dayOfWeek === 0 || dayOfWeek === 6;
   }
 
   function validateSelectedDates() {
@@ -462,7 +461,6 @@ if (empty($divisi) || empty($jabatan)) {
       
       errorDiv.style.display = 'none';
       
-      // Validasi tanggal mulai
       if (tanggalMulai.value) {
           if (isHoliday(tanggalMulai.value)) {
               showDateError(`Tanggal ${formatDate(tanggalMulai.value)} adalah hari libur nasional. Silakan pilih tanggal lain.`);
@@ -476,7 +474,6 @@ if (empty($divisi) || empty($jabatan)) {
           }
       }
       
-      // Validasi tanggal akhir
       if (tanggalAkhir.value) {
           if (isHoliday(tanggalAkhir.value)) {
               showDateError(`Tanggal ${formatDate(tanggalAkhir.value)} adalah hari libur nasional. Silakan pilih tanggal lain.`);
@@ -490,7 +487,6 @@ if (empty($divisi) || empty($jabatan)) {
           }
       }
       
-      // Validasi range tanggal
       if (tanggalMulai.value && tanggalAkhir.value) {
           const startDate = new Date(tanggalMulai.value);
           const endDate = new Date(tanggalAkhir.value);
@@ -760,7 +756,6 @@ if (empty($divisi) || empty($jabatan)) {
     const tanggalMulai = document.getElementById('tanggal_mulai');
     const tanggalAkhir = document.getElementById('tanggal_akhir');
     
-    // Validasi weekend dan holiday
     if (tanggalMulai.value && (isWeekend(tanggalMulai.value) || isHoliday(tanggalMulai.value))) {
       e.preventDefault();
       alert('Tanggal mulai tidak boleh pada hari weekend atau hari libur nasional');
@@ -846,7 +841,6 @@ if (empty($divisi) || empty($jabatan)) {
   document.addEventListener('DOMContentLoaded', function() {
     toggleConditionalInputs();
     
-    // Set minimum date to today
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('tanggal_mulai').min = today;
     document.getElementById('tanggal_akhir').min = today;
