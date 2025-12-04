@@ -21,7 +21,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $action = $_POST['action'];
         $alasan_penolakan = isset($_POST['alasan_penolakan']) ? trim($_POST['alasan_penolakan']) : '';
 
-        $check_query = "SELECT * FROM data_pengajuan_khl WHERE id_khl = ? AND role != 'direktur'";
+        $check_query = "SELECT dpk.*, dk.nama_lengkap 
+                       FROM data_pengajuan_khl dpk 
+                       JOIN data_karyawan dk ON dpk.kode_karyawan = dk.kode_karyawan 
+                       WHERE dpk.id_khl = ? AND dk.role != 'direktur'";
         $check_stmt = $conn->prepare($check_query);
         $check_stmt->bind_param("i", $id_khl);
         $check_stmt->execute();
@@ -64,7 +67,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-$query = "SELECT * FROM data_pengajuan_khl WHERE role != 'direktur' AND status_khl = 'pending' ORDER BY id_khl DESC";
+$query = "SELECT dpk.*, dk.nama_lengkap, dk.divisi, dk.jabatan, dk.role 
+          FROM data_pengajuan_khl dpk 
+          JOIN data_karyawan dk ON dpk.kode_karyawan = dk.kode_karyawan 
+          WHERE dk.role != 'direktur' AND dpk.status_khl = 'pending' 
+          ORDER BY dpk.id_khl DESC";
 $stmt = $conn->prepare($query);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -234,7 +241,7 @@ $result = $stmt->get_result();
             width: 100%;
             border-collapse: collapse;
             background: white;
-            min-width: 1300px;
+            min-width: 1400px;
         }
         
         th, td {
@@ -527,6 +534,7 @@ $result = $stmt->get_result();
                         <tr>
                             <th>No</th>
                             <th>Kode Karyawan</th>
+                            <th>Nama Karyawan</th>
                             <th>Divisi</th>
                             <th>Jabatan</th>
                             <th>Role</th>
@@ -546,6 +554,7 @@ $result = $stmt->get_result();
                             <tr>
                                 <td style="text-align: center;"><?php echo $no++; ?></td>
                                 <td><?php echo htmlspecialchars($row['kode_karyawan'] ?? ''); ?></td>
+                                <td><?php echo htmlspecialchars($row['nama_lengkap'] ?? ''); ?></td>
                                 <td><?php echo htmlspecialchars($row['divisi'] ?? ''); ?></td>
                                 <td><?php echo htmlspecialchars($row['jabatan'] ?? ''); ?></td>
                                 <td>
@@ -661,3 +670,4 @@ $result = $stmt->get_result();
 <?php
 $stmt->close();
 $conn->close();
+?>
